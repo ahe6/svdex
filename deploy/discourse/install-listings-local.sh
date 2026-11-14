@@ -7,6 +7,9 @@ docker exec "$container" rm -rf /var/www/discourse/plugins/discourse-svdex
 docker exec "$container" mkdir -p /var/www/discourse/plugins/discourse-svdex
 docker cp deploy/discourse/plugins/discourse-svdex/. "$container:/var/www/discourse/plugins/discourse-svdex/"
 docker exec "$container" chown -R discourse:discourse /var/www/discourse/plugins/discourse-svdex
+# The plugin is copied after the upstream image is built, so its schema must be
+# migrated explicitly before any directory or financial workflow can query it.
+docker exec -u discourse "$container" bash -lc 'cd /var/www/discourse && bundle exec rake db:migrate'
 docker exec -u discourse "$container" bash -lc 'cd /var/www/discourse && bundle exec rails runner '\''Plugin::JsManager.new.compile_js_bundle(Discourse.plugins.find { |p| p.name == "discourse-svdex" }); Stylesheet::Manager.recalculate_fs_asset_cachebuster!'\'''
 docker exec -u discourse "$container" bash -lc 'cd /var/www/discourse && SKIP_EMBER_CLI_COMPILE=1 DONT_PRECOMPILE_CSS=1 bundle exec rake assets:precompile'
 docker cp deploy/discourse/setup-listings-category.rb "$container:/tmp/svdex-listings-category.rb"
