@@ -2,7 +2,7 @@
 # Local layout fixtures: one through four desktop financial lines, all issued
 # by the same company. Existing SAFE and note topics supply two and four lines.
 abort "Local setup only" unless GlobalSetting.hostname == "localhost" && SiteSetting.port.to_s == "4080"
-category = Category.find(SiteSetting.svdex_listings_category_id)
+category = Category.find(SiteSetting.svdex_public_offerings_category_id)
 company = User.find_by!(username: "svdex-company")
 fixtures = [
   {
@@ -34,4 +34,4 @@ fixtures.each do |fixture|
   raise "Unexpected category or author" unless topic.category_id == category.id && topic.first_post.user_id == company.id
   puts "#{fixture[:title]}: #{topic.url}"
 end
-puts "Two lines: #{Topic.find(18).url}; four lines: #{Topic.find(276).url}"
+puts "Offering layout fixtures ready; stable source keys preserve existing edits."

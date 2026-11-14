@@ -8,7 +8,9 @@ source = source.sub(guard, 'GlobalSetting.hostname == "localhost" && SiteSetting
 source = source.sub('User.find_by_email(ENV.fetch("DISCOURSE_DEVELOPER_EMAILS").split(",").first.strip)', 'User.find_by!(username: "svdex")')
 
 ActiveRecord::Base.transaction do
-  welcome = Topic.find_by!(slug: "welcome-to-svdex", user_id: Discourse.system_user.id)
+  welcome = Topic.find_by(slug: "welcome-to-svdex", user_id: Discourse.system_user.id) ||
+    PostCreator.create!(Discourse.system_user, title: "Welcome to SVDEX", raw: "Company research and community conversation.",
+      category: Category.find_by!(slug: "discussion").id, tags: ["community"], skip_validations: true, skip_jobs: true).topic
   before = [User.count, Topic.with_deleted.count, Post.with_deleted.count, UserBadge.count]
   qa_old_welcome_raw = welcome.first_post.raw
   raw = qa_old_welcome_raw + "\n\n[Site Feedback](/c/site-feedback/2) and #site-feedback"

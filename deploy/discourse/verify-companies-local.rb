@@ -13,7 +13,7 @@ app.get "/companies"
 raise "Company directory shell failed" unless app.response.status == 200
 %i[weekly all].each do |period|
   app.get "/directory_items.json", params: { period: period, group: group.name, order: "likes_given" }
-  raise "Native company directory failed" unless app.response.status == 200
+  raise "Native company directory failed: #{app.response.status} #{app.response.body[0, 500]}" unless app.response.status == 200
   rows = app.response.parsed_body.fetch("directory_items")
   raise "Company directory exposes ordinary accounts" unless rows.map { |row| row.fetch("user").fetch("id") }.sort == expected
   rows.each do |row|
