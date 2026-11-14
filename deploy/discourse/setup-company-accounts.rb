@@ -12,6 +12,27 @@ funds = Group.find_by(name: SiteSetting.svdex_funds_group_name) || Group.create!
   visibility_level: Group.visibility_levels[:public], members_visibility_level: Group.visibility_levels[:public],
 )
 funds.update!(public_admission: false, public_exit: false, allow_membership_requests: false)
+# A fresh clone must not depend on accounts created by earlier manual UI work.
+# These guarded local fixtures never run through the production release path.
+User.transaction do
+  {
+    "svdex-company" => ["SVDEX", "svdex", "Company discovery, discussion and private-capital opportunities."],
+    "northstar" => ["Northstar Instruments", "northstar", "Compact optical instruments for the next generation of research labs."],
+  }.each do |username, (name, tag_name, description)|
+    user = User.find_by(username: username)
+    created = user.nil?
+    if user && (user.staff? || !group.users.exists?(id: user.id))
+      raise "Existing account is not a classified local company fixture"
+    end
+    user ||= User.create!(username: username, name: name, email: "#{username}@example.invalid",
+      password: SecureRandom.hex(32), active: true, approved: true, trust_level: 1)
+    group.add(user) unless group.users.exists?(id: user.id)
+    user.email_tokens.update_all(confirmed: true) if created
+    user.user_profile.update!(bio_raw: description) if user.user_profile.bio_raw.blank?
+    user.custom_fields["svdex_company_tag_id"] ||= Tag.find_by!(name: tag_name).id.to_s
+    user.save_custom_fields
+  end
+end
 accounts = User.where(username: %w[svdex-company northstar]).index_by(&:id)
 accounts.each_value { |user| group.add(user) unless group.users.exists?(id: user.id) }
 
