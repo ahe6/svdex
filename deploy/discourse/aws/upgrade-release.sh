@@ -52,6 +52,7 @@ cp "$release_dir/manifest.json" "$shared/manifest.json"
 cp "$release_dir/appearance/common.scss" "$shared/appearance/common.scss"
 cp -a "$release_dir/site-pages" "$shared/"
 install -m 644 "$release_dir/apply-site-pages.rb" "$shared/apply-site-pages.rb"
+install -m 644 "$release_dir/verify-production.rb" "$shared/verify-production.rb"
 bash "$release_dir/aws/replace-theme-sources.sh" "$release_dir" "$shared"
 find "$shared" -type d -exec chmod 755 {} +
 find "$shared" -type f ! -name app.yml -exec chmod 644 {} +

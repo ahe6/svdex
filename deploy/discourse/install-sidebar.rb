@@ -36,7 +36,7 @@ TranslationOverride.upsert!("en", "js.badges.title", "Achievements")
 # owner's primary links once, preserving existing pins and later user edits.
 primary_categories = [SiteSetting.svdex_listings_category_id.to_i, Category.find_by!(slug: "discussion").id, SiteSetting.svdex_help_category_id.to_i].select(&:positive?).uniq
 SiteSetting.default_navigation_menu_categories = primary_categories.join("|")
-unless PluginStore.get("svdex", "category_navigation_seeded")
+if primary_categories.length == 3 && !PluginStore.get("svdex", "category_navigation_seeded")
   owner = User.find_by!(username: "svdex")
   SidebarSectionLinksUpdater.update_category_section_links(owner, category_ids: (primary_categories + owner.secured_sidebar_category_ids).uniq)
   PluginStore.set("svdex", "category_navigation_seeded", true)
