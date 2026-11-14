@@ -31,6 +31,7 @@ raise "Could not configure the theme's welcome banner" unless result.success?
 SiteSetting.wizard_enabled = false
 SiteSetting.enable_site_owner_onboarding = false
 SiteSetting.tagging_enabled = true
+SiteSetting.allow_uncategorized_topics = false
 SiteSetting.chat_enabled = true
 SiteSetting.top_menu = "latest|top|categories"
 require "tempfile"

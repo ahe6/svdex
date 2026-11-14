@@ -186,5 +186,5 @@ PYTHON
   status)
     docker ps -a --filter "name=^/$config$" --filter 'name=^/miscdex-discourse-mail$' --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
     ;;
-  *) echo 'Usage: scripts/discourse-local.sh setup|configure|theme|appearance|achievements|private-offerings|events|chat|community|introductions|marketplace|help|companies|fund|listings|start|stop|restart|logs|status' >&2; exit 2 ;;
+  *) echo 'Usage: scripts/discourse-local.sh setup|configure|theme|appearance|achievements|private-offerings|fixtures|events|chat|community|introductions|marketplace|help|companies|fund|listings|start|stop|restart|logs|status' >&2; exit 2 ;;
 esac
