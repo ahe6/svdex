@@ -55,8 +55,8 @@ case "$command_name" in
     "$0" appearance
     "$0" achievements
     "$0" private-offerings
-    "$0" events
     "$0" marketplace
+    "$0" events
     ;;
   configure)
     python3 - "$repo_dir" <<'PYTHON'
