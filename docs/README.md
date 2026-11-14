@@ -13,6 +13,7 @@
 - [Appearance and sidebar](../frontend/discourse-appearance/README.md)
 - [Company/fund data](../deploy/discourse/company-directory.md)
 - [Production operations](../deploy/discourse/PRODUCTION.md)
+- [Release verification and recovery exercise](release-verification.md)
 - [Native policy publishing](../deploy/discourse/site-pages/README.md)
 - [Managed-hosting portability](hosting-portability.md)
 - [Security reporting](../SECURITY.md), [license](../LICENSE) and [third-party notices](../THIRD_PARTY_NOTICES.md)

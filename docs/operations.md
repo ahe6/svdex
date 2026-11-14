@@ -69,8 +69,8 @@ Do not open them with a public security-group rule or public tunnel.
 
 Each developer needs an isolated Docker host/volumes because the current tooling
 uses fixed container names and ports. Shared multi-tenant development, a
-Codespaces/devcontainer bootstrap and native cloud CI have not been implemented
-or verified. No extra development host is provisioned by these scripts.
+Codespaces/devcontainer bootstrap has not been implemented or verified.
+Native CI uses a separate disposable GitHub runner for each run. No extra development host is provisioned by these scripts.
 
 ## Production
 
