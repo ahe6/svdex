@@ -1,0 +1,29 @@
+{
+  "version": "2026-11-14-v1",
+  "provider": "Tally",
+  "form_url": "https://tally.so/r/xVM7or",
+  "title": "SVDEX private deals access",
+  "required": [
+    "Full name",
+    "SVDEX account email",
+    "Applying as: Individual or Entity",
+    "Country of residence or entity formation",
+    "Stated accredited-investor qualification categories, including Not sure / none",
+    "Private investment experience",
+    "Previous private investments",
+    "Relationship source",
+    "Approximate relationship start",
+    "Prior dealings and frequency",
+    "Understanding of illiquidity and potential total loss",
+    "Accuracy confirmation",
+    "Independent review acknowledgement"
+  ],
+  "optional": [
+    "Broad sectors or investment types of interest",
+    "Other review context"
+  ],
+  "uploads": false,
+  "automatic_approval": false,
+  "automated_integrations": false,
+  "archive": "Reviewer exports the original response and attaches it to a staff-only native Discourse case with version, timestamps, reviewer, decision, relationship notes and separate access authorization. No application data is stored in this source file."
+}

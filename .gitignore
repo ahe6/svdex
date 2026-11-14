@@ -1,0 +1,15 @@
+node_modules/
+.data/
+.env
+.env.*
+!.env.example
+*.key
+*.p12
+*.pfx
+*.tar.gz
+coverage/
+artifacts/
+*.sqlite*
+__pycache__/
+.DS_Store
+work/

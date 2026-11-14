@@ -1,0 +1,32 @@
+{
+  "dark": {
+    "name": "Dark",
+    "dark": true,
+    "colors": {
+      "primary": "e6e8eb", "secondary": "191b1e", "tertiary": "c1c8d0",
+      "quaternary": "c99876", "header_background": "191b1e", "header_primary": "e6e8eb",
+      "highlight": "554536", "selected": "30343a", "hover": "25292e",
+      "danger": "f0a3a3", "success": "97c9a8", "love": "d6a0ae"
+    },
+    "tokens": {
+      "surface": "202327", "sidebar": "16181b", "line": "32363c", "border": "626b76",
+      "text": "e6e8eb", "muted": "adb3bd", "selected": "2d3239", "selection_border": "949da9",
+      "action": "d5ac8c", "action_hover": "e3bfa2", "action_text": "231b16", "focus": "c5a789"
+    }
+  },
+  "light": {
+    "name": "Light",
+    "dark": false,
+    "colors": {
+      "primary": "282b2e", "secondary": "faf9f6", "tertiary": "4e5861",
+      "quaternary": "8d5438", "header_background": "faf9f6", "header_primary": "282b2e",
+      "highlight": "f0e3d8", "selected": "e6e9eb", "hover": "f0efeb",
+      "danger": "ac3941", "success": "33765b", "love": "a65070"
+    },
+    "tokens": {
+      "surface": "ffffff", "sidebar": "f0efeb", "line": "dedfdc", "border": "858d95",
+      "text": "282b2e", "muted": "626a71", "selected": "e1e5e7", "selection_border": "68747f",
+      "action": "8d5438", "action_hover": "75432e", "action_text": "ffffff", "focus": "8d6448"
+    }
+  }
+}

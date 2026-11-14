@@ -1,0 +1,11 @@
+{
+  "hostname": "svdex.com",
+  "admin_email": "",
+  "notification_email": "",
+  "smtp_address": "",
+  "smtp_port": 587,
+  "smtp_user_name": "",
+  "smtp_password": "",
+  "discourse_revision": "444e62cc26e96c7da97f08fa45df219f03f60114",
+  "docker_revision": "1309ec425ab697996a33b931e309df95c1fbd981"
+}

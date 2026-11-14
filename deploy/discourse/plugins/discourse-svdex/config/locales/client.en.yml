@@ -1,0 +1,64 @@
+en:
+  js:
+    svdex_buy_interest: "Buy interest"
+    svdex_sell_interest: "Sell interest"
+    discovery:
+      headings:
+        category:
+          svdex-events-calendar: "%{category} calendar"
+    filters:
+      svdex-events-calendar:
+        title: "Calendar"
+        help: "View events by date"
+      svdex-overview:
+        title: "All forums"
+        help: "Company and sector tags alongside community categories"
+    svdex:
+      new_offering: "New offering"
+      company:
+        buy_interest: "Buy interest"
+        sell_interest: "Sell interest"
+        company: "Company"
+        name: "Name"
+        fund: "Fund"
+        fund_rows:
+          one: "%{count} fund"
+          other: "%{count} funds"
+        listing_rows:
+          one: "%{count} listing"
+          other: "%{count} listings"
+        strategy_focus: "Strategy"
+        aum: "AUM"
+        fund_size: "Fund size"
+        fund_life: "Fund Life"
+        fund_domicile: "Fund domicile"
+        open_offerings: "Open offerings"
+        total_funding: "Total funding"
+        last_valuation: "Last valuation"
+        key_people: "Key People"
+        sector: "Sector"
+        stage: "Stage"
+        location: "Location"
+        open_offering: "Open offering"
+        total_rows:
+          one: "%{count} company"
+          other: "%{count} companies"
+        filter_name: "Search by company name"
+        no_results: "No companies match your search."
+        empty: "No companies to show."
+        none: "Not disclosed"
+        all_sectors: "All sectors"
+        all_values: "All values"
+        all_stages: "All stages"
+        all_locations: "All locations"
+        any: "Any"
+    directory:
+      svdex_total_funding: "Total funding"
+      svdex_aum: "AUM"
+      svdex_fund_size: "Fund size"
+      svdex_last_valuation: "Last valuation"
+    admin:
+      logs:
+        staff_actions:
+          actions:
+            svdex_company_details: "update company details"

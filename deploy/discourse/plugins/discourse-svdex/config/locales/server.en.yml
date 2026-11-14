@@ -1,0 +1,13 @@
+en:
+  site_settings:
+    svdex_bids_enabled: "Allow private nonbinding offering bids with amount and proposed terms. Does not execute trades or alter general interest totals."
+    svdex_bids_staff_preview: "Allow authorized staff to review offering bids within accessible offering topics."
+    svdex_interest_public_totals: "Publish aggregates from consenting, current, non-restricted indications to all viewers. Individual records remain private."
+    svdex_events_category_id: "Category for community events, separate from the Home feed."
+    svdex_lounge_channel_url: "Native Lounge channel URL used by the Discussions Chat tab. Leave blank to open the channel directory."
+    svdex_companies_group_name: "Staff-managed group of organization accounts included in the Listings directory."
+    svdex_funds_group_name: "Staff-managed fund subgroup within the Listings directory. This classification grants no offering permissions."
+    svdex_listings_category_id: "Combined native Offerings parent category."
+    svdex_public_offerings_category_id: "Publicly visible offerings child category. Visibility is not a legal exemption classification."
+    svdex_help_category_id: "Public Help & Feedback category, excluded only from global Latest and Top feeds."
+    svdex_overview_tag_colors: "Colors for Overview tag rows, copied from the original category colors. Enter six-digit hex colors in display order."

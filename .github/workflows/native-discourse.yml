@@ -1,0 +1,44 @@
+name: Native Discourse checks
+on:
+  pull_request:
+    paths:
+      - frontend/**
+      - deploy/discourse/**
+      - scripts/**
+      - test/**
+      - package*.json
+      - .github/workflows/native-discourse.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: native-discourse-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  native:
+    # Reviewed manual runs while private; public contribution PRs run automatically.
+    if: github.event_name == 'workflow_dispatch' || !github.event.repository.private
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - name: Build a fresh pinned forum and local configuration
+        run: npm run setup
+      - name: Native permissions, financial workflows and theme compilation
+        run: npm run check:discourse
+      - name: Runtime diagnostics without credential or database artifacts
+        if: failure()
+        run: |
+          docker ps -a
+          docker logs --tail 100 miscdex-forum 2>&1 || true
+      - name: Stop isolated test containers
+        if: always()
+        run: npm run stop || true

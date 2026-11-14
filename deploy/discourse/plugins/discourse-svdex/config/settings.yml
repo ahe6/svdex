@@ -1,0 +1,63 @@
+plugins:
+  svdex_bids_enabled:
+    default: false
+    client: true
+  svdex_bids_staff_preview:
+    default: false
+  svdex_interest_enabled:
+    default: false
+    client: true
+  svdex_interest_staff_preview:
+    default: false
+    client: true
+  svdex_interest_public_totals:
+    default: false
+    client: true
+  svdex_lounge_channel_url:
+    default: ""
+    client: true
+  svdex_listings_category_id:
+    default: 0
+    type: category
+    client: true
+  svdex_events_category_id:
+    default: 0
+    type: category
+    client: true
+  svdex_introductions_category_id:
+    default: 0
+    type: category
+    client: true
+  svdex_private_offerings_category_id:
+    default: 0
+    type: category
+    client: true
+  svdex_public_offerings_category_id:
+    default: 0
+    type: category
+    client: true
+  svdex_private_access_form_url:
+    default: ""
+    client: true
+  svdex_private_access_contact:
+    default: "svdex"
+    client: true
+  svdex_private_offerings_group_name:
+    default: "private_offerings"
+  svdex_companies_group_name:
+    default: "companies"
+    client: true
+  svdex_funds_group_name:
+    default: "funds"
+    client: true
+  svdex_help_category_id:
+    default: 0
+    type: category
+    client: true
+  svdex_overview_tag_colors:
+    # Assigned colors from the original Listings, Discussion, Feedback, Staff,
+    # and General category records, in their original displayed order.
+    default: "0088CC|2396BF|9863AD|E45735|25AAE2"
+    type: list
+    list_type: compact
+    client: true

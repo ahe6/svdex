@@ -1,0 +1,20 @@
+{
+  "name": "svdex-discourse",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "SVDEX native Discourse plugin, theme and local setup",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "setup": "bash scripts/discourse-local.sh setup",
+    "start": "bash scripts/discourse-local.sh start",
+    "stop": "bash scripts/discourse-local.sh stop",
+    "status": "bash scripts/discourse-local.sh status",
+    "test": "node --test test/*.test.js",
+    "check": "node scripts/check.js && npm test",
+    "check:discourse": "bash scripts/check-discourse-local.sh"
+  },
+  "license": "GPL-2.0-or-later"
+}

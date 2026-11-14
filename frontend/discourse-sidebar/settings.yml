@@ -1,0 +1,5 @@
+svg_icons:
+  default: "building|comments|plus|circle-question|bookmark"
+  type: list
+  list_type: compact
+  description: "Icons used by the SVDEX navigation."

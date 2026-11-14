@@ -1,0 +1,50 @@
+{
+  "discourse_revision": "444e62cc26e96c7da97f08fa45df219f03f60114",
+  "files": [
+    {
+      "path": "plugins/chat/assets/javascripts/discourse/templates/chat.gjs",
+      "sha256": "176c56b7fdb4f3de57fe0bc81f6e5fd22e3dbaf32e3fb91ae78a0c6b0a809bc0",
+      "integration": "Copied native Chat shell with one Discussions navigation insertion"
+    },
+    {
+      "path": "frontend/discourse/app/components/bread-crumbs.gjs",
+      "sha256": "fc83e7fe1a3af232765415db5a2bf60b823db262bd58edc19a82faf8fc75518a",
+      "integration": "Unified category breadcrumbs"
+    },
+    {
+      "path": "frontend/discourse/app/components/parent-category-row.gjs",
+      "sha256": "1f0fa45a9ada8c45e7aa4f7c6d0ab48b3ab1badfbbd60a4e8367a8a484e84ad3",
+      "integration": "Public private-access subcategory adapter"
+    },
+    {
+      "path": "frontend/discourse/select-kit/components/category-drop.js",
+      "sha256": "9c966ba976aca2018b63d2008a9b9b6bc6d69a2ad6b8598a3efb542d5241f42a",
+      "integration": "Scoped category choices and access information"
+    },
+    {
+      "path": "frontend/discourse/select-kit/components/tag-drop.js",
+      "sha256": "68f910820b15951117bc1e9409cd2f5eb42324c540b6a881f04c7790d9568303",
+      "integration": "Preserve offering filters on native tag navigation"
+    },
+    {
+      "path": "frontend/discourse/app/components/group-membership-button.gjs",
+      "sha256": "a05584d350f291c093a56282120647c0e39dc623e7080995266b05943ba49e53",
+      "integration": "Structured company membership request modal"
+    },
+    {
+      "path": "frontend/discourse/app/controllers/users.js",
+      "sha256": "bd7d81b5f3e39d61c2cb599c9b74f28813ad32dcebfd2048f195d991df330e1a",
+      "integration": "Native directory inheritance and organization-group exclusion"
+    },
+    {
+      "path": "frontend/discourse/app/controllers/discovery/list.js",
+      "sha256": "83c647d8730619b673842ff75621afb0389ba6af307ee5800b18c59ef7ca6977",
+      "integration": "Offering create target category"
+    },
+    {
+      "path": "frontend/discourse/app/routes/user/summary.js",
+      "sha256": "78a8ffa199106e184e07e5d8c0d5404c8b36bc359e724e1518874f929de2dfd4",
+      "integration": "Company/fund summary template selection"
+    }
+  ]
+}

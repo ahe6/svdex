@@ -1,0 +1,73 @@
+# frozen_string_literal: true
+abort "Local verification only" unless GlobalSetting.hostname == "localhost" && SiteSetting.port.to_s == "4080"
+Middleware::AnonymousCache.disable_anon_cache
+help = Category.find(SiteSetting.svdex_help_category_id)
+discussion = Category.find_by!(slug: "discussion")
+raise "Help is restricted or muted by default" if help.read_restricted? || SiteSetting.default_categories_muted.split("|").include?(help.id.to_s)
+raise "Help is not the native feedback category" unless SiteSetting.meta_category_id.to_i == help.id
+
+Post.transaction do
+  member = User.create!(username: "help_#{SecureRandom.hex(4)}", email: "#{SecureRandom.hex(8)}@example.invalid",
+    password: SecureRandom.hex(24), active: true, approved: true, trust_level: 1)
+  tag = Tag.create!(name: "helpcheck#{SecureRandom.hex(4)}")
+  create_topic = lambda do |category|
+    post = PostCreator.create!(Discourse.system_user, title: "Support check #{SecureRandom.hex(6)}",
+      raw: "Transaction-scoped feed visibility check.", category: category.id, skip_validations: true, skip_jobs: true)
+    post.topic.tags << tag
+    TopTopic.create!(topic_id: post.topic_id, all_score: 100_000, daily_score: 100_000)
+    post.topic
+  end
+  support = create_topic.call(help)
+  control = create_topic.call(Category.find(SiteSetting.svdex_listings_category_id))
+  conversation = create_topic.call(discussion)
+  restricted = create_topic.call(Category.find(SiteSetting.svdex_private_offerings_category_id))
+  support.update!(pinned_at: Time.now, pinned_globally: true)
+  CategoryUser.set_notification_level_for_category(member, CategoryUser.notification_levels[:watching], help.id)
+  TopicUser.change(member.id, support.id, notification_level: TopicUser.notification_levels[:watching])
+
+  [nil, member, User.find_by!(username: "svdex")].each do |user|
+    ids = ->(list) { list.topics.map(&:id) }
+    query = ->(opts = {}) { TopicQuery.new(user, { per_page: 100 }.merge(opts)) }
+    [:latest, :top].each do |filter|
+      list = ->(q) { filter == :latest ? q.list_latest : q.list_top_for(:all) }
+      global = ids.call(list.call(query.call))
+      raise "Help or discussion leaked into global #{filter}" if (global & [support.id, conversation.id]).any?
+      raise "Control missing from global #{filter}" unless global.include?(control.id)
+      category_ids = ids.call(list.call(query.call(category: help.id)))
+      raise "Direct Help #{filter} lost support post" unless category_ids.include?(support.id)
+      tag_ids = ids.call(list.call(query.call(tags: [tag.name])))
+      raise "Tag #{filter} lost support post" unless tag_ids.include?(support.id)
+      home_tag_ids = ids.call(list.call(query.call(tags: [tag.name], svdex_home: "1")))
+      raise "Home tag #{filter} included discussion or feedback" if (home_tag_ids & [support.id, conversation.id]).any?
+      raise "Home tag #{filter} lost the offering control" unless home_tag_ids.include?(control.id)
+      raise "Home tag #{filter} bypassed private permissions" if !Guardian.new(user).can_see?(restricted) && home_tag_ids.include?(restricted.id)
+    end
+    raise "Direct topic access lost" unless TopicView.new(support.id, user).topic.id == support.id
+  end
+  app = ActionDispatch::Integration::Session.new(Rails.application)
+  app.host! "localhost"
+  ["/latest.json", "/top.json?period=all", "/categories_and_latest.json"].each do |path|
+    app.get path
+    raise "HTTP #{app.response.status} for #{path}" unless app.response.status == 200
+    topic_ids = app.response.parsed_body.fetch("topic_list").fetch("topics").map { |topic| topic.fetch("id") }
+    raise "Help leaked into #{path}" if topic_ids.include?(support.id)
+    raise "Positive control absent from #{path}" unless topic_ids.include?(control.id)
+  end
+  ["/latest.json", "/top.json?period=all"].each do |path|
+    app.get path, params: {tags: tag.name, svdex_home: "1"}
+    raise "Home tag HTTP #{app.response.status}" unless app.response.status == 200
+    visible_ids = app.response.parsed_body.fetch("topic_list").fetch("topics").map { |topic| topic.fetch("id") }
+    raise "Tagged Home leaked other categories" if (visible_ids & [support.id, conversation.id, restricted.id]).any?
+    raise "Tagged Home lost matching offerings" unless visible_ids.include?(control.id)
+  end
+  puts "PASS Home tag filters preserve the feed allowlist and private permissions; standalone tags remain broader"
+  app.get "#{help.url}.json"
+  raise "Help directory unavailable" unless app.response.status == 200 && app.response.parsed_body.fetch("topic_list").fetch("topics").any? { |topic| topic["id"] == support.id }
+  SearchIndexer.index(support.first_post, force: true)
+  app.get "/search.json", params: { q: "#{support.title} in:title" }
+  raise "Search unavailable" unless app.response.status == 200
+  raise "Help disappeared from search" unless app.response.parsed_body.fetch("topics", []).any? { |topic| topic["id"] == support.id }
+  raise "Watching preference changed" unless CategoryUser.find_by!(user_id: member.id, category_id: help.id).notification_level == CategoryUser.notification_levels[:watching]
+  puts "PASS global Latest/Top/Overview exclude pinned/watched Help for guests, members and staff; direct category/tag feeds, topic access, search and notification preferences remain native"
+  raise ActiveRecord::Rollback
+end
