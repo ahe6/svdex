@@ -14,6 +14,17 @@ consented public aggregates and private offering bids were enabled explicitly.
 Temporary smoke-test records were rolled back; local fictional financial facts
 were not imported.
 
+## Automated clean installation
+
+[Native CI run 43604928259](https://github.com/ahe6/svdex/actions/runs/43604928259)
+passed on revision `8df2445` in 13 minutes. It built the pinned forum on a fresh
+GitHub runner, installed local fixtures, migrated both plugin tables, compiled
+the native themes and ran the complete permission/financial workflow suite.
+Source/package checks also passed. The clean bootstrap caught and repaired
+missing company fixtures, setup ordering, premature sidebar seeding and the
+missing post-copy plugin migration step. Its workflow now reports all failing
+suites together, rather than hiding later failures behind the first one.
+
 ## Observed checks
 
 - Production guest/member/staff smoke checks passed: directory access, protected
