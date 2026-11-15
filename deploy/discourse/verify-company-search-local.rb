@@ -9,6 +9,7 @@ Post.transaction do
   security = "Convertible Note #{SecureRandom.hex(5)}"
   titles = ["#{company} — #{security}", "#{company} — 2032 Bond"]
   titles.each { |title| PostCreator.create!(Discourse.system_user, title: title, raw: "Laboratory equipment development and operating plans.", category: category.id, skip_validations: true, skip_jobs: true) }
+  Topic.find_by!(title: titles.first).update!(pinned_at: Time.current)
   hidden = PostCreator.create!(Discourse.system_user, title: "#{company} Private — Seed", raw: "Not a public listing.", category: category.id, skip_validations: true, skip_jobs: true).topic
   hidden.update!(visible: false)
   PostCreator.create!(Discourse.system_user, title: "#{company} Discussion", raw: "An ordinary discussion about laboratory equipment.", category: Category.find_by!(slug: "discussion").id, skip_validations: true, skip_jobs: true)
@@ -34,7 +35,7 @@ Post.transaction do
   raise "Count exposed private or unlisted offerings" unless JSON.parse(app.response.body).fetch("topic_list").fetch("svdex_offering_count") == 2
   app.get "#{category.url}.json", params: { svdex_company: "absent-#{SecureRandom.hex(8)}" }
   raise "Empty count must be zero" unless JSON.parse(app.response.body).fetch("topic_list").fetch("svdex_offering_count") == 0
-  puts "PASS offering counts respect filtering, pagination, empty results and private visibility; security names are searchable"
+  puts "PASS offering counts respect filtering, pinning, pagination, empty results and private visibility; security names are searchable"
   app.get "/listings/companies.json", params: { q: "%" }
   raise "Wildcard was not literal" unless JSON.parse(app.response.body)["companies"].empty?
   app.get "/listings/companies.json", params: { q: "x" * 121 }

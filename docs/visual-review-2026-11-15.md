@@ -138,8 +138,8 @@ configuration checks pass. `git diff --check` passes. No deployment performed.
 Users and Groups are adjacent in More, using native link classes through the
 theme API. Home New topic omits offering categories; dedicated New offering retains
 both permitted children. Desktop Offerings uses Search offering and an exact
-matching count. Native query filtering and Guardian scoping precede the SQL window
-count, so it survives pagination without counting private or unlisted topics for
-guests. Security-title queries work in addition to company-name searches. Local
+matching count. Native query filtering and Guardian scoping precede the count query, which runs
+before pagination and native pinned-topic splitting. Guests never count private
+or unlisted topics. Security-title queries work in addition to company-name searches. Local
 transactional tests cover filtering, pagination, zero matches and private access.
 Browser review confirmed the 5 offerings to 1 offering transition for SAFE.

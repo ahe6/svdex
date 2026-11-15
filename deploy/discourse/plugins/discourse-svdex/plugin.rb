@@ -133,12 +133,14 @@ after_initialize do
     end
   end
 
-  # Native filtering/Guardian scoping runs before this modifier. The window
-  # count sees all matching rows before LIMIT/OFFSET, without a second request.
+  # Count the secured, fully filtered relation before pagination and native
+  # pinning split it into separate queries. Attach that same total to each row.
   register_modifier(:topic_query_create_list_topics) do |topics, options, query|
     if DiscourseSvdex.offering_category?(query.options.merge(options)[:category_id])
+      matching = topics.except(:limit, :offset, :order).reselect("topics.id").distinct
+      total = Topic.unscoped.from(matching, :svdex_matching_offerings).count
       topics = topics.select("topics.*") if topics.select_values.empty?
-      topics.select("COUNT(*) OVER() AS svdex_offering_count")
+      topics.select("#{Integer(total)} AS svdex_offering_count")
     else
       topics
     end
