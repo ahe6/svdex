@@ -35,14 +35,20 @@ raise "Company profile became inaccessible" unless app.response.status == 200
 puts "PASS Users hides companies/funds before counts, searches and pagination; fund-only and current-user exclusions hold; organization directory and profiles remain available"
 
 User.transaction do
-  person = User.find_by!(username: "maya-chen")
-  person.update!(trust_level: 2)
+  # Own the test participant rather than relying on a developer's visual-review
+  # account, which is deliberately not seeded by a clean installation.
+  person = User.create!(username: "directory_#{SecureRandom.hex(4)}", name: "Directory Member",
+    email: "#{SecureRandom.hex(8)}@example.invalid", password: SecureRandom.hex(24),
+    active: true, approved: true, trust_level: 2)
+  %i[all weekly].each do |period|
+    DirectoryItem.refresh_period!(period)
+  end
   person.user_option.update!(hide_profile: false)
   organizations = companies.users.where(admin: false, moderator: false).order(:id).limit(2).to_a
   raise "Two public organization fixtures required" unless organizations.length == 2
   field = DiscourseSvdex::CompanyDirectory::FIELDS.fetch("key_people")
   organizations.each do |organization|
-    organization.custom_fields[field] = [{ "name" => "Maya Chen", "user_id" => person.id }, { "name" => "Maya Chen", "user_id" => person.id }]
+    organization.custom_fields[field] = [{ "name" => person.name, "user_id" => person.id }, { "name" => person.name, "user_id" => person.id }]
     organization.save_custom_fields
   end
   app.get "/directory_items.json", params: { period: "weekly", order: "svdex_organizations" }

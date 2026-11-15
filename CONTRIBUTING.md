@@ -76,6 +76,8 @@ Interface/plugin pull requests. Native checks can also be started manually.
 Maintainers should inspect both results before merging.
 Upstream-contract failures require reviewing the changed native implementation,
 not merely replacing its stored hash.
+Native scenarios must create extra participants inside their rollback scope;
+visual-review accounts on a developer's machine are not test prerequisites.
 
 ## Remote/cloud development
 
