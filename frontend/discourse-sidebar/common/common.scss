@@ -6,16 +6,3 @@
   [data-section-name="chat-starred-channels"],
   [data-list-item-name="boards"] { display: none; }
 }
-
-// Fit the SVDEX wordmark within core's centered header/logo layout.
-.d-header .title:not(.title--minimized) {
-  --d-logo-height: 24px;
-  #site-logo {
-    display: block;
-    // Center the lowercase body optically; the d ascender skews the ink box.
-    transform: translateY(-12.5%);
-  }
-}
-@media (max-width: 767px) {
-  .d-header .title:not(.title--minimized) { --d-logo-height: 22px; }
-}

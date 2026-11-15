@@ -1,0 +1,95 @@
+// Lounge retains the native chat shell, with a non-scrolling Discussions toolbar.
+.svdex-discussion-chat-navigation {
+  flex: 0 0 auto;
+  padding: var(--space-4) 0 0 calc(var(--space-4) * 2);
+  .navigation-container { margin-block-end: var(--space-4); }
+  .navigation-controls, .category-breadcrumb { display: none; }
+}
+html.has-full-page-chat body #main-outlet:has(> .svdex-discussion-chat-navigation) {
+  height: calc(var(--composer-vh, 1dvh) * 100 - var(--main-outlet-offset, 0px));
+  min-height: 0;
+  > .full-page-chat { flex: 1 1 0; height: auto; grid-template-rows: minmax(0, 1fr); }
+  #main-chat-outlet { height: 100%; max-height: 100%; }
+  .c-routes.--channel { height: 100%; min-height: 0; display: flex; flex-direction: column; }
+  .c-navbar-container { flex-shrink: 0; }
+  .chat-channel { flex: 1 1 0; min-height: 0; height: auto; }
+}
+
+.svdex-offering-bid-modal textarea { width: 100%; box-sizing: border-box; }
+.svdex-bid-terms { white-space: pre-wrap; overflow-wrap: anywhere; }
+
+// Directory totals are entry points to the viewer's own indication, never a
+// public order book. Preserve native numeric typography and distinguish links.
+.svdex-companies-table .svdex-directory-interest {
+  padding: 0; min-width: 2em; min-height: 0; font: inherit; color: var(--primary-high);
+  text-decoration: underline; text-decoration-color: var(--primary-low-mid);
+  text-underline-offset: 0.2em;
+  &:hover, &:focus-visible { color: var(--tertiary); text-decoration-color: currentColor; }
+}
+.category-events :is(.navigation-container, .svdex-listing-filters-modal) .category-breadcrumb > li:has(> .category-drop) { display: none; }
+
+.svdex-companies-table .svdex-directory-interest--unknown { text-decoration: none; }
+
+// Owner-only financial activity uses native topic-list typography and controls.
+.svdex-interest-activity {
+  .svdex-interest-filters { gap: .5em; margin-bottom: 1em; flex-wrap: wrap; }
+  .svdex-interest-list {
+    .main-link { width: 100%; font-size: var(--font-0); .title { font-size: var(--font-up-1); } }
+    th, td { padding-left: .75em; padding-right: .75em; }
+    th:first-child, td:first-child { padding-left: 0; }
+    th:last-child, td:last-child { padding-right: 0; }
+    .svdex-interest-meta { color: var(--primary-medium); font-size: var(--font-down-1); margin-top: .25em; }
+    .svdex-interest-terms { width: auto; max-width: 100%; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+    th { font-size: var(--font-down-1); color: var(--primary-medium); font-weight: normal; }
+    .svdex-interest-amount, .svdex-interest-state, .svdex-interest-date { white-space: nowrap; color: var(--primary-medium); font-variant-numeric: tabular-nums; }
+    .svdex-interest-amount { color: var(--primary-high); }
+    .svdex-interest-state, .svdex-interest-date { font-size: var(--font-down-1); }
+    .svdex-interest-actions { white-space: nowrap; }
+  }
+}
+.mobile-view .svdex-interest-list {
+  display: block;
+  tbody { display: block; }
+  thead { display: none; }
+  tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: .75em; padding: 1em 0; }
+  td { padding: .2em 0; max-width: none; min-width: 0; }
+  .main-link { grid-column: 1 / -1; }
+  .svdex-interest-meta { display: none; }
+  .svdex-interest-terms { -webkit-line-clamp: 1; font-size: var(--font-down-1); color: var(--primary-medium); }
+  .svdex-interest-amount { grid-column: 1 / -1; text-align: start; }
+  .svdex-interest-state { grid-column: 1 / -1; justify-self: start; text-align: start; }
+  .svdex-interest-date { grid-column: 1; align-self: center; }
+  .svdex-interest-actions { grid-column: 2; justify-self: end; }
+  .svdex-interest-action-buttons .btn { font-size: var(--font-down-1); padding: .25em .5em; }
+}
+
+// Keep application fields aligned without changing other native forms.
+.svdex-company-application-modal .control-group :is(input, textarea) { width: 100%; }
+.svdex-private-access-notice a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: .15em;
+  white-space: nowrap;
+}
+
+// A persistent sidebar can leave a desktop directory as narrow as a tablet.
+// Follow the available content width instead of keeping a desktop-size input.
+.svdex-companies-page .users-directory { container-type: inline-size; }
+.desktop-view .svdex-company-search-trigger { display: none; }
+@container (max-width: 45rem) {
+  .desktop-view .svdex-companies-page {
+    .directory-controls {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: var(--space-2);
+      .period-controls { display: contents; }
+      h2 { grid-column: 1; grid-row: 1; margin: 0; align-self: center; }
+      .filter-name { display: none; }
+    }
+    .svdex-company-directory-tools { grid-column: 2; grid-row: 1; flex-wrap: nowrap; align-self: center; gap: var(--space-2); }
+    .svdex-company-directory-tools .inline-form { margin: 0; align-items: center; }
+    .svdex-company-search-trigger { display: inline-flex; }
+    .svdex-company-application { white-space: nowrap; }
+  }
+}
+

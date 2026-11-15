@@ -5,8 +5,10 @@
 - `frontend/discourse-interface/`: client components, templates, controllers and
   routes. The initializer only checks that the backend is present and registers
   the feature integrations below.
-- `frontend/discourse-sidebar/`: native sidebar links, ordering and navigation.
-- `frontend/discourse-appearance/`: layout and appearance within the native theme.
+- `frontend/discourse-sidebar/`: native sidebar links/order and native color-mode initialization.
+- `frontend/discourse-appearance/`: ordered editable `styles/` modules and a
+  generated `common.scss` distributed to the native theme. Run `npm run build:styles`;
+  do not edit the generated file. No extra compiler runs in production.
 - `deploy/discourse/plugins/discourse-svdex/`: permission-aware data queries,
   serializers, validation, financial records, hooks and client route declarations.
   This remains a custom-plugin installation, not a theme-only site.
@@ -21,7 +23,9 @@ The Interface integrations are grouped under `javascripts/discourse/integrations
 | Topic metadata | Compact category names and native tag color markers |
 | Offering topics | Composer/first-post details, review details, topic rows and financial column |
 
-Registration stays centralized and plugin-guarded. Components perform rendering;
+Feature registration stays centralized and plugin-guarded. Generic native label/
+Chat-entry behavior has its own Interface API initializer and remains usable
+without the backend. Discovery tabs belong to the Interface integration, not Sidebar. Components perform rendering;
 server controllers remain authoritative. Both Overview routes use the shared
 `svdex-overview-directory` component, while their controllers choose their own
 secured category sets. Ordinary native user and discussion views remain native.
@@ -161,3 +165,32 @@ No obvious reason was found to move remaining authorization or financial storage
 into themes, combine financial workflows, replace native accounts, or create a
 separate frontend application. Refactors above should be small behavior-preserving
 changes, with the current source/native checks and targeted visual comparisons.
+
+
+## Refactoring completed — 16 November 2026
+
+- Styles are split into seven ordered source modules with byte-preserving assembly;
+  generated output remains compatible with the existing native installer and
+  deployment. Removed superseded composer-label height rules. Moved logo styling
+  from Sidebar into Appearance. The historical cascade order is explicit rather
+  than silently reorganized by feature. Further consolidation can be incremental.
+- Interface owns discovery tabs and generic native label/Chat-entry behavior.
+  Sidebar retains links and native color-mode initialization. Offering search,
+  autocomplete, route synchronization and matching count are a separate component
+  from the screening panel. Event handlers retain their destruction cleanup.
+- `TopicDiscovery.install!` owns native query filters, count registration and Home
+  scoping, preserving registration order and Guardian authority. Plugin bootstrap
+  retains fields/hooks/controllers; financial workflows/storage remain separate.
+- `native-defaults.rb` centralizes six existing navigation/event defaults, and is
+  packaged/copied for local, fresh-production and preserving-upgrade entry points.
+  Its allowlist excludes credentials, permissions, registration, intake and policy
+  publishing. Local configuration tests and release-package byte checks cover it.
+- Reviewed upstream contracts now include composer/category-chooser/navigation,
+  Chat/Users routes and the topic-list/query implementations used by counts.
+- Source releases require clean committed source and carry a checksum/revision.
+  The manual release-candidate workflow reuses fresh native CI before uploading
+  source only. Neither workflow has cloud credentials or deploy/publish authority.
+
+The November 15 review above records the rationale; these items supersede its
+first refactor suggestions. Permission-aware large-catalog performance work stays
+measurement-driven. No new database schema or frontend framework was introduced.

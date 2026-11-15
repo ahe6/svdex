@@ -14,13 +14,10 @@ SiteSetting.enable_site_owner_onboarding = false
 SiteSetting.tagging_enabled = true
 SiteSetting.tags_listed_by_group = true
 SiteSetting.chat_enabled = true
-SiteSetting.nested_replies_enabled = true
-SiteSetting.nested_replies_default = true
-SiteSetting.discourse_events_enabled = true
-SiteSetting.discourse_post_event_enabled = true
+require_relative "native-defaults"
+SvdexNativeDefaults.apply!(:navigation)
+SvdexNativeDefaults.apply!(:events)
 SiteSetting.discourse_post_event_allowed_on_groups = "1|2|10"
-SiteSetting.enable_improved_event_reminders = true
-SiteSetting.sidebar_show_upcoming_events = false
 SiteSetting.enable_public_channels = true
 SiteSetting.top_menu = "latest|top"
 SiteSetting.desktop_category_page_style = "categories_only"

@@ -46,6 +46,25 @@ records, theme compilation/export/import and the pinned upstream contracts.
 Tests roll back their own records; avoid concurrent browser review while these
 checks temporarily import themes or toggle settings.
 
+### Finding the right file
+
+| Change | Start here |
+| --- | --- |
+| Spacing, typography, responsive behavior | `frontend/discourse-appearance/styles/` and its ordered `styles.json` |
+| Offering search/autocomplete/count | Interface `components/svdex-offering-search.gjs` |
+| Offering screening controls | Interface `components/svdex-tag-group-filters.gjs` |
+| Home/Discussions/Event tabs | Interface `integrations/svdex-discovery-tabs.gjs` |
+| Native labels and Chat entry behavior | Interface `api-initializers/svdex-native-navigation.gjs` |
+| Sidebar destinations/order | Sidebar `api-initializers/svdex-sidebar.gjs` |
+| Secured topic filtering/counts | Plugin `lib/discourse_svdex/topic_discovery.rb` |
+| Shared non-secret feature defaults | `deploy/discourse/native-defaults.rb` |
+
+After editing styles, run `npm run build:styles` and include the generated
+`common.scss` in the PR. The manifest preserves cascade order; grouping files is
+not permission to reorder selectors. The appearance installer builds it for local
+review, and checks/release packaging reject stale output. Production Discourse
+still receives a normal single stylesheet and has no extra runtime build step.
+
 For a theme change, review desktop and 320px/375px mobile layouts, empty/populated
 states, and ordinary native views affected by shared styles. Include screenshots
 in the PR. For backend changes, exercise guest/member/staff access and include
@@ -77,3 +96,22 @@ Use public issues for reproducible, nonsensitive bugs or proposals. For private
 financial data, credentials, account details or exploitable vulnerabilities, use
 [SECURITY.md](SECURITY.md). Never attach production backups, `.data/`, `.env`,
 mail captures, investor documents or unredacted private responses to an issue.
+
+## Source releases and production deployment
+
+`npm run package:source -- artifacts/svdex-source.tar.gz` packages a clean Git
+revision and writes its commit/checksum sidecar. It archives committed files, not
+the working directory; ignored local secrets/data never belong in a release.
+Uncommitted tracked or untracked source makes the command fail before writing.
+
+The manual **Validate source release candidate** workflow runs the reusable fresh
+Discourse job, then retains a source archive/checksum as a short-lived Actions
+artifact. It does not create a GitHub release, change repository visibility or
+deploy a site. No production secrets are provided to contributor workflows.
+
+Maintainers deploy paired plugin/themes using the preserving production upgrade
+in [production operations](deploy/discourse/PRODUCTION.md). A public source
+archive is not a configured production bundle. Production scripts currently
+protect the SVDEX host specifically; forks need their own reviewed hostname,
+operator/policies, contact/form destinations, email and secrets. Do not weaken
+those guards or point a fork at SVDEX's production accounts to simplify setup.

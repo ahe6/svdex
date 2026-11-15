@@ -1,5 +1,6 @@
 name: Native Discourse checks
 on:
+  workflow_call:
   pull_request:
     paths:
       - frontend/**
@@ -7,7 +8,7 @@ on:
       - scripts/**
       - test/**
       - package*.json
-      - .github/workflows/native-discourse.yml
+      - .github/workflows/**
   workflow_dispatch:
 permissions:
   contents: read

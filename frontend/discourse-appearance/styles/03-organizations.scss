@@ -1,0 +1,192 @@
+// Company descriptions continue to use the native biography within DUserInfo.
+.svdex-companies-page {
+  // Keep the actual account identity/links, but show one company name here.
+  .user-info.svdex-company-named .name-line {
+    .username-wrapper { display: none; }
+    .name-wrapper .name { font-weight: bold; }
+  }
+  :is(.directory-table__value, .directory-table__value--user-field) a {
+    color: inherit;
+    &:hover { color: var(--tertiary); text-decoration: underline; }
+  }
+  .svdex-company-summary {
+    flex-basis: 100%;
+    contain: inline-size;
+    min-width: 0;
+    color: var(--primary-medium);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    white-space: normal;
+  }
+}
+// Preserve core's username + seven-statistic grid. Only the first statistic
+// belongs to the company summary; Sector starts in the second statistic slot.
+// The six company facts fill the remaining native statistic positions.
+@container directory-table (min-width: 47em) {
+  .svdex-companies-page {
+    // Use the regular native text size consistently across company facts.
+    .svdex-companies-table :is(.directory-table__value, .directory-table__value--user-field) {
+      font-size: var(--font-0);
+      white-space: normal;
+    }
+    .svdex-companies-table .directory-table__header > :first-child,
+    .svdex-companies-table .directory-table__row > :first-child { grid-column: 1 / span 2; }
+  }
+}
+
+// Category badges beside topic metadata read like the neighboring tag labels.
+:is(.topic-list-item, .latest-topic-list-item, #topic-title, .extra-info-wrapper, .fps-result .search-category) .badge-category__name { text-transform: lowercase; }
+.svdex-category-short { display: none; }
+:is(.topic-list-item, .latest-topic-list-item, #topic-title, .extra-info-wrapper, .fps-result .search-category) .badge-category__name {
+  .svdex-category-full { display: none; }
+  .svdex-category-short { display: inline; }
+}
+
+// Let core size its real column labels without exposing a duplicate directory.
+.svdex-companies-grid { position: relative; }
+.svdex-company-grid-reference {
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+// The longer company search prompt should remain readable at desktop widths.
+.desktop-view .svdex-companies-page .directory-controls .filter-name { width: 15em; }
+
+// Use native heading typography and ComboBox controls for company navigation.
+.svdex-companies-page {
+  .svdex-company-directory-tools {
+    display: flex;
+    align-self: flex-start;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    // Core inline forms reserve bottom margin for wrapped controls. These
+    // buttons sit outside that form, so remove only its vertical reservation.
+    .inline-form > .filter-name,
+    .inline-form > .total-rows { margin-block: 0; }
+  }
+  .svdex-company-sort-control {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    .select-kit { min-width: 15em; }
+  }
+}
+// Keep native search, filter and create buttons on one mobile toolbar row.
+.mobile-view .svdex-companies-page .svdex-company-directory-tools {
+  width: 100%;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+  .inline-form { flex: 1; min-width: 0; width: auto; }
+  .svdex-company-application { flex-shrink: 0; white-space: nowrap; }
+}
+// Offerings retains core's compact mobile create action with a specific name
+// for screen readers, rather than making its label consume the toolbar.
+.mobile-view #create-topic .d-button-label { display: none; }
+.category-discussion .category-breadcrumb > li:has(> .category-drop) { display: none; }
+// Keep a single native scrollbar beneath company/fund tables. Touch and
+// trackpad scrolling remain available; mobile cards need no duplicate bar.
+.svdex-companies-page .svdex-companies-grid .horizontal-scroll-sync__top-scroll { display: none; }
+
+// Native header typography, with the filter controls in Discourse's own menu.
+.svdex-companies-page .svdex-company-column-trigger {
+  padding: 0;
+  min-height: 0;
+  font: inherit;
+  color: inherit;
+  &.--filtered { color: var(--tertiary); }
+  .d-icon { font-size: var(--font-down-2); }
+}
+.svdex-company-column-options { max-height: 24em; overflow-y: auto; }
+.svdex-company-choice-mark { width: var(--d-sidebar-section-link-prefix-width); flex-shrink: 0; }
+.svdex-company-filter-fields {
+  display: grid;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  label { margin: 0; }
+  .select-kit { width: 100%; }
+}
+.svdex-company-filters-modal .svdex-company-sort-control {
+  display: grid;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+.svdex-company-search-modal input { width: 100%; margin: 0; }
+.svdex-company-mobile-controls { display: flex; gap: var(--space-2); }
+.mobile-view .svdex-companies-page .directory-controls .inline-form {
+  display: flex;
+  width: auto;
+  align-items: center;
+  justify-content: space-between;
+  .filter-name { display: none; }
+  .total-rows { margin-inline-end: auto; }
+}
+.svdex-company-profile-offerings {
+  li { margin-bottom: var(--space-3); }
+}
+
+// Keep narrow offering cards readable without hiding their financial details.
+.mobile-view .svdex-home-listing-preview {
+  > .svdex-home-listing-summary {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  > br { display: none; }
+  > .svdex-home-listing-secondary { display: block; }
+}
+// A topic header, like its feed row, needs only the native category color cue.
+#topic-title .topic-category:has(> .badge-category__wrapper) .svdex-tag-marker { display: none; }
+
+.svdex-organization-reference { display: block; white-space: normal; }
+.svdex-organization-reference__role { color: var(--primary-medium); }
+.svdex-companies-table .svdex-organization-reference { max-width: 16em; }
+.svdex-company-entity-label { color: var(--primary-medium); }
+.svdex-admin-reference { margin-block: var(--space-3); label { display: block; } }
+
+.mobile-view {
+  .svdex-mobile-category-heading {
+    flex-basis: 100%;
+    order: -1;
+    font-size: var(--font-up-1);
+    margin: 0;
+  }
+  .svdex-listing-filters-modal .svdex-mobile-native-filters {
+    // Core marks breadcrumbs hidden on global mobile feeds; expose them only
+    // inside this panel (core hidden uses !important).
+    display: grid !important;
+    gap: 1em;
+    margin: 0 0 1em;
+    padding: 0;
+    > li { margin: 0; }
+    .select-kit { width: 100%; }
+  }
+}
+
+// Fund descriptions are longer than native user statistics. In card layout,
+// keep native dot leaders while allowing longer values more than half the row.
+@container (max-width: 47em) {
+  .svdex-companies-page .svdex-companies-table[aria-label="Funds"] {
+    .directory-table__label {
+      flex: 1 0 0;
+      min-width: 5.5em;
+    }
+    .directory-table__value--user-field {
+      flex: 0 1 auto;
+      max-width: 70%;
+    }
+  }
+}
+

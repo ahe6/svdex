@@ -1,0 +1,27 @@
+name: Validate source release candidate
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  native:
+    uses: ./.github/workflows/native-discourse.yml
+  source:
+    needs: native
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - run: node scripts/package-source.js artifacts/svdex-source.tar.gz
+      - uses: actions/upload-artifact@v7
+        with:
+          name: reviewed-source-${{ github.sha }}
+          path: |
+            artifacts/svdex-source.tar.gz
+            artifacts/svdex-source.tar.gz.json
+          if-no-files-found: error
+          retention-days: 14

@@ -1,0 +1,79 @@
+// Discussion uses its tags for context. Offerings retain the native category
+// label in mixed feeds; dedicated category pages still use core hideCategory.
+.svdex-home-discussion {
+  .link-bottom-line > .badge-category__wrapper,
+  .topic-item-stats__category-tags > .badge-category__wrapper,
+  .bottom-row > .badge-category__wrapper { display: none; }
+}
+
+// Match core category squares without changing tag text or link styling.
+.discourse-tag .svdex-tag-marker {
+  display: inline-block;
+  width: var(--category-badge-size);
+  height: var(--category-badge-size);
+  border-radius: var(--category-badge-border-radius);
+  margin-inline-end: 0.33em;
+}
+
+// One color cue per topic label row. With no visible category, use the first
+// tag; when the category is shown, its native square leads the row instead.
+:is(.topic-list .link-bottom-line, .topic-list .topic-item-stats__category-tags, .latest-topic-list-item .bottom-row, .fps-result .search-category) {
+  .discourse-tags > li:not(:first-child) .svdex-tag-marker { display: none; }
+}
+.topic-list-item:not(.svdex-home-discussion) :is(.link-bottom-line, .topic-item-stats__category-tags):has(> .badge-category__wrapper),
+.latest-topic-list-item:not(.svdex-home-discussion) .bottom-row:has(> .badge-category__wrapper),
+.fps-result .search-category:has(> .badge-category__wrapper) {
+  .svdex-tag-marker { display: none; }
+}
+
+// Separate a visible category from the first tag, using the same punctuation
+// as core's tag-to-tag separators. No comma when the row has no tags.
+:is(.topic-list .link-bottom-line, .topic-list .topic-item-stats__category-tags, .latest-topic-list-item .bottom-row, .fps-result .search-category) {
+  > .badge-category__wrapper:has(~ .discourse-tags li) .badge-category__name::after { content: ","; }
+}
+
+// Match core's 0.25em space after a comma instead of the normal 8px gap
+// between separate metadata groups.
+.topic-list .link-bottom-line:has(> .badge-category__wrapper ~ .discourse-tags li) { column-gap: 0.25em; }
+
+// The mobile label row uses an inline category margin rather than a flex gap.
+.mobile-view .topic-item-stats__category-tags > .badge-category__wrapper:has(~ .discourse-tags li) { margin-inline-end: 0.25em; }
+.svdex-home-discussion :is(.link-bottom-line, .topic-item-stats__category-tags, .bottom-row) > .badge-category__wrapper:has(~ .discourse-tags li) .badge-category__name::after { content: none; }
+
+// Topic headers wrap tags in an extra native container, so share the same
+// category-to-first-tag punctuation there too.
+#topic-title .topic-category:has(.discourse-tags li) > .badge-category__wrapper .badge-category__name::after { content: ","; }
+
+// One complete fact per line, with funding followed by the instrument terms.
+// Use the same native topic-list type and spacing as neighboring stats.
+.desktop-view {
+  .svdex-home-offer-heading,
+  .svdex-home-offer-details { width: 190px; text-align: left; }
+  .svdex-home-offer-details { font-size: var(--d-topic-list-data-font-size); }
+
+}
+
+// Desktop offering previews show only the summary; figures live in the column.
+// Limit the cell's intrinsic width so long metadata cannot stretch the table.
+.desktop-view .svdex-home-listing {
+  td.main-link { max-width: 0; }
+  .svdex-home-listing-preview {
+    display: block;
+    > br { display: none; }
+    > .svdex-home-listing-summary,
+    > .svdex-home-listing-secondary,
+    &.svdex-home-listing-secondary {
+      display: block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+}
+
+// Hide the native visit boundary without changing visit tracking or unread counts.
+.topic-list {
+  .topic-list-item-separator { display: none; }
+  > .topic-list-body > .topic-list-item.last-visit { border-bottom: 1px solid var(--content-border-color); }
+}
+

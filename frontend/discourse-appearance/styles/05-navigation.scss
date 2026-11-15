@@ -1,0 +1,113 @@
+// Preserve desktop page alignment without reserving a scrollbar on mobile.
+html:has(body.desktop-view) {
+  scrollbar-gutter: stable;
+}
+
+@supports (scrollbar-gutter: stable) {
+  // Native scroll lock already accounts for the reserved desktop gutter.
+  html.scroll-lock:has(body.desktop-view) { margin-right: 0; }
+}
+
+// Horizon separates toolbar groups by 1rem and puts New Topic in the sidebar.
+// Keep our native toolbar action, after the category/tag pair at the right.
+.desktop-view .list-controls .navigation-container {
+  column-gap: 1rem;
+  .category-breadcrumb {
+    order: 1;
+    margin-inline-start: auto;
+    > li:last-child { margin-inline-end: 0; }
+  }
+  #navigation-bar { margin-inline-end: 0; }
+  .navigation-controls { order: 2; align-self: flex-start; }
+  @media (max-width: 52rem) {
+    // Keep the pair and action together when a narrow desktop needs two rows.
+    &:has(#create-topic) #navigation-bar { flex-basis: 100%; }
+  }
+}
+
+// Mobile selectors live in Filters; keep navigation and the primary actions
+// together while allowing staff-only secondary actions to wrap independently.
+.mobile-view .navigation-container:has(.svdex-mobile-filters) {
+  > .category-breadcrumb { display: none; }
+  #navigation-bar > li:not(:has(*)) { display: none; }
+  .navigation-controls {
+    display: contents;
+    > * { order: 2; }
+    > .svdex-mobile-filters { order: 0; }
+    > :has(#create-topic) { order: 1; }
+  }
+}
+
+// Home exposes native Tags directly, without a category selector or Filters step.
+.navigation-container:has(.svdex-home-tags) > .category-breadcrumb { display: none; }
+.desktop-view .navigation-container:has(.svdex-home-tags) > .navigation-controls { margin-inline-start: auto; }
+.svdex-home-tags { display: inline-flex; align-items: center; }
+.mobile-view .navigation-container:has(.svdex-home-tags) .navigation-controls {
+  display: contents;
+  > * { order: 2; }
+  > .svdex-home-tags { order: 0; }
+  > :has(#create-topic) { order: 1; }
+}
+
+// SVDEX achievements retain their native silver/bronze badge colors.
+
+.svdex-company-profile-summary {
+  .svdex-company-summary-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    clear: both;
+    margin-block-start: var(--space-4);
+  }
+  .stats-section > ul {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    > li { min-width: 0; margin-inline-end: 0; }
+    @media (max-width: 40rem) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+}
+
+// Keep native calendar button groups together, but let the groups wrap on
+// narrow phones rather than widening the entire Events page.
+@media (max-width: 480px) {
+  .mobile-view .discourse-post-event-upcoming-events .fc-toolbar-chunk {
+    flex-wrap: wrap;
+    gap: 8px;
+    > :not(:first-child) { margin-inline-start: 0; }
+  }
+}
+
+// Keep only legal pages in native information-page navigation; existing routes remain.
+.nav-pills > :is(.nav-item-about, .nav-item-guidelines, .nav-item-faq) { display: none; }
+
+// Prevent centered content shifting when a short list switches to a tall calendar.
+html { scrollbar-gutter: stable; }
+
+nav.post-controls .actions button.post-action-menu__svdex-bid.btn-primary {
+  background: var(--tertiary); color: var(--secondary);
+  &:hover, &:focus-visible { background: var(--tertiary-hover); color: var(--secondary); }
+}
+
+// Company summaries are public-facing organization pages. Keep other staff
+// notices and all moderation records, while removing this one archival counter.
+.user-main:has(.svdex-company-profile-summary) .staff-counters {
+  > div:has(.deleted-posts) { display: none; }
+  &:has(> div:only-child .deleted-posts) { display: none; }
+}
+
+// Visibility is already stated by the category. Keep the underlying tags for
+// native filtering, and preserve correct separators for first/middle/last tags.
+@each $visibility in public, private {
+  :is(.link-bottom-line, .topic-item-stats__category-tags, .bottom-row, .topic-category, .extra-info-wrapper, .search-category):has(.svdex-category-short--#{$visibility}) {
+    .discourse-tags > li:has(.discourse-tag[data-tag-name="#{$visibility}-offering"]) { display: none; }
+    .discourse-tags > li:has(+ li:last-child .discourse-tag[data-tag-name="#{$visibility}-offering"]) .discourse-tags__tag-separator { display: none; }
+    &:has(.discourse-tags > li:only-child .discourse-tag[data-tag-name="#{$visibility}-offering"]) {
+      .discourse-tags { display: none; }
+      .badge-category__name:has(.svdex-category-short--#{$visibility})::after { content: none; }
+    }
+  }
+}
+
+// Offering visibility is selectable through native tags; avoid a second selector.
+.svdex-offerings-filters .category-breadcrumb > li:has(> .category-drop) { display: none; }
+

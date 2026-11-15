@@ -1,0 +1,116 @@
+// SVDEX presentation lives in the native theme, including the custom data views.
+// Keep these rules before shared appearance adjustments to preserve precedence.
+// Continue the opening post without a second cooked-content top inset.
+.cooked.svdex-topic-overview { padding-top: 0; }
+.svdex-topic-overview dl {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1em; margin: 0;
+  dt { font-size: var(--font-down-1); color: var(--primary-medium); margin-bottom: .35em; }
+  dd { margin: 0; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+}
+.svdex-composer-fields {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .65em;
+  margin: .5em 0;
+  legend { font-size: var(--font-down-1); color: var(--primary-medium); }
+  .svdex-field { display: flex; flex-direction: column; gap: .25em; min-width: 0; font-size: var(--font-down-1); }
+  .svdex-field:first-of-type { grid-column: 1 / -1; }
+  input { width: 100%; margin: 0; box-sizing: border-box; }
+}
+.mobile-view {
+  .svdex-topic-overview dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  // Core tag boxes have a fixed 300px width, wider than a 320px page's content.
+  .tags-index .tag-box { max-width: 100%; box-sizing: border-box; }
+  .navigation-container:has(.svdex-mobile-filters) {
+    column-gap: .5em;
+    #navigation-bar { margin-inline-end: auto; }
+    .navigation-controls { column-gap: .35em; }
+  }
+
+  .svdex-composer-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    min-height: 0;
+    max-height: min(40dvh, 320px);
+    overflow-y: auto;
+    .svdex-field:first-of-type { grid-column: 1 / -1; }
+  }
+}
+// Reserve writing space after the extra listing fields in the native composer.
+.desktop-view #reply-control.open:has(.svdex-composer-details[open]) {
+  min-height: min(650px, calc(100dvh - 70px));
+}
+
+// Native filter input; only size it to fit the existing breadcrumb row.
+.svdex-company-search-form {
+  display: flex;
+  width: 210px;
+  max-width: 100%;
+  .filter-input-container { width: 100%; }
+}
+
+// Share core SelectKit header, menu, and row styling with the adjacent filters.
+.svdex-company-search-form .filter-input-container {
+  box-sizing: border-box;
+  padding-inline: 0;
+  align-items: center;
+  .filter-input { padding: 0; min-width: 0; min-height: 0; font-weight: normal; }
+  .filter-input-clear-btn { flex-shrink: 0; padding-block: 0; min-height: 0; }
+}
+.select-kit.combo-box.tag-drop.svdex-company-suggestion-menu {
+  min-width: 210px;
+  width: 100%;
+  .select-kit-body { width: 100%; }
+  .select-kit-row a { color: inherit; width: 100%; }
+}
+// The native autocomplete transport supplies a menu frame too. Only SelectKit's
+// frame should remain, matching the adjacent filter menu border and shadow.
+.fk-d-menu__inner-content:has(.svdex-company-suggestion-menu) {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+}
+.fk-d-menu:has(.svdex-company-suggestion-menu) {
+  --d-border-radius: inherit;
+}
+
+.svdex-mobile-filter-fields {
+  display: grid;
+  gap: 1em;
+  list-style: none;
+  margin: 0 0 1em;
+  padding: 0;
+  .svdex-company-search-form, .select-kit { width: 100%; }
+}
+// Leave space for native SelectKit and company suggestions inside the modal.
+.mobile-view .svdex-listing-filters-modal {
+  .d-modal__body { min-height: min(60dvh, 480px); }
+  .select-kit-body { max-width: calc(100vw - 2em); }
+}
+
+// Keep offering filters, search and actions beside native Latest/Top tabs.
+// Mobile retains core's native navigation dropdown.
+.desktop-view .list-controls .navigation-container:has(.svdex-company-search-item) {
+  justify-content: flex-end;
+  column-gap: var(--space-3);
+  .svdex-company-search-form { width: 15em; }
+  .navigation-controls { order: 3; }
+  #navigation-bar { order: -1; }
+  .category-breadcrumb {
+    flex: 1 1 0;
+    flex-wrap: nowrap;
+    min-width: 0;
+    margin-inline: 0;
+    justify-content: flex-start;
+    > li:has(> .category-drop) { display: none; }
+    column-gap: var(--space-3);
+    > li { margin-inline: 0; }
+    > .svdex-company-search-item { margin-inline-start: auto; min-width: 0; flex: 1 1 auto; }
+  }
+}
+
+// The directory table normally ends the page with 3em of trailing space.
+// With a More link beneath it, use the same 1em gap as core's Latest column.
+.navigation-categories .svdex-overview-tags {
+  .category-list { margin-bottom: 0; }
+  .more-topics { margin-top: 1em; }
+}
+

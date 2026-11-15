@@ -55,6 +55,41 @@
       "path": "frontend/discourse/app/controllers/user.js",
       "sha256": "1aaa3c7555e4dbdf8ad79f7acb64979d6f3aeb19e40551481fad30988a2ee8b5",
       "integration": "Native mobile organization profile collapse/expand behavior; preserve hidden-profile rules"
+    },
+    {
+      "path": "frontend/discourse/app/services/composer.js",
+      "sha256": "559963caede95bb10100fe8c8777b1c0d86592041d90496c5476d39347d7c565",
+      "integration": "Scoped new-topic composers and native event builder entry"
+    },
+    {
+      "path": "frontend/discourse/select-kit/components/category-chooser.js",
+      "sha256": "910b557f1c524d79c21cc5fb6fc60f2e0da62512cceeef3ef729e9ff5c0a03fe",
+      "integration": "Composer category scope and compact native subcategory selection"
+    },
+    {
+      "path": "frontend/discourse/app/components/d-navigation.gjs",
+      "sha256": "2454128f87146013296f8d3d383809cf68cc3bb10b2a157736472aa6ebce1503",
+      "integration": "Native create/resume without split draft menu"
+    },
+    {
+      "path": "plugins/chat/assets/javascripts/discourse/routes/chat.js",
+      "sha256": "c06bf7e3de3b1142fb15f241b7fea73de5da416d4c95669bf1685f180253088e",
+      "integration": "Lounge native shell template selection"
+    },
+    {
+      "path": "frontend/discourse/app/routes/users.js",
+      "sha256": "31e0bf4a48d051a23bd2bfc1b4ca1f4990e8f689d0923e3d1243a1fcf6f74c6c",
+      "integration": "Native directory inheritance and Organizations column"
+    },
+    {
+      "path": "lib/topic_query.rb",
+      "sha256": "9066840709436451bd392921f1dfaeed121ce0024e63916bb0e388145f8762dc",
+      "integration": "Secured discovery modifiers, pagination and native pinned-topic count behavior"
+    },
+    {
+      "path": "app/models/topic_list.rb",
+      "sha256": "5247ac80e9469741140f8d93e8cf2be750dc04b9af9907e6973780ab1c534e58",
+      "integration": "Offering count serialization on native category/topic lists"
     }
   ]
 }

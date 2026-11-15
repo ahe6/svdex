@@ -83,13 +83,10 @@ ActiveRecord::Base.transaction do
   end
   raise "Private Access must be manual" unless badge.query.blank? && badge.trigger == Badge::Trigger::None
 
-  SiteSetting.nested_replies_enabled = true
-  SiteSetting.nested_replies_default = true
-  SiteSetting.discourse_events_enabled = true
-  SiteSetting.discourse_post_event_enabled = true
+  require_relative "native-defaults"
+  SvdexNativeDefaults.apply!(:navigation)
+  SvdexNativeDefaults.apply!(:events)
   SiteSetting.discourse_post_event_allowed_on_groups = "1|2|10"
-  SiteSetting.enable_improved_event_reminders = true
-  SiteSetting.sidebar_show_upcoming_events = false
 end
 DiscourseTagging.clear_cache!
 puts "Native upgrade configured: Feedback, secured private-access discovery, badge icons, member Events and reminder preferences. No members added, badges awarded or financial fixtures imported."

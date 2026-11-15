@@ -1,0 +1,9 @@
+[
+  "styles/01-topic-and-search.scss",
+  "styles/02-topic-metadata.scss",
+  "styles/03-organizations.scss",
+  "styles/04-offering-cards.scss",
+  "styles/05-navigation.scss",
+  "styles/06-chat-and-financial-activity.scss",
+  "styles/07-responsive-refinements.scss"
+]

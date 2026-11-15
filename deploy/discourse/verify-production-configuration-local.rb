@@ -28,7 +28,7 @@ ActiveRecord::Base.transaction do
   qa_expected_welcome = raw.gsub(qa_pattern, "[#{qa_feedback.name}](#{qa_feedback.url})").gsub(/(?<![\w\/])#site-feedback(?![\w-])/, "##{qa_feedback.slug}")
   qa_guidelines_bump = qa_guidelines_post.topic.bumped_at
 
-  eval(source, binding, "configure-upgrade-production.rb")
+  eval(source, binding, "/tmp/configure-upgrade-production.rb")
   vocabulary = TagGroup.find_by_name_insensitive("Topics")
   raise "Missing Topics vocabulary" unless vocabulary.tags.pluck(:name).sort == %w[community feedback financials founder-updates notifications research]
   raise "Wrong general category" unless SiteSetting.general_category_id.to_i == Category.find_by!(slug: "discussion").id
@@ -44,7 +44,7 @@ ActiveRecord::Base.transaction do
   puts "PASS Guidelines feedback link is repaired without changing external links, other policy text or activity date"
 
   ids = vocabulary.tags.pluck(:id).sort
-  eval(source, binding, "configure-upgrade-production.rb")
+  eval(source, binding, "/tmp/configure-upgrade-production.rb")
   raise "Repeated migration duplicates tags" unless vocabulary.reload.tags.pluck(:id).sort == ids
   raise "Repeated migration changes content counts" unless before == [User.count, Topic.with_deleted.count, Post.with_deleted.count, UserBadge.count]
   puts "PASS native configuration migration is idempotent"

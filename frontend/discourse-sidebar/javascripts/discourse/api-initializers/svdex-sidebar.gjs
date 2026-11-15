@@ -16,15 +16,6 @@ export default apiInitializer((api) => {
   // Native themes may be imported before a managed host accepts our plugin.
   // Register plugin routes only when its client settings are present.
   const hasSvdexPlugin = api.container.lookup("service:site-settings")?.svdex_listings_category_id !== undefined;
-  // Set core's preference before its native navigation handlers run. Scope this
-  // to Chat entry points so explicit minimizing still opens the drawer.
-  document.addEventListener("click", (event) => {
-    const loungeUrl = api.container.lookup("service:site-settings")?.svdex_lounge_channel_url;
-    const link = event.target.closest?.("a");
-    if (event.target.closest?.('.chat-header-icon a, .nav-pills a[href="/chat/browse/open"]') || (loungeUrl && link?.getAttribute("href") === loungeUrl)) {
-      api.container.lookup("service:chat-state-manager")?.prefersFullPage();
-    }
-  }, true);
   // Core leaves anonymous visitors without a colorMode until they choose one.
   // Initialize its native automatic mode so the selector has a valid label.
   const initializeNativeColorMode = () => {
@@ -34,70 +25,6 @@ export default apiInitializer((api) => {
     }
   };
   api.onPageChange(() => scheduleOnce("afterRender", null, initializeNativeColorMode));
-
-  if (hasSvdexPlugin) {
-    // The native All categories sidebar link leads to the combined directory.
-    api.modifyClass("route:discovery.categories", {
-      pluginId: "svdex-overview-directory",
-      beforeModel() {
-        if (this.routeName === "discovery.categories") {
-          return this.router.replaceWith("discovery.overview");
-        }
-        return this._super(...arguments);
-      },
-    });
-    api.addNavigationBarItem({
-      name: "svdex-overview", displayName: "Overview", href: "/all-forums", before: "categories",
-      customFilter: category => !category && api.container.lookup("service:router").currentRouteName !== "discovery.discussion-forums",
-      forceActive: (_category, _args, router) => router.currentRouteName === "discovery.overview",
-    });
-    api.addNavigationBarItem({
-      name: "svdex-discussion-forums", displayName: "Overview", title: "Browse discussion forums and tags", href: "/discussion-forums", before: "categories",
-      customFilter: category => category?.slug === "discussion" || api.container.lookup("service:router").currentRouteName === "discovery.discussion-forums",
-      forceActive: (_category, _args, router) => router.currentRouteName === "discovery.discussion-forums",
-    });
-    api.addNavigationBarItem({
-      name: "svdex-events-calendar", displayName: "Calendar", title: "View events by date", href: "/upcoming-events",
-      customFilter: category => Number(category?.id) > 0 && Number(category.id) === Number(api.container.lookup("service:site-settings").svdex_events_category_id),
-      forceActive: (_category, _args, router) => router.currentRouteName?.startsWith("discourse-post-event-upcoming-events"),
-    });
-    api.addNavigationBarItem({
-      name: "svdex-discussion-chat",
-      before: "svdex-discussion-forums",
-      displayName: "Chat",
-      title: "Open Lounge chat",
-      forceActive: (_category, _args, router) => router.currentURL?.split("?")[0] === api.container.lookup("service:site-settings").svdex_lounge_channel_url,
-      href: "/chat/browse/open",
-      customHref: () => api.container.lookup("service:site-settings").svdex_lounge_channel_url || "/chat/browse/open",
-      customFilter: category => {
-        const settings = api.container.lookup("service:site-settings");
-        const user = api.container.lookup("service:current-user");
-        const channels = api.container.lookup("service:chat-channels-manager");
-        return category?.slug === "discussion" && settings.chat_enabled &&
-          (user?.has_chat_enabled || channels?.anonymousUserCanViewPublicChat);
-      },
-    });
-  }
-
-  api.modifyClass("component:tag-drop", {
-    pluginId: "svdex-sidebar",
-    modifyNoSelection() {
-      const content = this._super(...arguments);
-      return this.tag?.name === "none" ? content : { ...content, name: "tags" };
-    },
-  });
-
-  // Only the directory heading is renamed; other tag labels stay native.
-  const renameTagsHeading = () => {
-    const heading = document.querySelector(".tags-index .tags-controls > h2");
-    if (heading) heading.textContent = "All tags";
-    if (["discovery.overview", "discovery.discussion-forums"].includes(api.container.lookup("service:router").currentRouteName)) {
-      const directoryHeading = document.querySelector("#topic-list-heading");
-      if (directoryHeading) directoryHeading.textContent = "Overview";
-    }
-  };
-  api.onPageChange(() => scheduleOnce("afterRender", null, renameTagsHeading));
-
 
   api.addCommunitySectionLink(BaseLink => class extends BaseLink {
     get name() { return "svdex-home"; }

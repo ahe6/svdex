@@ -29,8 +29,11 @@ abort "Output directory already exists" if File.exist?(output_path)
 
 root = File.expand_path("..", __dir__)
 plugin = "deploy/discourse/plugins/discourse-svdex"
+# Do not ship stale generated presentation when the editable style modules changed.
+_, error, style_status = Open3.capture3("node", "#{root}/scripts/build-styles.js", "--check")
+abort "Appearance build is stale: #{error}" unless style_status.success?
 source_dirs = [plugin, "frontend/discourse-sidebar", "frontend/discourse-interface", "frontend/discourse-appearance", "assets/brand", "deploy/discourse/aws", "deploy/discourse/site-pages"]
-sources = (source_dirs.flat_map { |path| Dir.glob("#{root}/#{path}/**/*").select { |entry| File.file?(entry) && !entry.include?("/__pycache__/") } } + %w[configure-production.rb configure-upgrade-production.rb configure-marketplace.rb retire-information-pages.rb apply-site-pages.rb verify-production.rb].map { |name| "#{root}/deploy/discourse/#{name}" }).sort
+sources = (source_dirs.flat_map { |path| Dir.glob("#{root}/#{path}/**/*").select { |entry| File.file?(entry) && !entry.include?("/__pycache__/") } } + %w[native-defaults.rb configure-production.rb configure-upgrade-production.rb configure-marketplace.rb retire-information-pages.rb apply-site-pages.rb verify-production.rb].map { |name| "#{root}/deploy/discourse/#{name}" }).sort
 plugin_archive, status = Open3.capture2({ "COPYFILE_DISABLE" => "1" }, "tar", "-czf", "-", "-C", "#{root}/deploy/discourse/plugins", "discourse-svdex")
 abort "Could not package plugin" unless status.success?
 files = sources.to_h { |path| [path.delete_prefix("#{root}/"), Digest::SHA256.file(path).hexdigest] }
@@ -86,7 +89,7 @@ abort "Could not package interface" unless system({ "COPYFILE_DISABLE" => "1" },
 FileUtils.cp_r("#{root}/frontend/discourse-appearance", "#{output_path}/appearance")
 FileUtils.cp_r("#{root}/assets/brand", "#{output_path}/brand")
 FileUtils.cp_r("#{root}/deploy/discourse/site-pages", "#{output_path}/site-pages")
-%w[configure-production.rb configure-upgrade-production.rb configure-marketplace.rb retire-information-pages.rb apply-site-pages.rb verify-production.rb].each do |name|
+%w[native-defaults.rb configure-production.rb configure-upgrade-production.rb configure-marketplace.rb retire-information-pages.rb apply-site-pages.rb verify-production.rb].each do |name|
   FileUtils.cp("#{root}/deploy/discourse/#{name}", "#{output_path}/#{name}")
 end
 FileUtils.mkdir_p("#{output_path}/aws")
