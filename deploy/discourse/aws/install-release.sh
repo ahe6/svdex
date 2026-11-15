@@ -15,6 +15,11 @@ chmod 755 /var/discourse/shared /var/discourse/shared/standalone
 aws s3 cp "$release_uri" /var/lib/svdex/release.tar.gz --region us-east-1 --only-show-errors
 tar -xzf /var/lib/svdex/release.tar.gz -C /var/discourse/shared/standalone/svdex-release
 cd /var/discourse/shared/standalone/svdex-release
+python3 - <<'PY_KIND'
+import json
+kind = json.load(open("manifest.json")).get("release_kind", "installation")
+assert kind == "installation", "Code-only upgrade bundles cannot initialize a site"
+PY_KIND
 mkdir -p sidebar interface
 tar -xzf svdex-sidebar.tar.gz -C sidebar
 tar -xzf svdex-interface.tar.gz -C interface

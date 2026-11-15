@@ -8,6 +8,10 @@ test -f /var/lib/svdex/site-ready
 umask 077
 release_dir=$(mktemp -d /var/lib/svdex/upgrade.XXXXXX)
 aws s3 cp "$release_uri" "$release_dir/release.tar.gz" --region us-east-1 --only-show-errors
+if test -n "${2:-}"; then
+  [[ "$2" =~ ^[0-9a-f]{64}$ ]] || exit 2
+  printf '%s  %s\n' "$2" "$release_dir/release.tar.gz" | sha256sum -c - >/dev/null
+fi
 tar -xzf "$release_dir/release.tar.gz" -C "$release_dir"
 # The reduced plugin and native interface must be released together.
 test -f "$release_dir/svdex-interface.tar.gz"

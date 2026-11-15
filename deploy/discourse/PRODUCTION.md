@@ -132,3 +132,44 @@ Retain a fresh recovery point for each backend upgrade and use an isolated resto
 target when testing recovery. Never restore over local development or production
 as a verification shortcut. Configure administrator MFA/passkeys and recovery.
 
+
+## GitHub delivery
+
+Relevant pushes to `main` run the fresh pinned native checks, then wait for the
+`production` environment reviewer. Approve in GitHub Actions to release; no AWS
+sign-in is needed. Documentation-only changes do not trigger delivery. A stale
+approval is refused if main has advanced. Production deliveries are serialized.
+
+The production job builds with `ruby scripts/prepare-discourse-production.rb
+--upgrade artifacts/release`. This code-only package has no installation
+credentials or environment settings. It cannot initialize a fresh host. The host
+keeps its existing private environment, database, uploads and runtime engine pin.
+Source-owned themes and bounded marketplace defaults are reapplied. Changing the
+Discourse engine pin is a separate reviewed operation, not an automatic upgrade.
+
+`aws/github-delivery.yml` adds the GitHub identity provider, a role restricted to
+this repository's production environment, an exact-host deployment command and
+receipt writes for the existing host role. It creates no compute resources.
+Install `aws/deploy-approved-release.sh` as
+`/usr/local/sbin/svdex-deploy-approved-release` (root-owned, mode 755) through an
+operator session. The runner can upload encrypted code archives and read small
+status receipts; it cannot read backups, credentials or arbitrary command logs.
+The privileged workflow actions are pinned to reviewed commits.
+
+Configure the production environment for required review, no administrator
+bypass, and deployment from `main` only. Set its nonsecret variables
+`SVDEX_DEPLOY_ROLE_ARN`, `SVDEX_ARTIFACT_BUCKET`, `SVDEX_INSTANCE_ID`. Enable the
+repository variable `SVDEX_DEPLOY_ENABLED=true` only after the host helper and
+AWS stack are ready. Disable that variable to stop future automated deliveries;
+it does not interrupt one already running. Forks need their own infrastructure
+and environment configuration; they never inherit production access.
+
+Each delivery checks the archive digest, takes an uploads-inclusive native
+backup, verifies its encrypted off-server copy, upgrades, and performs production
+smoke checks. The private host log is `/var/log/svdex-github-RUN-ATTEMPT.log`.
+GitHub reads a nonsensitive receipt under `deployments/github/`. A timeout means
+inspect the host before retrying. A build failure restores the previous image
+and configuration. Failure after migrations/theme import needs operator review;
+automatic database rollback is deliberately avoided. A single-host rebuild may
+briefly interrupt service. Keep isolated restore tests current, especially before
+engine upgrades. Delivery never publishes policy drafts or imports local fixtures.

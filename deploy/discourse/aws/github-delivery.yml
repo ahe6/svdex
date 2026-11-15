@@ -1,0 +1,112 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Approval-gated GitHub delivery to the existing SVDEX host; no compute resources.
+Parameters:
+  InstanceId:
+    Type: String
+    AllowedPattern: 'i-[0-9a-f]+'
+  ArtifactBucket:
+    Type: String
+    AllowedPattern: 'svdex-discourse-[0-9]{12}-[a-z0-9-]+'
+  HostRoleName:
+    Type: String
+    AllowedPattern: '[A-Za-z0-9+=,.@_-]+'
+  GitHubOwner:
+    Type: String
+    Default: ahe6
+    AllowedPattern: '[A-Za-z0-9-]+'
+  GitHubOwnerId:
+    Type: String
+    AllowedPattern: '[0-9]+'
+  GitHubRepository:
+    Type: String
+    Default: svdex
+    AllowedPattern: '[A-Za-z0-9_.-]+'
+  GitHubRepositoryId:
+    Type: String
+    AllowedPattern: '[0-9]+'
+Resources:
+  GitHubIdentity:
+    Type: AWS::IAM::OIDCProvider
+    Properties:
+      Url: https://token.actions.githubusercontent.com
+      ClientIdList: [sts.amazonaws.com]
+  DeployDocument:
+    Type: AWS::SSM::Document
+    Properties:
+      Name: SVDEX-DeployReviewedRelease
+      DocumentType: Command
+      UpdateMethod: NewVersion
+      Content:
+        schemaVersion: '2.2'
+        description: Deploy a checksum-verified, reviewed source release using the installed host helper.
+        parameters:
+          ReleaseSha:
+            type: String
+            allowedPattern: '^[0-9a-f]{40}$'
+          ArchiveSha256:
+            type: String
+            allowedPattern: '^[0-9a-f]{64}$'
+          RunId:
+            type: String
+            allowedPattern: '^[0-9]{1,20}-[0-9]{1,5}$'
+        mainSteps:
+          - action: aws:runShellScript
+            name: deployReviewedRelease
+            inputs:
+              timeoutSeconds: '3600'
+              runCommand:
+                - "bash /usr/local/sbin/svdex-deploy-approved-release '{{ ReleaseSha }}' '{{ ArchiveSha256 }}' '{{ RunId }}'"
+  HostReceipts:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: SVDEXGitHubDeploymentReceipts
+      Roles: [!Ref HostRoleName]
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action: s3:PutObject
+            Resource: !Sub 'arn:${AWS::Partition}:s3:::${ArtifactBucket}/deployments/github/*.json'
+            Condition:
+              StringEquals:
+                s3:x-amz-server-side-encryption: AES256
+  DeployRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: SVDEX-GitHubProductionDeploy
+      MaxSessionDuration: 3600
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !Ref GitHubIdentity
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+                token.actions.githubusercontent.com:sub: !Sub 'repo:${GitHubOwner}@${GitHubOwnerId}/${GitHubRepository}@${GitHubRepositoryId}:environment:production'
+      Policies:
+        - PolicyName: PublishAndDeployReviewedSource
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: s3:PutObject
+                Resource: !Sub 'arn:${AWS::Partition}:s3:::${ArtifactBucket}/releases/github/*/release.tar.gz'
+                Condition:
+                  StringEquals:
+                    s3:x-amz-server-side-encryption: AES256
+              - Effect: Allow
+                Action: s3:GetObject
+                Resource: !Sub 'arn:${AWS::Partition}:s3:::${ArtifactBucket}/deployments/github/*.json'
+              - Effect: Allow
+                Action: ssm:SendCommand
+                Resource:
+                  - !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:document/${DeployDocument}'
+                  - !Sub 'arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:instance/${InstanceId}'
+Outputs:
+  DeployRoleArn:
+    Value: !GetAtt DeployRole.Arn
+  DeployDocumentName:
+    Value: !Ref DeployDocument
