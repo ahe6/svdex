@@ -1,13 +1,11 @@
 # frozen_string_literal: true
 abort "Local setup only" unless GlobalSetting.hostname == "localhost" && SiteSetting.port.to_s == "4080"
 
-SiteSetting.discourse_events_enabled = true
-SiteSetting.discourse_post_event_enabled = true
+require_relative "native-defaults"
+SvdexNativeDefaults.apply!(:events)
 SiteSetting.discourse_post_event_allowed_on_groups = "1|2|10"
-SiteSetting.enable_improved_event_reminders = true
 # The theme places the same native sidebar link below Chat, labeled Events.
 # Suppress core's additional Upcoming events entry to avoid duplicate links.
-SiteSetting.sidebar_show_upcoming_events = false
 
 actor = User.find_by!(username: "svdex")
 category = Category.find(SiteSetting.svdex_events_category_id)

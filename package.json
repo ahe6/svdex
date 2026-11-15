@@ -14,7 +14,9 @@
     "status": "bash scripts/discourse-local.sh status",
     "test": "node --test test/*.test.js",
     "check": "node scripts/check.js && npm test",
-    "check:discourse": "bash scripts/check-discourse-local.sh"
+    "check:discourse": "bash scripts/check-discourse-local.sh",
+    "build:styles": "node scripts/build-styles.js",
+    "package:source": "node scripts/package-source.js"
   },
   "license": "GPL-2.0-or-later"
 }

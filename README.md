@@ -31,7 +31,8 @@ edits, use the smaller update commands instead of rerunning setup:
 
 ```sh
 scripts/discourse-local.sh theme       # Sidebar + Interface components
-scripts/discourse-local.sh appearance  # components + parent theme/logo/palette
+npm run build:styles                  # after editing appearance/styles/
+scripts/discourse-local.sh appearance  # builds styles + installs native themes
 npm run check                         # source and package tests
 npm run check:discourse                # real local Discourse workflow checks
 ```
@@ -55,7 +56,8 @@ Start with [contributing](CONTRIBUTING.md) for a first change, or the
 [Report sensitive security problems privately](SECURITY.md).
 
 GitHub runs lightweight source checks plus a fresh native Discourse build for
-public Interface/plugin pull requests. The native job compiles Glimmer/SCSS and
+public Interface/plugin pull requests. A manual source-release validation workflow
+reuses the fresh native job and packages checked, committed source only. The native job compiles Glimmer/SCSS and
 runs server workflow checks; it can also be started manually. Neither job has
 production deployment credentials.
 

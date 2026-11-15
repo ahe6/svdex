@@ -33,8 +33,8 @@ SiteSetting.enable_site_owner_onboarding = false
 SiteSetting.tagging_enabled = true
 SiteSetting.allow_uncategorized_topics = false
 SiteSetting.chat_enabled = true
-SiteSetting.nested_replies_enabled = true
-SiteSetting.nested_replies_default = true
+require_relative "native-defaults"
+SvdexNativeDefaults.apply!(:navigation)
 SiteSetting.top_menu = "latest|top|categories"
 require "tempfile"
 logo = Tempfile.create(["svdex-wordmark", ".svg"]) do |file|

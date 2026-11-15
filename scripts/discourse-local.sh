@@ -80,6 +80,8 @@ for attempt in range(60):
         if attempt == 59:
             raise SystemExit("Discourse has not become ready; inspect its logs.")
         time.sleep(2)
+subprocess.run(["docker", "cp", str(root / "deploy/discourse/native-defaults.rb"),
+                "miscdex-forum:/tmp/native-defaults.rb"], check=True)
 subprocess.run(["docker", "cp", str(root / "deploy/discourse/configure-local.rb"),
                 "miscdex-forum:/tmp/miscdex-configure-local.rb"], check=True)
 subprocess.run(["docker", "cp", str(root / "assets/brand/svdex-wordmark.svg"),
@@ -98,6 +100,7 @@ PYTHON
     done
     ;;
   events)
+    docker cp "$repo_dir/deploy/discourse/native-defaults.rb" "$config:/tmp/native-defaults.rb"
     docker cp "$repo_dir/deploy/discourse/setup-events-local.rb" "$config:/tmp/svdex-events-local.rb"
     docker exec -u discourse "$config" bash -lc \
       'cd /var/www/discourse && bundle exec rails runner /tmp/svdex-events-local.rb'
@@ -163,6 +166,7 @@ PYTHON
       'cd /var/www/discourse && bundle exec rails runner /tmp/miscdex-setup-chat.rb'
     ;;
   appearance)
+    node "$repo_dir/scripts/build-styles.js"
     "$0" theme
     docker exec "$config" mkdir -p /tmp/miscdex-appearance
     docker cp "$repo_dir/frontend/discourse-appearance/." "$config:/tmp/miscdex-appearance/"

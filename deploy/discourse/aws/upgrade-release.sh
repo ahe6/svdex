@@ -74,6 +74,7 @@ docker exec -u discourse app bash -lc 'cd /var/www/discourse && bundle exec rail
   section.sidebar_urls.where(value: ["/companies", "/latest"]).each { |url| section.sidebar_section_links.where(linkable: url).destroy_all }
   puts "Native sidebar and toolbar updated."
 '\'''
+install -m 644 "$release_dir/native-defaults.rb" "$shared/native-defaults.rb"
 install -m 644 "$release_dir/configure-upgrade-production.rb" "$shared/configure-upgrade-production.rb"
 docker exec -u discourse -e SVDEX_CONFIGURE_UPGRADE=1 app bash -lc 'cd /var/www/discourse && bundle exec rails runner /shared/svdex-release/configure-upgrade-production.rb'
 install -m 644 "$release_dir/configure-marketplace.rb" "$shared/configure-marketplace.rb"

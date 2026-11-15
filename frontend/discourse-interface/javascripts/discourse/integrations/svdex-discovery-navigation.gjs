@@ -1,3 +1,4 @@
+import registerDiscoveryTabs from "./svdex-discovery-tabs.gjs";
 import { isOverviewDirectory } from "../lib/svdex-sector-navigation";
 import SectorFilter from "../components/svdex-sector-filter.gjs";
 import DiscoverySearch from "../components/svdex-discovery-search.gjs";
@@ -13,6 +14,7 @@ import NavItem, { customNavItemHref } from "discourse/models/nav-item";
 import ListingTagGroupFilters from "../components/svdex-tag-group-filters.gjs";
 
 export default function registerDiscoveryNavigation(api, { settings, router, site }) {
+  registerDiscoveryTabs(api);
   api.renderInOutlet("top-notices", EventsNavigation);
   api.registerValueTransformer("create-topic-icon", () => "plus");
   api.registerValueTransformer("can-create-topic-button", ({ value }) =>

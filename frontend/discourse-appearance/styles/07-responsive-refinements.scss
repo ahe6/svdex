@@ -1,0 +1,347 @@
+// Financial facts must not squeeze offering titles into a thin strip when the
+// desktop sidebar leaves a tablet-sized content area.
+.desktop-view :is(.list-controls, .list-container.--topic-list) { container-type: inline-size; }
+@container (max-width: 45rem) {
+  .desktop-view {
+    .svdex-home-offer-heading, .svdex-home-offer-details { width: 9rem; }
+    .svdex-offering-terms {
+      min-width: 0;
+      max-width: none;
+      &__primary { font-size: var(--font-0); }
+      &__secondary { font-size: var(--font-down-1); }
+    }
+    .list-controls .navigation-container:has(.svdex-company-search-item) {
+      justify-content: flex-start;
+      gap: var(--space-2);
+      .category-breadcrumb { display: contents; }
+    }
+  }
+}
+
+// Disclosure uses native details semantics and leaves the editor usable before
+// financial fields are needed. Inputs stay aligned when mobile labels wrap.
+.svdex-composer-details {
+  margin: var(--space-2) var(--space-4);
+  flex-shrink: 0;
+  summary { cursor: pointer; color: var(--primary-high); font-size: var(--font-down-1); }
+  .svdex-composer-fields { max-height: min(40dvh, 320px); overflow-y: auto; }
+}
+// Required empty fields are not errors before an application is attempted.
+.svdex-company-application-modal:not(:has(.alert-error)) input:invalid {
+  border-color: var(--primary-low-mid);
+  &:focus { border-color: var(--tertiary); outline-color: var(--tertiary); }
+}
+
+.svdex-interest-modal .control-group :is(input, select) { width: 100%; }
+.svdex-interest-explanation {
+  margin-block: var(--space-3);
+  summary { cursor: pointer; color: var(--primary-high); }
+  p:first-of-type { margin-top: var(--space-2); }
+}
+
+.svdex-interest-modal .control-group .select-kit { width: 100%; }
+
+// Keep offering filters together and search beside tags/create at every desktop width.
+.svdex-offering-filter-group {
+  &, > ul { list-style: none; margin: 0; padding: 0; }
+  > ul { display: flex; align-items: center; gap: var(--space-2); }
+  > ul > li { margin: 0; }
+}
+@container (max-width: 55rem) {
+  .desktop-view .list-controls .navigation-container:has(.svdex-company-search-item) {
+    justify-content: flex-start;
+    gap: var(--space-2);
+    .category-breadcrumb { display: contents; }
+    .svdex-offering-filter-group { flex-basis: 100%; }
+    .svdex-company-search-item { flex: 1 1 9rem; min-width: 9rem; max-width: 15em; margin-inline-start: auto; }
+    .svdex-company-search-form { width: 100%; }
+    .navigation-controls { margin-inline-start: 0; }
+  }
+}
+// The mobile dialog keeps its original stacked fields and search-first layout.
+.svdex-mobile-filter-fields {
+  .svdex-offering-filter-group, .svdex-offering-filter-group > ul { display: contents; }
+  > .svdex-company-search-item { order: -1; }
+}
+// Discovery uses the native directory count/search treatment beside its actions.
+.desktop-view {
+  .svdex-company-search-item, .svdex-discovery-search {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    .total-rows { color: var(--primary-medium); font-size: var(--font-down-1); white-space: nowrap; margin: 0; }
+  }
+  .svdex-company-search-item .svdex-company-search-form { flex: 1; min-width: 9rem; }
+  .svdex-discovery-search {
+    margin: 0;
+    .filter-input-container { width: 15em; }
+    input { width: 100%; margin: 0; }
+  }
+  .navigation-container:has(.svdex-discovery-search) .navigation-controls { align-items: center; gap: var(--space-3); }
+  .navigation-container:has(.svdex-discovery-search) .category-breadcrumb { margin-inline-start: auto; }
+}
+.mobile-view .svdex-topic-count { display: none; }
+@container (max-width: 55rem) {
+  .desktop-view .list-controls .navigation-container:has(.svdex-company-search-item) .svdex-company-search-item { max-width: none; }
+}
+@media (max-width: 70rem) {
+  .desktop-view .svdex-discovery-search .filter-input-container { width: 12em; }
+}
+.svdex-discovery-search form { margin: 0; }
+@container (max-width: 55rem) {
+  .desktop-view .list-controls .navigation-container:has(.svdex-discovery-search) {
+    #navigation-bar, &:has(#create-topic) #navigation-bar { flex-basis: auto; }
+    .navigation-controls { flex-basis: 100%; justify-content: flex-end; gap: var(--space-2); }
+    .svdex-discovery-search { gap: var(--space-2); }
+  }
+}
+.desktop-view .category-breadcrumb > .svdex-company-search-item {
+  justify-content: flex-end;
+  .svdex-company-search-form { max-width: 15em; }
+}
+@container (max-width: 55rem) {
+  .desktop-view .list-controls .navigation-container:has(.svdex-company-search-item) .category-breadcrumb > .svdex-company-search-item {
+    flex: 1 1 9rem;
+    min-width: 9rem;
+    .svdex-company-search-form { min-width: 7.5rem; }
+  }
+}
+// Native Latest/Top tabs replace the offering sort selector.
+.desktop-view .navigation-container:has(.svdex-discovery-search) > .category-breadcrumb > li:has(> .tag-drop) { display: none; }
+@container (max-width: 55rem) {
+  .desktop-view .list-controls .navigation-container:has(.svdex-company-search-item) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    #navigation-bar { grid-column: 1; grid-row: 1; }
+    .svdex-offering-filter-group { grid-column: 2 / -1; grid-row: 1; justify-self: end; }
+    .category-breadcrumb > .svdex-company-search-item { grid-column: 1; grid-row: 2; width: 100%; }
+    .category-breadcrumb > li:has(> .tag-drop:not(.svdex-company-search-form)) { grid-column: 2; grid-row: 2; }
+    .navigation-controls { grid-column: 3; grid-row: 2; }
+  }
+}
+
+// Directory controls use the same gaps on both sides of search.
+.svdex-companies-page .svdex-company-directory-tools .inline-form {
+  gap: var(--space-3);
+  > .total-rows { margin-inline: 0; }
+}
+@container (max-width: 45rem) {
+  .svdex-companies-page .svdex-company-directory-tools .inline-form { gap: var(--space-2); }
+}
+.mobile-view .svdex-companies-page .svdex-company-directory-tools .inline-form { gap: var(--space-2); }
+@container (max-width: 55rem) {
+  .desktop-view .svdex-discovery-search .filter-input-container { width: 10em; }
+}
+// Every discovery toolbar shares a boxed Filters action before creation.
+.svdex-panel-search {
+  margin-block-end: var(--space-4);
+  form { margin: 0; }
+  .filter-input-container, input { width: 100%; }
+}
+.svdex-listing-filters-modal .svdex-home-tags { width: 100%; .select-kit { width: 100%; } }
+.desktop-view .svdex-mobile-filters { display: inline-flex; }
+// Without standalone financial selectors, a narrow offering toolbar needs only
+// a navigation row and the search/tags/filter/create row.
+@container (max-width: 55rem) {
+  .desktop-view .list-controls .navigation-container:has(.svdex-company-search-item) {
+    #navigation-bar { grid-column: 1 / -1; }
+  }
+}
+@container (max-width: 55rem) {
+  .desktop-view .list-controls .navigation-container:has(.svdex-company-search-item) {
+    .category-breadcrumb > .svdex-company-search-item { display: contents; }
+    .svdex-topic-count { grid-column: 2 / -1; grid-row: 1; justify-self: end; }
+    .svdex-company-search-form { grid-column: 1; grid-row: 2; width: 100%; min-width: 0; }
+  }
+}
+.mobile-view .navigation-container:has(.svdex-home-tags) .navigation-controls > .svdex-mobile-filters { order: 0; }
+.svdex-listing-filters-modal .d-modal__body > .tag-drop { width: 100%; margin-block-end: var(--space-4); }
+@container (max-width: 55rem) {
+  .desktop-view .list-controls .navigation-container:has(.svdex-discovery-search) {
+    position: relative;
+    .svdex-topic-count { position: absolute; inset-inline-end: 0; top: var(--space-2); }
+  }
+}
+.svdex-companies-page .svdex-company-directory-tools .inline-form > .filter-name { margin-inline: 0; }
+// Filters belongs to navigation, rather than the search/create action group.
+.desktop-view #navigation-bar > li:has(.svdex-mobile-filters) {
+  display: flex;
+  align-items: center;
+  margin-inline-start: var(--space-2);
+  padding: 0;
+}
+.svdex-companies-page .directory-controls .period-controls {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-3);
+  h2 { margin: 0; }
+}
+@container (max-width: 45rem) {
+  .desktop-view .svdex-companies-page .directory-controls .period-controls { display: flex; grid-column: 1; grid-row: 1; }
+}
+.svdex-submission-tabs { margin: 0; }
+.svdex-interest-filters { align-items: center; gap: var(--space-3); }
+@container (max-width: 45rem) {
+  .desktop-view .svdex-company-directory-tools .svdex-company-mobile-controls { display: flex; }
+}
+// One discoverable text control owns tags and the page's additional filters.
+.svdex-filter-trigger { flex-direction: row-reverse; gap: var(--space-2); }
+.navigation-container:has(.svdex-discovery-search) > .category-breadcrumb,
+.navigation-container:has(.svdex-home-filters) > .category-breadcrumb { display: none; }
+.navigation-container:has(.svdex-filter-trigger) > .category-breadcrumb > li:has(> .tag-drop:not(.svdex-company-search-form)) { display: none; }
+// The native directory and topic-list counts share one secondary text size.
+.svdex-company-directory-tools .total-rows, .svdex-topic-count {
+  font-size: var(--font-down-1);
+  font-weight: normal;
+  line-height: var(--line-height-medium);
+  color: var(--primary-medium);
+}
+.svdex-interest-action-buttons {
+  display: grid;
+  grid-template-columns: 4.5em 2em;
+  justify-content: end;
+  gap: var(--space-1);
+  .svdex-interest-withdraw { grid-column: 1 / -1; }
+  .svdex-interest-row-menu { width: 2em; .d-icon { margin: 0; } }
+  .svdex-interest-edit { color: var(--tertiary); .d-icon { color: inherit; } }
+}
+// Keep administrative editing beside the native notification control.
+.navigation-container .navigation-controls > .edit-category,
+.navigation-container .navigation-controls > #edit-tag,
+.navigation-container .navigation-controls > .tag-category-admin-dropdown { order: 22; }
+.navigation-container .navigation-controls > .category-notifications-tracking,
+.navigation-container .navigation-controls > .tag-notifications-tracking { order: 21; }
+// A text Filter button needs a second directory toolbar row at tablet widths.
+@container (max-width: 34rem) {
+  .desktop-view .svdex-companies-page .directory-controls {
+    grid-template-columns: minmax(0, 1fr);
+    .period-controls { grid-column: 1; grid-row: 1; }
+    .svdex-company-directory-tools { grid-column: 1; grid-row: 2; }
+  }
+}
+.desktop-view .navigation-container:has(.svdex-discovery-search) > .navigation-controls { margin-inline-start: auto; }
+// Search and Filter form one browsing group; create actions sit a little apart.
+
+@container (max-width: 55rem) {
+  .desktop-view .list-controls .navigation-container:has(.svdex-company-search-item) {
+    grid-template-columns: minmax(0, 1fr) auto;
+    .svdex-topic-count { grid-column: 2; }
+    .navigation-controls { grid-column: 2; }
+  }
+}
+
+.navigation-container:has(.svdex-sector-control) > .category-breadcrumb > li:has(> .tag-drop:not(.svdex-company-search-form)) { display: none; }
+.svdex-sector-control .select-kit { max-width: 13em; }
+.mobile-view .svdex-sector-control .select-kit { max-width: 8.5em; }
+// Match core list-controls.scss: breadcrumb items use 0.5em margin-right,
+// and native navigation-controls uses the same 0.5em horizontal gap.
+.desktop-view .list-controls .navigation-container:has(.navigation-controls) {
+  column-gap: .5em;
+  .navigation-controls, .category-breadcrumb { column-gap: .5em; }
+  .svdex-discovery-search, .svdex-company-search-item { gap: .5em; }
+}
+.desktop-view .svdex-companies-page .svdex-company-directory-tools {
+  gap: .5em;
+  .inline-form { gap: .5em; }
+}
+.svdex-directory-page .navigation-container > .category-breadcrumb { display: none; }
+.svdex-instrument-selector {
+  margin-block: var(--space-2) var(--space-3);
+  label { display: block; font-size: var(--font-down-1); font-weight: bold; margin-bottom: var(--space-1); }
+  .select-kit { width: 100%; }
+}
+// Align inputs by stretching their native field cells, without reserving an
+// extra label line for every short mobile label.
+.mobile-view .svdex-composer-details .svdex-field > span { min-height: 0; }
+.mobile-view .svdex-composer-details .svdex-field input { margin-top: auto; }
+
+// Keep navigation anchored when search and creation are absent on Overview/Chat.
+.list-controls .navigation-container #navigation-bar { min-height: 2.34375em; }
+.desktop-view .list-controls .navigation-container > .navigation-controls { margin-inline-start: auto; }
+.mobile-view .svdex-discussion-chat-navigation { padding: var(--space-5) .67em 0; }
+.mobile-view .svdex-companies-page .directory-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--space-2);
+  .period-controls { grid-column: 1; grid-row: 1; min-width: 0; }
+  .period-controls h2 { font-size: var(--font-up-1); line-height: var(--line-height-large); }
+  .svdex-company-directory-tools, .svdex-company-directory-tools .inline-form { display: contents; }
+  .svdex-company-mobile-controls { grid-column: 2; grid-row: 1; }
+  .svdex-company-application { grid-column: 3; grid-row: 1; }
+  .svdex-company-directory-tools .inline-form > .total-rows {
+    position: static;
+    grid-column: 1 / -1;
+    grid-row: 2;
+    margin: 0;
+    justify-self: start;
+  }
+}
+// The additional native directory column scrolls as one table on desktop.
+.desktop-view .users-page:not(.svdex-companies-page) .directory-table-container { overflow-x: auto; }
+
+.mobile-view .svdex-company-directory-tools .svdex-company-application { min-height: 2.34375em; }
+
+// A focused native form, with one direction and no embedded activity ledger.
+.svdex-interest-modal {
+  .svdex-interest-context { margin: 0 0 var(--space-2); }
+  .svdex-interest-description { color: var(--primary-high); margin: 0 0 var(--space-5); }
+  .control-group { margin-bottom: var(--space-4); }
+  .control-group input { box-sizing: border-box; margin-bottom: 0; }
+  .svdex-interest-consent { display: flex; align-items: flex-start; gap: var(--space-2); margin-top: var(--space-5); }
+  .svdex-interest-consent input { flex: 0 0 auto; margin-top: .25em; }
+  .svdex-interest-hint { font-size: var(--font-down-1); color: var(--primary-medium); margin: var(--space-2) 0 0; }
+}
+
+// Align offering metadata with the title and financial preview on mobile.
+.mobile-view .svdex-offering-card__footer { margin-inline-start: var(--svdex-offering-content-inset); }
+.mobile-view .svdex-offering-card__identity {
+  gap: 10px;
+  .user-image { flex-basis: 45px; min-width: 45px; }
+  .avatar { width: 45px; height: 45px; }
+}
+
+// The same text + caret geometry for SelectKit and modal-based Filter controls.
+.svdex-filter-trigger { padding-inline: .75em; }
+.svdex-filter-trigger .d-icon { margin: 0; padding: 0; width: 1em; height: 1em; }
+.select-kit.combo-box.svdex-sector-filter .select-kit-header {
+  padding-inline: .75em;
+  min-height: 2.34375em;
+  .select-kit-header-wrapper { display: flex; align-items: center; gap: var(--space-2); }
+  .angle-icon { margin: 0; padding: 0; width: 1em; height: 1em; }
+}
+
+.svdex-interest-date-label, .svdex-interest-field-label { display: none; }
+.mobile-view .svdex-interest-list {
+  .svdex-interest-amount { font-weight: normal; font-size: var(--font-down-1); }
+  .svdex-interest-amount-value { color: var(--primary-high); }
+  .svdex-interest-date-label, .svdex-interest-field-label { display: inline; }
+  .svdex-interest-field-label { color: var(--primary-medium); }
+}
+
+// Keep notices concise on mobile without losing their full desktop explanation.
+.svdex-notice-mobile { display: none; }
+.mobile-view {
+  .svdex-notice-desktop { display: none; }
+  .svdex-notice-mobile { display: inline; }
+}
+
+// The Lounge shell shares the Discussions content edge on desktop.
+.desktop-view .svdex-discussion-chat-navigation ~ .full-page-chat {
+  margin-inline-start: calc(var(--space-4) * 2);
+}
+
+// Fit the SVDEX wordmark within core's centered header/logo layout.
+.d-header .title:not(.title--minimized) {
+  --d-logo-height: 24px;
+  #site-logo {
+    display: block;
+    // Center the lowercase body optically; the d ascender skews the ink box.
+    transform: translateY(-12.5%);
+  }
+}
+@media (max-width: 767px) {
+  .d-header .title:not(.title--minimized) { --d-logo-height: 22px; }
+}

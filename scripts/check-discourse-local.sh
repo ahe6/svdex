@@ -4,6 +4,7 @@ cd "$(dirname "$0")/.."
 container=miscdex-forum
 docker exec "$container" bash -lc 'test "$(printenv DISCOURSE_HOSTNAME)" = localhost && test "$(printenv DISCOURSE_PORT)" = 4080'
 docker cp deploy/discourse/verify-production.rb "$container:/tmp/svdex-production-smoke.rb"
+docker cp deploy/discourse/native-defaults.rb "$container:/tmp/native-defaults.rb"
 docker cp deploy/discourse/configure-upgrade-production.rb "$container:/tmp/configure-upgrade-production.rb"
 docker cp deploy/discourse/site-pages/. "$container:/tmp/svdex-site-pages/"
 docker cp deploy/discourse/apply-site-pages.rb "$container:/tmp/apply-site-pages.rb"

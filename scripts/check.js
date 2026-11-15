@@ -13,6 +13,7 @@ function check(command, args) {
   if (result.error) throw result.error;
   if (result.status !== 0) process.exit(result.status || 1);
 }
+check(process.execPath, ["scripts/build-styles.js", "--check"]);
 const sources = ["scripts", "deploy/discourse", "frontend", "test", ".github"].flatMap(files);
 for (const path of sources) {
   if (path.endsWith(".js")) check(process.execPath, ["--check", path]);
