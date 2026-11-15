@@ -1,0 +1,62 @@
+name: Deliver SVDEX production
+on:
+  push:
+    branches: [main]
+    paths:
+      - frontend/**
+      - deploy/discourse/plugins/**
+      - deploy/discourse/aws/**
+      - deploy/discourse/native-defaults.rb
+      - deploy/discourse/configure-upgrade-production.rb
+      - deploy/discourse/configure-marketplace.rb
+      - deploy/discourse/production.json.example
+      - scripts/prepare-discourse-production.rb
+      - scripts/deploy-from-github.py
+      - .github/workflows/deploy-production.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: svdex-production-delivery
+  cancel-in-progress: false
+jobs:
+  native:
+    if: github.repository == 'ahe6/svdex' && github.ref == 'refs/heads/main' && vars.SVDEX_DEPLOY_ENABLED == 'true'
+    uses: ./.github/workflows/native-discourse.yml
+  deploy:
+    needs: native
+    runs-on: ubuntu-24.04
+    timeout-minutes: 65
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Refuse stale approvals
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: test "$(gh api repos/ahe6/svdex/git/ref/heads/main --jq .object.sha)" = "$GITHUB_SHA"
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: '24'
+      - uses: ruby/setup-ruby@b3aaceaef7e0ee231b499e7b5f49c03fc1d32199 # v1
+        with:
+          ruby-version: '3.3'
+      - name: Build credential-free update bundle
+        run: |
+          ruby scripts/prepare-discourse-production.rb --upgrade artifacts/release
+          tar -czf artifacts/release.tar.gz -C artifacts/release .
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.SVDEX_DEPLOY_ROLE_ARN }}
+          aws-region: us-east-1
+          role-duration-seconds: 3600
+          role-session-name: svdex-${{ github.run_id }}
+      - name: Deliver reviewed release
+        env:
+          SVDEX_ARTIFACT_BUCKET: ${{ vars.SVDEX_ARTIFACT_BUCKET }}
+          SVDEX_INSTANCE_ID: ${{ vars.SVDEX_INSTANCE_ID }}
+        run: python3 scripts/deploy-from-github.py

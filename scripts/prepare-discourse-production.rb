@@ -8,26 +8,33 @@ require "fileutils"
 require "open3"
 require "tmpdir"
 
-abort "Usage: ruby scripts/prepare-discourse-production.rb PRIVATE_CONFIG.json OUTPUT_DIRECTORY" unless ARGV.size == 2
-config_path, output_path = ARGV.map { |path| File.expand_path(path) }
-abort "Private configuration must have permissions 600" unless (File.stat(config_path).mode & 0o777) == 0o600
-config = JSON.parse(File.read(config_path))
-required = %w[hostname admin_email notification_email smtp_address smtp_user_name smtp_password discourse_revision docker_revision]
-required.each do |key|
-  abort "Missing configuration: #{key}" unless config[key].is_a?(String) && !config[key].strip.empty?
+abort "Usage: ruby scripts/prepare-discourse-production.rb PRIVATE_CONFIG.json|--upgrade OUTPUT_DIRECTORY" unless ARGV.size == 2
+root = File.expand_path("..", __dir__)
+upgrade_only = ARGV.first == "--upgrade"
+output_path = File.expand_path(ARGV.last)
+if upgrade_only
+  # Code-only updates never need SMTP/OAuth credentials or a production export.
+  config = JSON.parse(File.read("#{root}/deploy/discourse/production.json.example"))
+else
+  config_path = File.expand_path(ARGV.first)
+  abort "Private configuration must have permissions 600" unless (File.stat(config_path).mode & 0o777) == 0o600
+  config = JSON.parse(File.read(config_path))
 end
+required = upgrade_only ? %w[hostname discourse_revision docker_revision] : %w[hostname admin_email notification_email smtp_address smtp_user_name smtp_password discourse_revision docker_revision]
+required.each { |key| abort "Missing configuration: #{key}" unless config[key].is_a?(String) && !config[key].strip.empty? }
 abort "Expected a public hostname" unless config["hostname"].match?(/\A[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+\z/) && !config["hostname"].end_with?(".invalid", ".localhost")
-%w[admin_email notification_email].each do |key|
-  abort "Invalid #{key}" unless config[key].match?(/\A[^\s@]+@[^\s@]+\.[^\s@]+\z/) && !config[key].end_with?(".invalid")
+unless upgrade_only
+  %w[admin_email notification_email].each do |key|
+    abort "Invalid #{key}" unless config[key].match?(/\A[^\s@]+@[^\s@]+\.[^\s@]+\z/) && !config[key].end_with?(".invalid")
+  end
+  abort "SMTP port must be 587 (STARTTLS)" unless config.fetch("smtp_port", 587) == 587
+  abort "SMTP hostname is invalid" unless config["smtp_address"].match?(/\A[a-zA-Z0-9.-]+\z/) && config["smtp_address"].include?(".")
 end
 %w[discourse_revision docker_revision].each do |key|
   abort "#{key} must be an immutable Git commit" unless config[key].match?(/\A[0-9a-f]{40}\z/)
 end
-abort "SMTP port must be 587 (STARTTLS)" unless config.fetch("smtp_port", 587) == 587
-abort "SMTP hostname is invalid" unless config["smtp_address"].match?(/\A[a-zA-Z0-9.-]+\z/) && config["smtp_address"].include?(".")
 abort "Output directory already exists" if File.exist?(output_path)
 
-root = File.expand_path("..", __dir__)
 plugin = "deploy/discourse/plugins/discourse-svdex"
 # Do not ship stale generated presentation when the editable style modules changed.
 _, error, style_status = Open3.capture3("node", "#{root}/scripts/build-styles.js", "--check")
@@ -41,7 +48,13 @@ head, status = Open3.capture2("git", "-C", root, "rev-parse", "HEAD")
 abort "Could not identify source revision" unless status.success?
 dirty, = Open3.capture2("git", "-C", root, "status", "--porcelain")
 
-app = {
+app = if upgrade_only
+  { "params" => { "version" => config.fetch("discourse_revision") },
+    "hooks" => { "after_code" => [
+      { "file" => { "path" => "/tmp/svdex-plugin.tar.gz.b64", "contents" => Base64.strict_encode64(plugin_archive), "chmod" => "600" } },
+    ] } }
+else
+{
   "templates" => %w[postgres redis web web.ratelimited web.ssl web.letsencrypt.ssl].map { |name| "templates/#{name}.template.yml" },
   "expose" => ["80:80", "443:443"],
   "params" => { "version" => config.fetch("discourse_revision") },
@@ -76,10 +89,13 @@ app = {
   ] },
 }
 
+end
+
 FileUtils.mkdir_p(output_path, mode: 0o700)
 File.chmod(0o700, output_path)
 File.write("#{output_path}/app.yml", YAML.dump(app), perm: 0o600)
 File.write("#{output_path}/manifest.json", JSON.pretty_generate({
+  release_kind: upgrade_only ? "upgrade" : "installation",
   hostname: config.fetch("hostname"), source_commit: head.strip, source_dirty: !dirty.empty?,
   discourse_revision: config.fetch("discourse_revision"), docker_revision: config.fetch("docker_revision"),
   files: files, app_sha256: Digest::SHA256.file("#{output_path}/app.yml").hexdigest,
@@ -94,6 +110,6 @@ FileUtils.cp_r("#{root}/deploy/discourse/site-pages", "#{output_path}/site-pages
 end
 FileUtils.mkdir_p("#{output_path}/aws")
 Dir.glob("#{root}/deploy/discourse/aws/*").select { |path| File.file?(path) }.each { |path| FileUtils.cp(path, "#{output_path}/aws/") }
-puts "Prepared private Discourse configuration and theme assets."
-puts "Registration and anonymous access remain closed. No services were deployed."
+puts(upgrade_only ? "Prepared credential-free upgrade assets; live configuration is preserved." : "Prepared private installation configuration; registration and anonymous access remain closed.")
+puts "No services were deployed."
 warn "Source contains uncommitted changes; commit and regenerate before release." unless dirty.empty?
