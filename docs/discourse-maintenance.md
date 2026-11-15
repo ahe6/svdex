@@ -81,3 +81,83 @@ plugin/theme changes together, deploy a reviewed source revision, and keep
 financial intake flags separate from presentation release. Native users, groups,
 topics, fields, indications and bids all belong to ordinary Discourse backups;
 there is no separate browser or external database to maintain for this feature.
+
+
+## Architecture review — 15 November 2026
+
+Reviewed the current themes, plugin registrations/controllers/models/migrations,
+native integration contracts, local setup, release boundaries and CI. The theme
+versus plugin split is appropriate; there is no reason for a broad rewrite. This
+review did not benchmark a large production dataset.
+
+### Keep these boundaries
+
+- Appearance, responsive layout, forms, profile summaries and navigation belong in
+  the three themes. Interface already registers five feature integration modules
+  rather than one large initializer.
+- Validation, private visibility, numeric filtering/sorting, consent, bids and
+  interest records belong in the plugin. Client-side category choices and labels
+  are UX, not authorization. Exact filtered offering counts are likewise a backend
+  responsibility; native pinning makes counting rendered rows inaccurate.
+- Keep the plugin's small route declarations and directory adapter: they are the
+  transport contract for plugin endpoints, not presentation that must be moved
+  merely to make the plugin smaller.
+- Native user/group accounts, topic fields, category review and private-category
+  permissions remain a useful base. Companies do not need another entity table
+  for the current product. Financial submissions do need their two custom tables,
+  unique indexes, foreign keys, consent rules and server checks.
+- Keep interest and offering bids separate despite similar forms. Both use exact
+  USD cents and owner-scoped writes; public aggregation has different visibility
+  and publication-consent rules from private proposed terms. The shared financial
+  validator is an appropriate amount of reuse.
+- Keep paired plugin/theme releases, ordinary native backups, guarded local
+  fixtures and rollback-only native checks. Official hosting still requires
+  accepting the remaining plugin to preserve every current feature.
+
+### Refactor order
+
+1. **Consolidate SCSS before changing designs again.** `common.scss` is over 1,000
+   lines with repeated toolbar/mobile rules and superseded declarations (for
+   example, composer-label min-height is set to 2.8em and later reset to zero).
+   Group rules by feature, remove overridden declarations after checking selector
+   scope, then consider native-supported partials. Preserve the computed styles
+   and capture desktop/mobile baselines; changing the cascade while merely moving
+   blocks would be a regression.
+2. **Clarify frontend ownership.** Sidebar currently also registers discovery
+   tabs, tag-heading changes and Chat-entry behavior. Those fit the Interface
+   discovery integration better. Keep Sidebar focused on native links/order and
+   move global logo appearance to Appearance in a separately verified change.
+   Split the misleadingly named `svdex-tag-group-filters` into offering search/
+   autocomplete/count and the offering screening panel; it now owns both.
+3. **Share safe native defaults.** Local, fresh-production and upgrade scripts
+   repeat feature and navigation configuration. Nested replies were just aligned
+   explicitly across these paths. Extract only a small allowlist of shared native
+   feature/presentation defaults. Keep hostname guards, credentials, environment
+   permissions, intake switches, policy publishing and fixture setup separate.
+   Do not replace guarded upgrade scripts with a universal reset/setup command.
+4. **Complete upgrade-contract coverage.** Hash checks currently cover 11 native
+   implementations, but not every method override. Add reviewed sources for the
+   composer service, category chooser, native navigation/draft control, Chat route
+   and Users route as those integrations are refactored. Prefer supported outlets
+   and transformers when equivalent; hashes require review on change but do not
+   prove semantic compatibility.
+5. **Improve fresh-install verification for refactor/release batches.** The source
+   workflow runs on pushes. Native CI runs on public contribution PRs or manual
+   dispatch, not every main push; the local native run uses the existing container.
+   Use a successful clean-install native run as evidence before releasing a large
+   refactor. Preserve its rollback/privacy tests and isolated fixture guards.
+
+### Defer until measurements justify it
+
+Company numeric filters cast validated native custom-field values, and the Users
+organization-count sort scans visible organizations before pagination. Exact
+offering totals add a count query. These are sensible for the current small
+catalog, but should be profiled with representative data before introducing
+indexes, materialized summaries or a separate company schema. Any caching must
+respect the visitor's permissions; a global cache of private-aware counts is not
+a safe optimization.
+
+No obvious reason was found to move remaining authorization or financial storage
+into themes, combine financial workflows, replace native accounts, or create a
+separate frontend application. Refactors above should be small behavior-preserving
+changes, with the current source/native checks and targeted visual comparisons.
