@@ -111,6 +111,11 @@ Discourse job, then retains a source archive/checksum as a short-lived Actions
 artifact. It does not create a GitHub release, change repository visibility or
 deploy a site. No production secrets are provided to contributor workflows.
 
+Relevant updates to `main` run the approval-gated **Deliver SVDEX production**
+workflow. Contributor pull requests never get its production identity; maintainers
+review and merge first. The production reviewer approves a checked main revision
+in GitHub Actions. No AWS access is needed to contribute or run native checks.
+
 Maintainers deploy paired plugin/themes using the preserving production upgrade
 in [production operations](deploy/discourse/PRODUCTION.md). A public source
 archive is not a configured production bundle. Production scripts currently
