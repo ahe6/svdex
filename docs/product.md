@@ -142,6 +142,9 @@ omitted from that topic's metadata to avoid duplication. Category/tag separation
 uses native typography with comma handling and one leading color marker. Native
 private locks and unread state remain visible. Optional 506b/506c/4a7 tags are
 staff-assigned, not inferred or treated as certification of legal eligibility.
+For real offerings, include the applicable `506b`, `506c` or `4a7` tag once staff
+have confirmed the offering's stated exemption. Keep this classification explicit
+in the publication review.
 
 ## Private access and achievements
 
