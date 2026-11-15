@@ -53,6 +53,7 @@ en:
         all_locations: "All locations"
         any: "Any"
     directory:
+      svdex_organizations: "Organizations"
       svdex_total_funding: "Total funding"
       svdex_aum: "AUM"
       svdex_fund_size: "Fund size"

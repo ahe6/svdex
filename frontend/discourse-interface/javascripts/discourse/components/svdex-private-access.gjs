@@ -22,8 +22,7 @@ export class PrivateAccessInfo extends Component {
         <h2>How to request access</h2>
         <ol>
           <li>Complete the investor questionnaire using your SVDEX account email.</li>
-          <li>The team will review your investment experience and interests, and may follow up by email.</li>
-          <li>The team will review your request and let you know the next steps.</li>
+          <li>The team will review your investment experience and interests, and follow up by email with any questions and next steps.</li>
         </ol>
         <p>Access is granted after an individual review by the SVDEX team.</p>
         {{#if this.currentUser}}{{#if this.requestUrl}}<a class="btn btn-primary" href={{this.requestUrl}} target="_blank" rel="noopener noreferrer">Complete questionnaire</a>{{else}}<p>The questionnaire will be available soon.</p>{{/if}}

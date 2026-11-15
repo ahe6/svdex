@@ -100,7 +100,7 @@ export default class ListingTagGroupFilters extends Component {
     this.syncCompanyQuery();
     this.router.on("routeDidChange", this.syncCompanyQuery);
     registerDestructor(this, () => this.router.off("routeDidChange", this.syncCompanyQuery));
-    this.load();
+    if (this.args.panel) this.load();
   }
 
   @action syncCompanyQuery() {
@@ -111,8 +111,14 @@ export default class ListingTagGroupFilters extends Component {
     return (this.args.panel || !this.site.mobileView) && isOfferingCategory(this.args.outletArgs.currentCategory?.id, this.siteSettings) && !this.args.outletArgs.editingCategory;
   }
 
+  get offeringCount() {
+    const list = this.router.currentRoute?.attributes?.list;
+    return list?.topic_list?.svdex_offering_count;
+  }
+  get offeringCountLabel() { return this.offeringCount === 1 ? "1 offering" : `${this.offeringCount} offerings`; }
+  get hasOfferingCount() { return Number.isInteger(this.offeringCount) && !this.args.panel; }
+
   get showSearch() { return this.args.panel || !this.site.mobileView; }
-  get showSort() { return !this.args.panel && !this.site.mobileView; }
 
   @action async load() {
     this.failed = false;
@@ -153,16 +159,6 @@ export default class ListingTagGroupFilters extends Component {
       { id: "250m-plus", name: "$250m+ USD" },
       { id: "undisclosed", name: "Undisclosed" },
     ];
-  }
-  get sort() { return /\/l\/top$/.test(this.router.currentURL.split("?")[0]) ? "top" : "latest"; }
-  get sortOptions() { return [{ id: "latest", name: "Latest" }, { id: "top", name: "Top" }]; }
-  @action changeSort(value) {
-    const current = new URL(this.router.currentURL, window.location.origin);
-    const params = new URLSearchParams(current.search);
-    params.delete("page");
-    params.delete("period");
-    const base = current.pathname.replace(/\/l\/(latest|top|new|unread|unseen|hot|posted)$/, "");
-    DiscourseURL.routeTo(`${base}/l/${value}${params.size ? `?${params}` : ""}`);
   }
   @action changeValuation(value) {
     const current = new URL(this.router.currentURL, window.location.origin);
@@ -229,28 +225,9 @@ export default class ListingTagGroupFilters extends Component {
 
   <template>
     {{#if this.visible}}
-      {{#if this.showSearch}}
-      <li class="svdex-company-search-item">
-        <form class="svdex-company-search-form select-kit single-select combo-box tag-drop" role="search" aria-label="Search by company" {{on "submit" this.submitSearch}} {{on "click" this.focusSearch}}>
-          <DFilterInput
-            @value={{this.companyQuery}}
-            @filterAction={{this.updateSearch}}
-            @onClearInput={{this.clearSearch}}
-            @icons={{hash left="magnifying-glass"}}
-            @containerClass="select-kit-header tag-drop-header"
-            placeholder="Search company"
-            aria-label="Search company"
-            maxlength="120"
-            role="combobox"
-            aria-autocomplete="list"
-            aria-expanded={{this.suggestionsOpen}}
-            aria-controls="svdex-company-suggestions"
-            {{this.companyAutocomplete}}
-          />
-        </form>
-      </li>
-      {{/if}}
 
+      {{#if @panel}}
+      <li class="svdex-offering-filter-group"><ul>
       {{#each this.filters as |filter|}}
         <li>
         <ComboBox
@@ -279,14 +256,31 @@ export default class ListingTagGroupFilters extends Component {
           </li>
         {{/if}}
       {{/each}}
-      {{#if this.showSort}}
-        <li class="svdex-offering-sort-item">
-          <ComboBox class="tag-drop svdex-tag-group-filter svdex-sort-filter" @content={{this.sortOptions}}
-            @value={{this.sort}} @onChange={{this.changeSort}}
-            @options={{hash headerAriaLabel="Sort" filterable=false clearable=false
-              caretDownIcon="discourse-chevron-expand" caretUpIcon="discourse-chevron-expand" headerComponent=TagDropHeader}} />
-        </li>
+      </ul></li>
       {{/if}}
+      {{#if this.showSearch}}
+      <li class="svdex-company-search-item">
+        <form class="svdex-company-search-form select-kit single-select combo-box tag-drop" role="search" aria-label="Search offering" {{on "submit" this.submitSearch}} {{on "click" this.focusSearch}}>
+          <DFilterInput
+            @value={{this.companyQuery}}
+            @filterAction={{this.updateSearch}}
+            @onClearInput={{this.clearSearch}}
+            @icons={{hash left="magnifying-glass"}}
+            @containerClass="select-kit-header tag-drop-header"
+            placeholder="Search offering"
+            aria-label="Search offering"
+            maxlength="120"
+            role="combobox"
+            aria-autocomplete="list"
+            aria-expanded={{this.suggestionsOpen}}
+            aria-controls="svdex-company-suggestions"
+            {{this.companyAutocomplete}}
+          />
+        </form>
+        {{#if this.hasOfferingCount}}<span class="total-rows">{{this.offeringCountLabel}}</span>{{/if}}
+      </li>
+      {{/if}}
+
     {{/if}}
   </template>
 }

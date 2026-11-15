@@ -28,6 +28,9 @@ begin
     company = User.find_by!(username: "svdex-company")
     other = User.find_by!(username: "northstar")
     fund = User.find_by!(username: "svdex-fund-i")
+    # Isolate totals from persistent local visual-review submissions. This
+    # deletion rolls back with the surrounding scenario transaction.
+    DiscourseSvdex::InterestIndication.where(organization_id: [company.id, other.id, fund.id]).delete_all
     indication = ->(user, organization, side, amount, consent = true, **attrs) {
       DiscourseSvdex::InterestIndication.create!({ user: user, organization: organization, side: side,
         market: side == "sell" ? "secondary" : "either", currency: "USD", amount_cents: amount,

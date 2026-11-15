@@ -4,6 +4,7 @@ import { apiInitializer } from "discourse/lib/api";
 import FAQSectionLink from "discourse/lib/sidebar/common/community-section/faq-section-link";
 import AboutSectionLink from "discourse/lib/sidebar/common/community-section/about-section-link";
 import BadgesSectionLink from "discourse/lib/sidebar/common/community-section/badges-section-link";
+import GroupsSectionLink from "discourse/lib/sidebar/common/community-section/groups-section-link";
 import UsersSectionLink from "discourse/lib/sidebar/common/community-section/users-section-link";
 import MyPostsSectionLink from "discourse/lib/sidebar/user/community-section/my-posts-section-link";
 import MyMessagesSectionLink from "discourse/lib/sidebar/user/community-section/my-messages-section-link";
@@ -47,9 +48,13 @@ export default apiInitializer((api) => {
     });
     api.addNavigationBarItem({
       name: "svdex-overview", displayName: "Overview", href: "/all-forums", before: "categories",
-      customHref: category => category?.slug === "discussion" ? "/discussion-forums" : "/all-forums",
-      customFilter: category => !category || category.slug === "discussion" || api.container.lookup("service:site").mobileView,
-      forceActive: (_category, _args, router) => ["discovery.overview", "discovery.discussion-forums"].includes(router.currentRouteName),
+      customFilter: category => !category && api.container.lookup("service:router").currentRouteName !== "discovery.discussion-forums",
+      forceActive: (_category, _args, router) => router.currentRouteName === "discovery.overview",
+    });
+    api.addNavigationBarItem({
+      name: "svdex-discussion-forums", displayName: "Overview", title: "Browse discussion forums and tags", href: "/discussion-forums", before: "categories",
+      customFilter: category => category?.slug === "discussion" || api.container.lookup("service:router").currentRouteName === "discovery.discussion-forums",
+      forceActive: (_category, _args, router) => router.currentRouteName === "discovery.discussion-forums",
     });
     api.addNavigationBarItem({
       name: "svdex-events-calendar", displayName: "Calendar", title: "View events by date", href: "/upcoming-events",
@@ -58,6 +63,7 @@ export default apiInitializer((api) => {
     });
     api.addNavigationBarItem({
       name: "svdex-discussion-chat",
+      before: "svdex-discussion-forums",
       displayName: "Chat",
       title: "Open Lounge chat",
       forceActive: (_category, _args, router) => router.currentURL?.split("?")[0] === api.container.lookup("service:site-settings").svdex_lounge_channel_url,
@@ -119,6 +125,12 @@ export default apiInitializer((api) => {
     @service site;
     get category() { return this.site.categories.find(category => Number(category.id) === Number(this.siteSettings.svdex_listings_category_id)); }
     get name() { return "svdex-offerings"; }
+    get currentWhen() {
+      const path = (this.router.currentURL || "").split("?")[0];
+      const ids = [this.siteSettings.svdex_listings_category_id, this.siteSettings.svdex_public_offerings_category_id, this.siteSettings.svdex_private_offerings_category_id].map(Number);
+      return this.site.categories.some(c => ids.includes(Number(c.id)) &&
+        (path === c.url || path.startsWith(`${c.url}/`) || path.startsWith(`/tags${c.url}/`)));
+    }
     get text() { return "Offerings"; }
     get title() { return "Offerings"; }
     get href() {
@@ -137,7 +149,8 @@ export default apiInitializer((api) => {
     get currentWhen() {
       if (this.router.currentRouteName === "discovery.discussion-forums") return true;
       const path = (this.router.currentURL || "").split("?")[0];
-      return this.category && (path === this.category.url || path.startsWith(`${this.category.url}/`));
+      if (path === this.siteSettings.svdex_lounge_channel_url) return true;
+      return this.category && (path === this.category.url || path.startsWith(`${this.category.url}/`) || path.startsWith(`/tags${this.category.url}/`));
     }
     get text() { return "Discussions"; }
     get title() { return "Research and community discussions"; }
@@ -190,28 +203,26 @@ export default apiInitializer((api) => {
     get shouldDisplay() { return this.siteSettings.discourse_events_enabled && this.siteSettings.discourse_post_event_enabled; }
   });
 
+  api.addCommunitySectionLink(() => class extends MyMessagesSectionLink {
+    constructor(owner, options) { super(owner, { ...options, overriddenName: "Messages" }); }
+  });
   api.addCommunitySectionLink(() => class extends MyPostsSectionLink {
     constructor(owner, options) { super(owner, { ...options, overriddenName: "My posts" }); }
   });
   api.addCommunitySectionLink(BaseLink => class extends BaseLink {
     get name() { return "svdex-my-interest"; }
-    get text() { return "My interest & bids"; }
-    get title() { return "My interest and bids"; }
+    get text() { return "My Bids"; }
+    get title() { return "My Bids"; }
     get route() { return "userActivity.interest"; }
     get model() { return this.currentUser?.username; }
     get prefixValue() { return "list-check"; }
     get shouldDisplay() { return Boolean(this.currentUser) && Boolean(this.siteSettings.svdex_companies_group_name); }
   });
-  api.addCommunitySectionLink(() => class extends MyMessagesSectionLink {
-    constructor(owner, options) { super(owner, { ...options, overriddenName: "My messages" }); }
-  });
+
 
   api.addCommunitySectionLink({
     name: "svdex-index", text: "All tags", title: "All tags", href: "/tags", icon: "tags",
   }, true);
-  api.addCommunitySectionLink(() => class extends BadgesSectionLink {
-    get text() { return "Achievements"; }
-  });
   // Keep Bookmarks in core's main navigation instead of a separate custom section.
   api.addCommunitySectionLink(BaseLink => class extends BaseLink {
     get name() { return "svdex-bookmarks"; }
@@ -222,9 +233,15 @@ export default apiInitializer((api) => {
     get prefixValue() { return "bookmark"; }
     get shouldDisplay() { return Boolean(this.currentUser); }
   });
+  api.addCommunitySectionLink(() => class extends BadgesSectionLink {
+    get text() { return "Achievements"; }
+  });
   api.addCommunitySectionLink(() => class extends UsersSectionLink {
     get text() { return "Users"; }
-  });
+  }, true);
+  api.addCommunitySectionLink(() => class extends GroupsSectionLink {
+    get text() { return "Groups"; }
+  }, true);
   api.addCommunitySectionLink(() => class extends ReviewSectionLink {
     constructor(owner, options) { super(owner, { ...options, overriddenName: "Review" }); }
   });

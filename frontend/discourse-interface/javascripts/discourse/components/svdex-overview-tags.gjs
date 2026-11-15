@@ -73,7 +73,7 @@ export default class SvdexOverviewTags extends Component {
           // View-only adapters for the actual native row component. Never add
           // these objects to Discourse's category store or permission model.
           return TagCategoryRow.create({
-            id: `svdex-tag-${tag.id}`, name: tag.name.toLowerCase() === "ai" ? "AI" : tag.name.charAt(0).toLocaleUpperCase() + tag.name.slice(1), slug: tag.slug,
+            id: `svdex-tag-${tag.id}`, name: tag.name.split("-").map(word => ["ai", "svdex"].includes(word.toLowerCase()) ? word.toUpperCase() : word.charAt(0).toLocaleUpperCase() + word.slice(1)).join(" "), slug: tag.slug,
             tagId: Number(tag.id), tracking: this.topicTrackingState,
             url: tag.url, color: tagColor(tag.name, this.siteSettings.svdex_overview_tag_colors), textColor: "FFFFFF", style_type: "square",
             description_excerpt: escapeExpression(tag.description || ""),

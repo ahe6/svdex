@@ -1,3 +1,6 @@
+import ComboBox from "discourse/select-kit/components/combo-box";
+import { hash } from "@ember/helper";
+import { INSTRUMENTS, inferredInstrument, instrumentAllowsField } from "../lib/svdex-offering-instruments";
 import { isOfferingCategory } from "../lib/svdex-offering-categories";
 import Component from "@glimmer/component";
 import { action } from "@ember/object";
@@ -27,8 +30,15 @@ export default class ListingFields extends Component {
     return isOfferingCategory(this.model.categoryId, this.siteSettings) &&
       this.model.topicFirstPost && !this.model.privateMessage;
   }
+  instrumentOptions = INSTRUMENTS;
+  get instrument() {
+    const explicit = this.model.svdex_instrument_type ?? this.model.topic?.svdex_listing?.instrument_type;
+    if (explicit) return explicit;
+    return inferredInstrument(this.model.topic?.svdex_listing || {}, this.model.title || this.model.topic?.title || "");
+  }
+  @action changeInstrument(value) { this.model.set("svdex_instrument_type", value || ""); this.model.notifyPropertyChange("reply"); }
   get fields() {
-    return FIELDS.map(field => ({ ...field, type: field.type || "text",
+    return FIELDS.filter(field => instrumentAllowsField(this.instrument, field.key.replace("svdex_", ""))).map(field => ({ ...field, type: field.type || "text",
       value: this.model[field.key] ?? this.model.topic?.svdex_listing?.[field.key.replace("svdex_", "")] ?? ""
     }));
   }
@@ -39,8 +49,15 @@ export default class ListingFields extends Component {
   }
   <template>
     {{#if this.visible}}
-      <fieldset class="svdex-composer-fields">
-        <legend>Offering details</legend>
+      <details class="svdex-composer-details">
+        <summary>Offering details</summary>
+        <div class="svdex-instrument-selector">
+          <label>Instrument</label>
+          <ComboBox @content={{this.instrumentOptions}} @value={{this.instrument}} @onChange={{this.changeInstrument}}
+            @options={{hash translatedNone="Choose instrument" headerAriaLabel="Instrument" filterable=false}} />
+        </div>
+        <fieldset class="svdex-composer-fields">
+        <legend class="sr-only">Offering details</legend>
         {{#each this.fields as |field|}}
           <label class="svdex-field">
             <span>{{field.name}}</span>
@@ -48,7 +65,8 @@ export default class ListingFields extends Component {
               placeholder={{field.hint}} {{on "input" (fn this.update field.key)}} />
           </label>
         {{/each}}
-      </fieldset>
+        </fieldset>
+      </details>
     {{/if}}
   </template>
 }

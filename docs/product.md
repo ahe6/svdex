@@ -19,29 +19,30 @@ particular financing/security. No separate company entity database exists.
 ## Navigation and feeds
 
 The main sidebar order is Home, Companies, Funds, Offerings, Discussions, Events,
-My posts, My interest & bids, My messages, Achievements, Bookmarks and Users.
+Messages, My posts, My Bids, Bookmarks and Achievements. Users and Groups sit together under More.
 Member-only links require sign-in; staff tools retain native visibility. More
 contains secondary destinations, including All tags, Groups and configured
 Privacy/Terms links. About/Guidelines routes are deliberately retired.
 
 Home Latest/Top includes viewer-visible offerings and Company & Fund Updates.
 Ordinary discussions, Feedback and community Events are outside that allowlist.
-Its visible native Tags selector narrows the existing feed; it does not silently
+Its native Sector dropdown narrows the existing feed; it does not silently
 broaden into the global tag feed. Latest/Top retains the tag selection. Standalone
 tag pages remain broader and respect native topic security.
 
-Home and Discussions both have Overview. They share the tag/category directory
+Home and Discussions both call their directory Overview. They share the tag/category directory
 UI; Discussions restricts the category side to its community scope. Desktop has
-tags and categories side by side; mobile puts categories before tags. The tag
+categories on the left and tags on the right; mobile puts categories before tags. The tag
 side is a general company/sector/topic navigation directory. These are ordinary
 native secured category/tag links, not separate content stores.
 
-Discussions keeps independent Latest/Top, Overview and Chat. Its category selector
-contains community choices, without offerings or Events. Chat opens Lounge while
+Discussions keeps independent Latest/Top, Overview and Chat. Category navigation
+lives in Overview; the toolbar exposes Sector without a category selector. Chat opens Lounge while
 retaining Discussions navigation and the visible native composer. The native
 channel directory remains available elsewhere when needed. Events has its own
-sidebar destination, native topic view and Calendar alternative. It keeps Tags
-without a category selector. RSVP/reminders/preferences remain native.
+sidebar destination, native topic view and Calendar alternative. Offerings and Events
+do not include the Home Overview link in their mobile navigation. Events keeps Tags
+inside Filter without a category selector. RSVP/reminders/preferences remain native.
 
 ## Companies and Funds
 
@@ -67,7 +68,9 @@ Interest columns depend on the configured public-totals/staff-review capability;
 visible public totals are available to guests. Financial headers provide native
 range/sort choices, including Buy/Sell interest. Filter state persists through
 search/sort/pagination. Filters apply before pagination; missing financial values
-sort last. Mobile uses native directory cards and separate Search/Filters actions.
+sort last. Mobile uses native directory cards and separate Search/Filters actions. Directory
+controls keep search and Filter together, with a larger gap before Add company/Add fund.
+Last Updated is omitted.
 Desktop keeps one bottom scrollbar for the directory's real overflow.
 
 Missing disclosures use an em dash, distinct from measured zero. Money uses
@@ -84,7 +87,7 @@ Financial facts are staff-editable validated native custom fields. Native explic
 profile/group privacy remains authoritative. Public classified organization
 profiles are visible to guests even when new; ordinary-user privacy is unchanged.
 
-New company/New fund opens native group membership-request intake, with structured
+Add company/Add fund opens native group membership-request intake, with structured
 organization/representative/authority details. It does not automatically classify
 or verify the applicant. Staff ownership of the group does not make staff a
 company. Buy/Sell actions in the directory or Summary open the viewer's own
@@ -97,10 +100,28 @@ Private offerings children. The parent is read-only for ordinary members; creati
 an offering defaults to the public child and requires native review. Replies keep
 ordinary native behavior. Approved figures survive queued-post review and edits.
 
-Desktop has Search company, Sector, Valuation and Latest together, then native
-Tags and the New offering action group. There is no separate offerings-category
-selector. Mobile uses a boxed Filters action for company search, sector, valuation
-and tags; native category navigation retains its own scope elsewhere.
+Desktop Offerings keeps native Latest/Top tabs at the left, with the result count,
+Search offering, its permission-aware matching count, Filter and New offering actions at the right. There is no
+separate offerings-category selector.
+
+Home and Discussions expose a native sector dropdown labeled Filter
+after search; Offerings uses its broader filter panel.
+It contains only the Sectors tag group, preserves non-sector tag/search criteria,
+and retains each page's feed/category scope. Clearing a sector from a native
+category-tag URL returns to the same category without retaining that sector.
+There is no additional Filter button on Home or Discussions. Companies and Funds
+retain their broader screening Filter panel; Events retains its Filter panel.
+Creation uses native blue primary buttons. Add company/Add fund and native
+New topic/offering actions use the same 0.5em horizontal gap as Discourse
+category/tag dropdowns (8px at the current text size). Mobile directory headings, Search, Filter and Add controls share one row;
+catalog counts sit beneath it, including zero-result counts.
+
+Home/Discussions/Events omit result counts; Companies/Funds retain their catalog
+counts. Desktop Offerings shows its full filtered count beside Search offering,
+before pagination and excluding inaccessible/unlisted topics. Offering search
+matches company names and security titles; company-name suggestions remain native
+autocomplete choices.
+Topic search submits with Enter through native search and preserves current scope.
 
 Desktop offering rows use an instrument-aware Terms column in topic lists,
 including Home; ordinary topics retain native participant avatars. One primary
@@ -128,9 +149,10 @@ Private-category permission comes from native group membership, not an achieveme
 or questionnaire submission. Members without access can discover the access
 process through a public informational category adapter and dismissible native
 notice. It never exposes private topic titles, terms, tags or counts. Authorized
-members see native private content under Offerings. The notice covers discovery,
-organization profiles and topics while staying out of account settings, Chat and
-legal pages.
+members see native private content under Offerings. The dismissible private-access
+notice appears only on Home feeds/Overview and accessible offering category/tag
+views. Discussions, Events, topics, profiles, account screens and legal pages do
+not show it. Companies/Funds retain their separate interest-column tip.
 
 `/private-offerings` requires login before showing the Tally questionnaire link.
 Responses stay with Tally for manual review; the older Google Form is retained.
@@ -169,8 +191,9 @@ closed/archived offerings reject new or updated bids. Company representatives do
 not automatically receive others' bids. There is no acceptance, matching, order,
 execution or position-tracking system.
 
-My interest & bids links to Activity → Interest & bids. The owner-only view filters
-current/expired/withdrawn interest/bids, newest-update first in pages of 25, shows
+My Bids links to Activity → Interest & bids. The owner-only view combines
+current/expired/withdrawn interest/bids without type/status controls, newest-update
+first in pages of 25, shows
 exact amounts and supports edit/resubmit/withdraw. It displays the latest saved
 version, not an immutable history of every edit. Staff cannot request another
 owner's history through this endpoint. History/withdrawal remain available when
@@ -192,3 +215,107 @@ Source/package tests are lightweight CI. Native workflow/permission/theme tests
 and desktop/mobile browser review remain required for relevant changes. Local
 work and draft PRs are not automatically live; source parity also does not prove
 production settings, data, email delivery or recovery status.
+
+Personal interest/bid history is currently unfiltered, with no type or status
+controls. Edit uses a flat native action; interest withdrawal is in a row menu,
+while bid withdrawal remains in its editor. Mobile cards use explicit left-aligned
+“Buy/Sell interest: amount” or “Bid: amount” and “Status: state” rows, with Updated
+and actions below; there is no repeated heading or duplicate submission label.
+Administrative category/tag editing sits at the far right, after notification controls.
+
+Home and Discussions Overview directories omit Sector, Filter and New topic
+controls. Posting remains available from their topic feeds.
+
+Composer category choices exclude the aggregating Offerings parent; authorized
+child categories retain native hierarchy and permissions. Add/New toolbar actions
+share the native plus icon.
+
+## Offering instruments and composer scope
+
+Offering details includes a native Instrument selector: Equity, SAFE, Convertible
+note, Debt / bond, Warrant and Other. Common summary/funding/target/minimum/terms
+fields remain available. Equity adds valuation; SAFE adds cap/discount; convertible
+notes add cap/discount/rate; debt adds rate; warrants add strike/expiry. Other shows
+all fields. Switching types keeps entered values, including across a saved draft;
+the shared figures renderer displays only terms applicable to the saved type.
+
+The type is the validated native topic custom field `svdex_instrument_type`.
+It uses the existing metadata create/edit/draft/review/serialization pipeline and
+requires no separate table. Existing untyped offerings retain their current display;
+the composer infers a suitable starting selection from their title/terms.
+
+New offering's category chooser includes only the viewer-authorized Public and
+Private offerings children. A new composer opened from Home or Discussions excludes all three
+offering category IDs and retains the other native authorized categories. Scope
+stays with that composer when its selected category changes. The composer header
+uses native child-category badges without the redundant parent prefix.
+
+### Directory organization counts
+
+The Users directory retains Discourse's activity columns and adds **Organizations**.
+This is the number of visible company/fund profiles that explicitly link the member
+through a Key people account reference. It is not an ownership claim. Duplicate
+references count once per organization; hidden profiles and private memberships
+are excluded. The count is current, independent of the directory's activity period,
+and supports ascending/descending sorting before pagination.
+
+### Browsing and submission controls
+
+Discussions orders its tabs Latest, Top, Chat, Overview. The embedded Lounge keeps
+these tabs but omits discovery search, filters, creation and category administration.
+Overview keeps the same tab placement as feeds. Offerings uses a full filter panel
+(company search, sector, valuation and native tags); Home/Discussions retain their
+simple sector dropdown labeled Filter. Toolbar creation keeps native draft resume,
+without the split draft menu; drafts remain accessible in profile Activity.
+
+My Bids uses one Edit action per editable submission. Bids retain withdrawal in
+their editor; company/fund indications put withdrawal in the row's action menu,
+with a confirmation naming the organization and buy/sell side. A standalone
+Withdraw action remains when editing permission is lost but withdrawal is allowed.
+
+Buy/sell interest pop-ups are focused, fixed-direction forms. They show amount,
+buy-market preference, existing indication context and the nonbinding consent,
+without a staff ledger or a withdrawal action. Saving updates the same indication,
+refreshes totals and closes the form. Companies/Funds use the native global notice
+to explain their clickable interest columns, replacing the private-access prompt
+only on those directories.
+
+### Application and event entry points
+
+Add company/Add fund opens the same application form for staff, applicants and
+approved representatives. New applicants use native membership requests. Already
+approved members/staff send another application to the group's owners as a native
+private message, rather than requesting duplicate membership. Nothing publishes
+an organization profile or grants privileges automatically.
+
+New event opens the bundled Events plugin's date/time builder before the composer.
+The chosen event name, timezone, start/end and other native settings carry into the
+draft. Calendar selections already supply event markup and bypass this extra
+step. Canceling the builder does not create a topic. Event topics keep native
+publication, RSVP, privacy and reminder behavior.
+
+The private-access notice explains approval and links to the investor questionnaire;
+Companies/Funds retain their separate interest-column tip. Mobile offering avatars,
+titles, financial previews and metadata share the native topic row's 55px identity
+inset on both Home and Offerings. Mobile Add company/Add fund uses the same native
+icon-only plus button as topic creation, retaining explicit accessible names;
+desktop retains the text labels. SVDEX achievements retain native bronze/silver
+icon colors without custom blue/green verification-status overrides.
+
+### Mobile profile and topic consistency
+
+Company/fund profiles start with the native collapsed profile header on mobile,
+with native Expand/Collapse controls. Ordinary profiles and hidden-profile access
+rules retain core behavior; desktop organization profiles remain unchanged.
+Offering titles in mobile feeds use the same native title size and regular weight
+as ordinary topics. Summaries, financial preview text and metadata retain their
+existing sizes and identity inset.
+
+Private-access and directory interest notices use shorter mobile copy while
+retaining the full desktop explanation and native dismissal. The Lounge chat
+panel aligns to the Discussions toolbar content edge on desktop.
+
+Native nested replies are enabled and the default topic view locally. Fresh-site
+and upgrade configuration carry the same native settings for the next release.
+Private messages retain core behavior; this does not change permissions or the
+mobile composer. No custom reply renderer is introduced.

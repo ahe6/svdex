@@ -25,8 +25,8 @@ export default class CompanySort extends Component {
   }
   <template>
     <div class="svdex-company-sort-control">
-      <span class="svdex-company-sort-label">Sort by</span>
-      <ComboBox @content={{this.options}} @value={{this.value}} @onChange={{this.changeSort}}
+      <label for="svdex-company-sort">Sort by</label>
+      <ComboBox @id="svdex-company-sort" @content={{this.options}} @value={{this.value}} @onChange={{this.changeSort}}
         @options={{hash filterable=false headerAriaLabel="Sort listings"}} />
     </div>
   </template>

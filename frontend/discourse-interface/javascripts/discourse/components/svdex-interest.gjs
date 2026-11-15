@@ -1,39 +1,51 @@
 import { getOwner } from "@ember/owner";
 import Component from "@glimmer/component";
-import { eq } from "truth-helpers";
 import { tracked } from "@glimmer/tracking";
 import { action } from "@ember/object";
 import { service } from "@ember/service";
 import { on } from "@ember/modifier";
+import { hash } from "@ember/helper";
+import ComboBox from "discourse/select-kit/components/combo-box";
 import didInsert from "@ember/render-modifiers/modifiers/did-insert";
 import { ajax } from "discourse/lib/ajax";
 import { popupAjaxError } from "discourse/lib/ajax-error";
 import DButton from "discourse/ui-kit/d-button";
 import DModal from "discourse/ui-kit/d-modal";
-import { formatFinancialAmount } from "../lib/svdex-financial-format";
 
 export class InterestModal extends Component {
-  @service currentUser;
   @service siteSettings;
-  @tracked rows = [];
   @tracked own = [];
   @tracked side = "buy";
   @tracked market = "either";
   @tracked amount = "";
   @tracked confirmation = false;
   @tracked loading = true;
+  @tracked loaded = false;
   @tracked error = "";
   constructor() {
     super(...arguments);
     this.side = this.args.model.side === "sell" ? "sell" : "buy";
   }
+  markets = [{id: "either", name: "Primary or secondary"}, {id: "primary", name: "Primary financing"}, {id: "secondary", name: "Secondary purchase"}];
+  @action changeMarket(value) { this.market = value; }
   get endpoint() { return `/listings/interests/${this.args.model.organizationId}`; }
-  money(cents) { return formatFinancialAmount(`$${cents / 100}`); }
-  get records() { return this.rows.map(row => ({ ...row, amount: this.money(row.amount_cents), state: row.active ? "Active" : row.withdrawn_at ? "Withdrawn" : "Expired" })); }
+  get isBuy() { return this.side === "buy"; }
+  get title() { return this.isBuy ? "Buy interest" : "Sell interest"; }
+  get saveLabel() { return this.isBuy ? "Save buy interest" : "Save sell interest"; }
+  get saveDisabled() { return this.loading || !this.loaded || !this.confirmation || !(Number(this.amount) > 0); }
+  get existing() { return this.own.find(row => row.side === this.side); }
+  get editHint() {
+    if (!this.existing) return "";
+    if (this.existing.withdrawn_at) return "Your previous indication was withdrawn. Saving records a new current amount.";
+    if (!this.existing.active) return "Your previous indication expired. Saving renews it for 30 days.";
+    return `Saving replaces your current ${this.side} interest.`;
+  }
   @action async load() {
     this.loading = true;
-    try { const data = await ajax(`${this.endpoint}.json`, { data: { topic_id: this.args.model.topicId } }); this.rows = data.records; this.own = data.interest; this.selectSide(); return data; }
-    catch (error) { popupAjaxError(error); }
+    this.loaded = false;
+    this.error = "";
+    try { const data = await ajax(`${this.endpoint}.json`, { data: { topic_id: this.args.model.topicId } }); this.own = data.interest; this.selectSide(); this.loaded = true; return data; }
+    catch { this.error = "Your interest could not be loaded. Please try again."; }
     finally { this.loading = false; }
   }
   @action selectSide() {
@@ -44,8 +56,7 @@ export class InterestModal extends Component {
   }
   @action update(event) {
     const { name, value, checked } = event.target;
-    if (["side", "market", "amount", "confirmation"].includes(name)) this[name] = name === "confirmation" ? checked : value;
-    if (name === "side") this.selectSide();
+    if (["amount", "confirmation"].includes(name)) this[name] = name === "confirmation" ? checked : value;
   }
   @action async save() {
     if (!this.confirmation) { this.error = "Confirm that this is a nonbinding indication."; return; }
@@ -54,36 +65,43 @@ export class InterestModal extends Component {
     try {
       await ajax(`${this.endpoint}/${this.side}.json`, { type: "PUT", data: { interest: { amount: this.amount, currency: "USD", market: this.market, topic_id: this.args.model.topicId, confirmation: this.siteSettings.svdex_interest_public_totals ? "nonbinding-public-v1" : "nonbinding" } } });
       const data = await this.load();
-      if (data) await this.args.model.onChange?.((this.args.model.topicId ? data.offering_totals : data.totals) || {});
+      if (data) {
+        await this.args.model.onChange?.((this.args.model.topicId ? data.offering_totals : data.totals) || {});
+        this.args.closeModal();
+      }
     } catch (error) { popupAjaxError(error); }
     finally { this.loading = false; }
   }
-  @action async withdraw() {
-    this.loading = true;
-    try { await ajax(`${this.endpoint}/${this.side}.json`, { type: "DELETE" }); const data = await this.load(); if (data) await this.args.model.onChange?.((this.args.model.topicId ? data.offering_totals : data.totals) || {}); }
-    catch (error) { popupAjaxError(error); }
-    finally { this.loading = false; }
-  }
-  get canWithdraw() { return this.own.some(row => row.side === this.side && !row.withdrawn_at); }
   <template>
-    <DModal @title="Nonbinding interest" @closeModal={{@closeModal}}>
+    <DModal @title={{this.title}} @closeModal={{@closeModal}} class="svdex-interest-modal">
       <:body>
         <div {{didInsert this.load}}>
-          {{#if @model.topicTitle}}<p><strong>{{@model.topicTitle}}</strong></p><p>This indication applies to this offering.</p>{{else}}{{#if @model.organizationName}}<p><strong>{{@model.organizationName}}</strong></p>{{/if}}<p>This is general company or fund interest, independent of a particular offering.</p>{{/if}}
-          <p>{{if this.siteSettings.svdex_interest_public_totals "Your amount contributes to public buy or sell interest totals. Your identity and individual record remain private to you and SVDEX staff. Private-offering-linked indications are excluded from public totals." "Your indication is private to you and SVDEX staff."}} It is not a commitment, verified funds or an executed trade. Reconfirm within 30 days to keep it current.</p>
-          <p>Only one current amount per company or fund and side is counted. Updating it replaces your previous amount, including any linked offering indication.</p>
-          <div class="control-group"><label for="svdex-interest-side">Interest</label><select id="svdex-interest-side" name="side" value={{this.side}} {{on "change" this.update}}><option value="buy" selected={{eq this.side "buy"}}>Buy</option><option value="sell" selected={{eq this.side "sell"}}>Secondary sell</option></select></div>
-          <div class="control-group"><label for="svdex-interest-amount">Amount (USD)</label><input id="svdex-interest-amount" type="number" name="amount" min="0.01" step="0.01" value={{this.amount}} {{on "input" this.update}} /></div>
-          {{#if (eq this.side "buy")}}<div class="control-group"><label for="svdex-interest-market">Buy interest applies to</label><select id="svdex-interest-market" name="market" value={{this.market}} {{on "change" this.update}}><option value="either" selected={{eq this.market "either"}}>Primary or secondary</option><option value="primary" selected={{eq this.market "primary"}}>Primary financing</option><option value="secondary" selected={{eq this.market "secondary"}}>Secondary purchase</option></select></div>{{/if}}
-          <label class="checkbox-label"><input type="checkbox" name="confirmation" checked={{this.confirmation}} {{on "change" this.update}} /> {{if this.siteSettings.svdex_interest_public_totals "This is my current nonbinding interest, and I agree to include this amount in public aggregate totals. It is not an order or investment commitment." "This is my current nonbinding interest, not an order or investment commitment."}}</label>
-          {{#if this.error}}<p class="alert alert-error" role="alert">{{this.error}}</p>{{/if}}
-          {{#if this.records.length}}
-            <h3>{{if this.currentUser.staff "Recorded interest" "Your indications"}}</h3>
-            <ul>{{#each this.records as |row|}}<li>{{#if row.username}}{{row.username}} · {{/if}}{{row.side}} · {{row.amount}} · {{row.state}}</li>{{/each}}</ul>
+          <p class="svdex-interest-context"><strong>{{if @model.topicTitle @model.topicTitle @model.organizationName}}</strong></p>
+          <p class="svdex-interest-description">{{if @model.topicTitle "Nonbinding interest in this offering, valid for 30 days." "General interest, independent of an offering. Valid for 30 days."}}</p>
+          <div class="control-group">
+            <label for="svdex-interest-amount">Amount (USD)</label>
+            <input id="svdex-interest-amount" type="number" name="amount" min="0.01" step="0.01" inputmode="decimal" value={{this.amount}} disabled={{this.loading}} {{on "input" this.update}} />
+            {{#if this.editHint}}<p class="svdex-interest-hint">{{this.editHint}}</p>{{/if}}
+          </div>
+          {{#if this.isBuy}}
+            <div class="control-group">
+              <label for="svdex-interest-market">Market</label>
+              <ComboBox @id="svdex-interest-market" @value={{this.market}} @content={{this.markets}} @onChange={{this.changeMarket}} @options={{hash translatedName="Market" disabled=this.loading}} />
+            </div>
           {{/if}}
+          <label class="checkbox-label svdex-interest-consent">
+            <input type="checkbox" name="confirmation" checked={{this.confirmation}} disabled={{this.loading}} {{on "change" this.update}} />
+            <span>{{if this.siteSettings.svdex_interest_public_totals "This is my current nonbinding interest, and I agree to include this amount in public aggregate totals. It is not an order or investment commitment." "This is my current nonbinding interest, not an order or investment commitment."}}</span>
+          </label>
+          <p class="svdex-interest-hint">Private to you and SVDEX staff. Manage or withdraw in <a href="/my/activity/interest">My Bids</a>.</p>
+          {{#if this.error}}<p class="alert alert-error" role="alert">{{this.error}}</p>{{/if}}
+          {{#unless this.loaded}}{{#unless this.loading}}<DButton @translatedLabel="Try again" @action={{this.load}} />{{/unless}}{{/unless}}
         </div>
       </:body>
-      <:footer><DButton class="btn-primary" @translatedLabel="Save interest" @action={{this.save}} @disabled={{this.loading}} />{{#if this.canWithdraw}}<DButton @translatedLabel="Withdraw interest" @action={{this.withdraw}} @disabled={{this.loading}} />{{/if}}<DButton @translatedLabel="Done" @action={{@closeModal}} /></:footer>
+      <:footer>
+        <DButton class="btn-primary" @translatedLabel={{this.saveLabel}} @action={{this.save}} @disabled={{this.saveDisabled}} />
+        <DButton class="btn-flat" @translatedLabel="Cancel" @action={{@closeModal}} />
+      </:footer>
     </DModal>
   </template>
 }

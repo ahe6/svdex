@@ -1,3 +1,6 @@
+import TagDrop from "discourse/select-kit/components/tag-drop";
+import HomeTags from "./svdex-home-tags.gjs";
+import DiscoverySearch from "./svdex-discovery-search.gjs";
 import Component from "@glimmer/component";
 import { service } from "@ember/service";
 import { registerDestructor } from "@ember/destroyable";
@@ -35,7 +38,7 @@ export default class HomeFiltersModal extends Component {
 
   @action clear() {
     const params = new URLSearchParams(this.router.currentURL.split("?")[1]);
-    ["tags", "match_all_tags", "no_tags", "svdex_company", "svdex_valuation", "page"].forEach(key => params.delete(key));
+    ["tags", "match_all_tags", "no_tags", "svdex_company", "svdex_valuation", "search", "page"].forEach(key => params.delete(key));
     const mode = /\/(top|latest|new|unread|unseen|hot)$/.exec(this.router.currentURL.split("?")[0])?.[1] || "latest";
     const path = this.args.model.category ? `${this.args.model.category.url}/l/${mode}` : `/${mode}`;
     DiscourseURL.routeTo(`${path}${params.size ? `?${params}` : ""}`);
@@ -44,8 +47,15 @@ export default class HomeFiltersModal extends Component {
   <template>
     <DModal @title="Filters" @closeModal={{@closeModal}} class={{if @model.isOffering "svdex-listing-filters-modal svdex-offerings-filters" "svdex-listing-filters-modal"}}>
       <:body>
-        <BreadCrumbs class="svdex-mobile-native-filters" @categories={{this.categories}}
-          @category={{@model.category}} @tag={{@model.tag}} @additionalTags={{@model.additionalTags}} />
+        {{#unless @model.isOffering}}<DiscoverySearch @panel={{true}} @outletArgs={{@model}} />{{/unless}}
+        {{#if @model.isOffering}}
+          <TagDrop @currentCategory={{@model.category}} @tag={{@model.tag}} />
+        {{else if @model.homeFeed}}
+          <HomeTags @outletArgs={{@model}} />
+        {{else}}
+          <BreadCrumbs class="svdex-mobile-native-filters" @categories={{this.categories}}
+            @category={{@model.category}} @tag={{@model.tag}} @additionalTags={{@model.additionalTags}} />
+        {{/if}}
         {{#if @model.isOffering}}
           <ul class="svdex-mobile-filter-fields">
             <ListingTagGroupFilters @panel={{true}} @outletArgs={{hash currentCategory=@model.category tag=@model.tag additionalTags=@model.additionalTags}} />

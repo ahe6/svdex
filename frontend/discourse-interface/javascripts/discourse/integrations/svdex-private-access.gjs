@@ -2,7 +2,7 @@ import { trustHTML } from "@ember/template";
 import { categoryBadgeHTML, defaultCategoryLinkRenderer } from "discourse/ui-kit/helpers/d-category-link";
 import { publicPrivateCategory } from "../lib/svdex-public-private-category";
 import { tracked } from "@glimmer/tracking";
-import { privateAccessNoticePage } from "../lib/svdex-private-access-pages";
+import { privateAccessNoticePage, organizationDirectoryPage } from "../lib/svdex-private-access-pages";
 import PublicPrivateCategoryRow, { PRIVATE_ACCESS_ID } from "../components/svdex-public-private-category-row.gjs";
 import { action } from "@ember/object";
 import { service } from "@ember/service";
@@ -72,8 +72,19 @@ export default function registerPrivateAccess(api, { settings, router, site }) {
   api.modifyClass("component:category-drop", publicPrivateAccessChoice);
   class PrivateAccessNoticeState { @tracked dismissed = false; }
   const privateAccessNotice = new PrivateAccessNoticeState();
+  const directoryInterestNotice = new PrivateAccessNoticeState();
   api.addGlobalNotice(
-    'Interested in private deals? <a href="/private-offerings">Request access</a>.',
+    '<span class="svdex-directory-interest-notice"><span class="svdex-notice-desktop">To indicate interest, click an amount or dash under <strong>Buy interest</strong> or <strong>Sell interest</strong>.</span><span class="svdex-notice-mobile">Tap <strong>Buy interest</strong> or <strong>Sell interest</strong> to indicate interest.</span></span>',
+    "svdex-directory-interest",
+    {
+      dismissable: true,
+      persistentDismiss: false,
+      onDismiss: () => { directoryInterestNotice.dismissed = true; },
+      visibility: () => !directoryInterestNotice.dismissed && settings.svdex_interest_enabled && organizationDirectoryPage(router.currentURL),
+    }
+  );
+  api.addGlobalNotice(
+    '<span class="svdex-private-access-notice"><span class="svdex-notice-desktop">Private offerings are available to approved members. <a href="/private-offerings">Request access</a> by completing our investor questionnaire.</span><span class="svdex-notice-mobile">Private offerings for approved members. <a href="/private-offerings">Request access</a>.</span></span>',
     "svdex-private-access",
     {
       dismissable: true,

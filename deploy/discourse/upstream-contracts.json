@@ -45,6 +45,16 @@
       "path": "frontend/discourse/app/routes/user/summary.js",
       "sha256": "78a8ffa199106e184e07e5d8c0d5404c8b36bc359e724e1518874f929de2dfd4",
       "integration": "Company/fund summary template selection"
+    },
+    {
+      "path": "plugins/discourse-events/assets/javascripts/discourse/components/modal/post-event-builder.gjs",
+      "sha256": "d3cfd474a8eb002d7ea9016515849fb38471749411cfcd0abb8296f209ed3af1",
+      "integration": "Open the native event date/time builder before the Events topic composer"
+    },
+    {
+      "path": "frontend/discourse/app/controllers/user.js",
+      "sha256": "1aaa3c7555e4dbdf8ad79f7acb64979d6f3aeb19e40551481fad30988a2ee8b5",
+      "integration": "Native mobile organization profile collapse/expand behavior; preserve hidden-profile rules"
     }
   ]
 }

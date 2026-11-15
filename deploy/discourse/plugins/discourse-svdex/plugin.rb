@@ -11,7 +11,8 @@ module ::DiscourseSvdex
   COMPANY_NAME_SQL = "btrim(split_part(topics.title, ' — ', 1))"
   VALUATION_FIELD = "svdex_post_money_valuation_usd"
   MAX_VALUATION = 9_007_199_254_740_991
-  FIELDS = { "svdex_summary" => 180, "svdex_terms" => 120,
+  INSTRUMENT_TYPES = %w[equity safe convertible_note debt warrant other].freeze
+  FIELDS = { "svdex_instrument_type" => 24, "svdex_summary" => 180, "svdex_terms" => 120,
              "svdex_valuation_cap" => 80, "svdex_conversion_discount" => 80, "svdex_strike_price" => 80, "svdex_expiration" => 80,
              "svdex_interest_rate" => 80, "svdex_offering_size" => 80, "svdex_funds_raised" => 80, "svdex_total_funding" => 80, "svdex_minimum" => 80, VALUATION_FIELD => 16 }.freeze
 
@@ -49,6 +50,10 @@ module ::DiscourseSvdex
   end
 
   def self.validate_field!(name, value)
+    if name == "svdex_instrument_type"
+      raise Discourse::InvalidParameters.new(name) unless value.is_a?(String) && (value.empty? || INSTRUMENT_TYPES.include?(value))
+      return value
+    end
     if name == VALUATION_FIELD
       return nil if value == ""
       unless (value.is_a?(Integer) || (value.is_a?(String) && value.match?(/\A[0-9]{1,16}\z/))) &&
@@ -85,6 +90,8 @@ after_initialize do
   require_relative "app/controllers/discourse_svdex/company_directory_controller"
   require_relative "app/controllers/discourse_svdex/private_access_controller"
   User.class_eval { attr_accessor :svdex_company_directory_details }
+  DirectoryItem.class_eval { attr_accessor :svdex_organizations }
+  add_to_serializer(:directory_item, :svdex_organizations) { object.svdex_organizations || 0 }
   DiscourseSvdex::CompanyDirectory::FIELDS.each do |key, field|
     register_user_custom_field_type(field, DiscourseSvdex::CompanyDirectory::METADATA_TYPES[key] || (%w[stage headquarters_country].include?(key) ? :string : :integer))
   end
@@ -125,6 +132,20 @@ after_initialize do
       topics
     end
   end
+
+  # Native filtering/Guardian scoping runs before this modifier. The window
+  # count sees all matching rows before LIMIT/OFFSET, without a second request.
+  register_modifier(:topic_query_create_list_topics) do |topics, options, query|
+    if DiscourseSvdex.offering_category?(query.options.merge(options)[:category_id])
+      topics = topics.select("topics.*") if topics.select_values.empty?
+      topics.select("COUNT(*) OVER() AS svdex_offering_count")
+    else
+      topics
+    end
+  end
+  add_to_serializer(:topic_list, :svdex_offering_count, include_condition: -> {
+    DiscourseSvdex.offering_category?(object.category&.id)
+  }) { object.topics.first&.attributes&.fetch("svdex_offering_count", 0).to_i }
 
   DiscourseSvdex::FIELDS.each do |name, length|
     register_topic_custom_field_type(name, name == DiscourseSvdex::VALUATION_FIELD ? :integer : :string, max_length: length)
@@ -174,7 +195,9 @@ after_initialize do
     if value.present? && DiscourseSvdex.offering_category?(query.options[:category_id])
       raise Discourse::InvalidParameters.new(:svdex_company) unless value.is_a?(String) && value.length <= 120
       company = value.strip.split(" — ", 2).first
-      results.where("#{DiscourseSvdex::COMPANY_NAME_SQL} ILIKE ?", "%#{ActiveRecord::Base.sanitize_sql_like(company)}%")
+      results.where("(#{DiscourseSvdex::COMPANY_NAME_SQL} ILIKE :company OR topics.title ILIKE :offering)",
+        company: "%#{ActiveRecord::Base.sanitize_sql_like(company)}%",
+        offering: "%#{ActiveRecord::Base.sanitize_sql_like(value.strip)}%")
     else
       results
     end

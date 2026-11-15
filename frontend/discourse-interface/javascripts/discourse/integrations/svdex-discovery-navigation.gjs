@@ -1,4 +1,6 @@
-import HomeTags from "../components/svdex-home-tags.gjs";
+import { isOverviewDirectory } from "../lib/svdex-sector-navigation";
+import SectorFilter from "../components/svdex-sector-filter.gjs";
+import DiscoverySearch from "../components/svdex-discovery-search.gjs";
 import EventsNavigation from "../components/svdex-events-navigation.gjs";
 import { isOfferingCategory } from "../lib/svdex-offering-categories";
 import { action } from "@ember/object";
@@ -12,6 +14,21 @@ import ListingTagGroupFilters from "../components/svdex-tag-group-filters.gjs";
 
 export default function registerDiscoveryNavigation(api, { settings, router, site }) {
   api.renderInOutlet("top-notices", EventsNavigation);
+  api.registerValueTransformer("create-topic-icon", () => "plus");
+  api.registerValueTransformer("can-create-topic-button", ({ value }) =>
+    isOverviewDirectory(router.currentRouteName) ? false : value
+  );
+  // Suppress only this toolbar's split menu; native create/resume and the
+  // current user's actual draft count stay intact elsewhere.
+  const singleCreateAction = Base => class extends Base {
+    didReceiveAttrs() {
+      super.didReceiveAttrs(...arguments);
+      this.set("draftCount", 0);
+    }
+  };
+  singleCreateAction.pluginId = "svdex-single-create-action";
+  api.modifyClass("component:d-navigation", singleCreateAction);
+
   const chatShellRoute = Base => class extends Base {
     setupController(controller, model) {
       this.templateName = "svdex-chat";
@@ -80,6 +97,8 @@ export default function registerDiscoveryNavigation(api, { settings, router, sit
       const params = new URLSearchParams({svdex_home: "1"});
       if (query.tags) params.set("tags", Array.isArray(query.tags) ? query.tags.join(" ") : query.tags);
       if (query.no_tags) params.set("no_tags", String(query.no_tags));
+      if (query.search) params.set("search", query.search);
+      if (query.match_all_tags !== undefined) params.set("match_all_tags", String(query.match_all_tags));
       return `/${item.name}?${params}`;
     }
     const tags = item.currentRouteQueryParams?.tags;
@@ -99,7 +118,8 @@ export default function registerDiscoveryNavigation(api, { settings, router, sit
     return `${path}?${params}`;
   });
   api.renderInOutlet("bread-crumbs-left", ListingTagGroupFilters);
-  api.renderInOutlet("before-create-topic-button", HomeTags);
+  api.renderInOutlet("before-create-topic-button", DiscoverySearch);
+  api.renderInOutlet("before-create-topic-button", SectorFilter);
   api.renderInOutlet("before-create-topic-button", ListingMobileFilters);
   api.renderInOutlet("after-breadcrumbs", MobileCategoryHeading);
 }

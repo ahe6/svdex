@@ -10,7 +10,7 @@ import OfferingBidModal from "../../components/svdex-offering-bid.gjs";
 export default class InterestController extends Controller {
   @service modal;
   @service dialog;
-  queryParams = ["kind", "status"];
+  queryParams = [];
   @tracked kind = "all";
   @tracked status = "all";
   @tracked records = [];
@@ -57,7 +57,7 @@ export default class InterestController extends Controller {
     this.modal.show(row.kind === "bid" ? OfferingBidModal : InterestModal, { model });
   }
   @action withdraw(row) {
-    this.dialog.confirm({ message: `Withdraw this ${row.label.toLowerCase()}?`, didConfirm: async () => {
+    this.dialog.confirm({ message: `Withdraw your ${row.label.toLowerCase()} ${row.kind === "bid" ? "for" : "in"} ${row.kind === "bid" ? row.title : row.organization.name}?`, didConfirm: async () => {
       try { await ajax(`/listings/my-interest/${row.kind}/${row.id}.json`, { type: "DELETE" }); await this.reload(); }
       catch (error) { popupAjaxError(error); }
     } });

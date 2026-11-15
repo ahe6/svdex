@@ -27,7 +27,7 @@ ActiveRecord::Base.transaction do
   SiteSetting.contact_url = "https://svdex.com#{feedback.url}"
 
   section = SidebarSection.find_by!(section_type: :community, public: true)
-  section.sidebar_urls.where(value: %w[/about /faq /guidelines /rules /conduct]).each do |url|
+  section.sidebar_urls.where(value: %w[/about /faq /guidelines /rules /conduct /g]).each do |url|
     section.sidebar_section_links.where(linkable: url).destroy_all
   end
 
@@ -83,6 +83,8 @@ ActiveRecord::Base.transaction do
   end
   raise "Private Access must be manual" unless badge.query.blank? && badge.trigger == Badge::Trigger::None
 
+  SiteSetting.nested_replies_enabled = true
+  SiteSetting.nested_replies_default = true
   SiteSetting.discourse_events_enabled = true
   SiteSetting.discourse_post_event_enabled = true
   SiteSetting.discourse_post_event_allowed_on_groups = "1|2|10"

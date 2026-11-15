@@ -210,6 +210,27 @@ module DiscourseSvdex
       end
     end
 
+    # Count only explicit Key people links on organization profiles the viewer
+    # can see. Do not infer ownership from names, email or private applications.
+    def self.member_organization_counts(guardian)
+      group = Group.find_by(name: SiteSetting.svdex_companies_group_name)
+      return {} unless group && guardian.public_can_see_profiles? && guardian.can_see_group_and_members?(group)
+      counts = Hash.new(0)
+      organizations = group.users.where(active: true, staged: false, admin: false, moderator: false)
+        .includes(:user_option, :user_stat, :user_custom_fields)
+      organizations.each do |organization|
+        next unless guardian.can_see_profile?(organization)
+        ids = Array(organization.custom_fields[FIELDS.fetch("key_people")]).filter_map do |entry|
+          entry["user_id"].to_i if entry.is_a?(Hash) && entry["user_id"].to_i > 0
+        end
+        ids.uniq.each { |id| counts[id] += 1 }
+      end
+      # Match the public Key people renderer: a private person's association
+      # must not become discoverable through a count on the Users page.
+      people = User.where(id: counts.keys).includes(:user_option, :user_stat)
+      counts.slice(*people.select { |person| guardian.can_see_profile?(person) }.map(&:id))
+    end
+
     module Query
       def call(**options)
         @svdex_filters = options.delete(:svdex_filters) || {}
@@ -219,12 +240,16 @@ module DiscourseSvdex
         result = super(**options)
         if @svdex_company_directory
           CompanyDirectory.populate(result.items.map(&:user), guardian)
+        else
+          counts = @svdex_member_organizations ||= CompanyDirectory.member_organization_counts(guardian)
+          result.items.each { |item| item.svdex_organizations = counts.fetch(item.user_id, 0) }
         end
         result
       ensure
         @svdex_company_directory = false
         @svdex_filters = {}
         @svdex_visible_company_user_ids = nil
+        @svdex_member_organizations = nil
       end
 
       private
@@ -249,6 +274,12 @@ module DiscourseSvdex
       end
 
       def order_items(items, requested_order, ascending)
+        if !@svdex_company_directory && requested_order == "svdex_organizations"
+          counts = @svdex_member_organizations ||= CompanyDirectory.member_organization_counts(guardian)
+          cases = counts.map { |id, count| "WHEN #{Integer(id)} THEN #{Integer(count)}" }.join(" ")
+          expression = cases.empty? ? "0::integer" : "CASE directory_items.user_id #{cases} ELSE 0 END"
+          return items.order(Arel.sql("(#{expression}) #{ascending ? 'ASC' : 'DESC'}"), id: :asc)
+        end
         if @svdex_company_directory
           # A hidden financial disclosure must not be inferred through a filter.
           if CompanyDirectory::FILTER_KEYS.any? { |key| @svdex_filters[key].present? }

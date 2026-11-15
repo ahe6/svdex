@@ -92,7 +92,7 @@ print("Admin credentials: " + str(credentials_path))
 PYTHON
     ;;
   fixtures)
-    for script in setup-offering-row-fixtures-local setup-private-offering-fixture-local refresh-content-local; do
+    for script in setup-offering-row-fixtures-local setup-private-offering-fixture-local refresh-content-local setup-financial-activity-local; do
       docker cp "$repo_dir/deploy/discourse/$script.rb" "$config:/tmp/$script.rb"
       docker exec -u discourse "$config" bash -lc "cd /var/www/discourse && bundle exec rails runner /tmp/$script.rb"
     done

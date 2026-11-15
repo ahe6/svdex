@@ -21,7 +21,7 @@ export default class OfferingBidModal extends Component {
   @tracked notice = "";
   get endpoint() { return `/listings/offering-bids/${this.args.model.topicId}.json`; }
   get canWithdraw() { return this.bid && !this.bid.withdrawn_at; }
-  get saveDisabled() { return this.loading || !this.loaded || this.args.model.closed; }
+  get saveDisabled() { return this.loading || !this.loaded || this.args.model.closed || !this.confirmation || !(Number(this.amount) > 0) || !this.terms.trim(); }
   get state() { return this.bid?.withdrawn_at ? "Withdrawn" : this.bid?.active ? "Current" : "Expired"; }
   get rows() { return this.records.map(row => ({...row, amount: formatFinancialAmount(`$${row.amount_cents / 100}`), state: row.withdrawn_at ? "Withdrawn" : row.active ? "Current" : "Expired" })); }
   @action async load() {

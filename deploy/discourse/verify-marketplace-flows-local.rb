@@ -66,6 +66,20 @@ ActiveRecord::Base.transaction do
   assert_market!(a.response.status == 200 && !companies.users.exists?(first.id), "malformed structured text still needs staff review and cannot trigger automatic approval")
   staff.put "/groups/#{companies.id}/handle_membership_request.json", params: { user_id: first.id, accept: true }, headers: staff_headers
   assert_market!(staff.response.status == 200 && companies.users.exists?(first.id), "native owner approval supports a company with no financial or incorporation fields")
+  # Existing approved representatives can submit an additional organization to
+  # the same reviewers through native private messages, without re-enrollment.
+  a.get "/groups/#{companies.name}/members.json", params: { limit: 1 }
+  owners = a.response.parsed_body.fetch("owners").map { |owner| owner.fetch("username") }
+  assert_market!(a.response.status == 200 && owners.any?, "approved applicants can find their native application reviewers")
+  fund_reason = "SVDEX fund application · v1\n\n**Fund:** Research Capital\n**Authorized representative:** Investment Manager\n**Description:** An investment fund supporting scientific infrastructure companies through a diversified portfolio of early-stage equity positions. Its investment committee assesses business quality, portfolio concentration, follow-on reserves, and the needs of research equipment manufacturers.\n**Website:** Not provided\n**Authority confirmed:** Yes"
+  a.post "/posts.json", params: { archetype: "private_message", target_recipients: owners.join(","), title: "Fund application: Research Capital", raw: fund_reason }, headers: a_headers
+  assert_market!(a.response.status == 200, "approved company representatives can submit another application as a native private message: #{a.response.status} #{a.response.body.first(400) unless a.response.status == 200}")
+  staff.post "/posts.json", params: { archetype: "private_message", target_recipients: staff_user.username, title: "Company application: Portfolio Research", raw: "A staff-managed organization profile application for Portfolio Research, submitted to its reviewer inbox. The organization develops quantitative data systems for research teams and seeks a public directory profile. Authority to represent the organization is confirmed, and profile publication remains a separate manual review action." }, headers: staff_headers
+  assert_market!(staff.response.status == 200, "staff application works when the submitter is also the only reviewer: #{staff.response.status}")
+  application_id = a.response.parsed_body.fetch("topic_id")
+  guest.get "/t/#{application_id}.json"
+  assert_market!([403, 404].include?(guest.response.status), "additional organization applications remain private")
+  assert_market!(companies.users.exists?(first.id) && !GroupRequest.exists?(group: companies, user: first), "additional applications do not create duplicate memberships or requests")
   private_group = Group.find_by!(name: SiteSetting.svdex_private_offerings_group_name)
   assert_market!(!private_group.users.exists?(first.id) && !UserBadge.exists?(user: first, badge: Badge.find_by!(name: "Verified Accredited Investor")), "company approval grants neither private-deal access nor accreditation")
   assert_market!(!second.guardian.can_create_topic_on_category?(introductions) && staff_user.guardian.can_create_topic_on_category?(introductions), "unapproved accounts cannot submit official organization updates")
@@ -85,6 +99,8 @@ ActiveRecord::Base.transaction do
   assert_market!(TopicQuery.new(nil, category: discussion.id).list_latest.topics.map(&:id).include?(conversation.id), "Discussions remain available in native category browsing")
 
   org = User.find_by!(username: "svdex-company")
+  # Keep this arithmetic scenario independent of local visual fixtures.
+  DiscourseSvdex::InterestIndication.where(organization: org).delete_all
   other_org = User.find_by!(username: "northstar")
   path = "/listings/interests/#{org.id}"
   payload = ->(amount, market = "either", more = {}) { { interest: { amount: amount, market: market, currency: "USD", confirmation: "nonbinding" }.merge(more) } }

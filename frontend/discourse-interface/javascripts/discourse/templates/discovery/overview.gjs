@@ -11,7 +11,7 @@ export default <template>
         @filterType="categories" />
     </:navigation>
     <:list>
-      {{bodyClass "categories-list"}}
+      {{bodyClass "svdex-directory-page categories-list"}}
       <OverviewDirectory @categories={{@controller.directoryCategories}} />
     </:list>
   </Layout>

@@ -14,8 +14,8 @@ export default class OverviewDirectory extends Component {
         <OverviewTags />
       {{else}}
         <div class="categories-and-latest svdex-overview-directories">
-          <div class="column categories"><OverviewTags /></div>
-          <div class="column"><CategoriesOnly @categories={{@categories}} /></div>
+          <div class="column categories"><CategoriesOnly @categories={{@categories}} /></div>
+          <div class="column"><OverviewTags /></div>
         </div>
       {{/if}}
     </div>

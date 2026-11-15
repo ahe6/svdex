@@ -1,6 +1,7 @@
 import InterestActivityNav from "../components/svdex-interest-activity-nav.gjs";
 import CompanyApplication from "../components/svdex-company-application.gjs";
-import { action } from "@ember/object";
+import { action, computed } from "@ember/object";
+import { service } from "@ember/service";
 import CompanyAdminFields from "../components/svdex-company-admin-fields.gjs";
 import CompanySummary from "../components/svdex-company-summary.gjs";
 
@@ -24,6 +25,34 @@ export default function registerOrganizationProfiles(api, { settings, router, si
   };
   peopleGroupChoices.pluginId = "svdex-people-directory-groups";
   api.modifyClass("controller:users", peopleGroupChoices);
+
+  const memberOrganizations = Base => class extends Base {
+    setupController(controller, model) {
+      const columns = [...model.columns.filter(column => column.name !== "svdex_organizations"),
+        { name: "svdex_organizations", type: "automatic", icon: null }];
+      return super.setupController(controller, { ...model, columns });
+    }
+  };
+  memberOrganizations.pluginId = "svdex-member-organizations";
+  api.modifyClass("route:users", memberOrganizations);
+
+  // Reuse native collapse/expand behavior for mobile organization profiles.
+  // Hidden profiles and ordinary people keep core's visibility rules.
+  const compactOrganizationHeader = Base => class extends Base {
+    @service site;
+    @computed("model.svdex_company_account", "site.mobileView", "model.profile_hidden", "viewingSelf")
+    get canExpandProfile() {
+      if (this.site.mobileView && this.model?.svdex_company_account && !this.model.profile_hidden) return true;
+      return super.canExpandProfile;
+    }
+    @computed("model.svdex_company_account", "site.mobileView", "model.profile_hidden", "isSummaryRoute", "viewingSelf", "forceExpand")
+    get collapsedInfo() {
+      if (this.site.mobileView && this.model?.svdex_company_account) return this.model.profile_hidden || !this.forceExpand;
+      return super.collapsedInfo;
+    }
+  };
+  compactOrganizationHeader.pluginId = "svdex-compact-organization-header";
+  api.modifyClass("controller:user", compactOrganizationHeader);
 
   const companySummaryRoute = Base => class extends Base {
     setupController(controller, model) {

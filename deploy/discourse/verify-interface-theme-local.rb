@@ -22,9 +22,9 @@ Theme.transaction do
     restored.update_javascript_cache!
     js = restored.javascript_cache&.content.to_s
     assert_interface!(js.present? && !js.start_with?("throw new Error("), "restored interface compiles with the native theme compiler")
-    # The Lounge shell reuses the bundled, official Chat components. Keep the
+    # Lounge and event creation reuse bundled, official Chat and Events components. Keep the
     # portability guard against dependencies on any custom plugin asset bundle.
-    assert_interface!((restored.javascript_cache.external_plugin_imports - ["chat"]).empty?, "interface depends only on official Chat assets, never custom plugin bundles")
+    assert_interface!((restored.javascript_cache.external_plugin_imports - ["chat", "discourse-events"]).empty?, "interface depends only on official Chat/Events assets, never custom plugin bundles")
   end
   raise ActiveRecord::Rollback
 end

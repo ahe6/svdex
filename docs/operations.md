@@ -27,6 +27,7 @@ configuration commands are local-only, not production release operations.
 | Plugin client route declarations | Use `scripts/discourse-local.sh listings` to compile plugin/application assets; this also reapplies local offering configuration |
 | Local company/fund fixture accounts | `scripts/discourse-local.sh companies` |
 | Reviewed marketplace structure | `scripts/discourse-local.sh marketplace` |
+| Local example topics and private interest/bid activity | `scripts/discourse-local.sh fixtures` |
 | Local Chat/Events/Achievements | Corresponding `chat`, `events`, `achievements` commands |
 
 For a Ruby-only update from the repository root:

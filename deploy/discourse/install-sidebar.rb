@@ -14,7 +14,7 @@ SidebarSection.transaction do
   # The theme API now owns primary directory/feed links and active states.
 
   # Account links use their native classes in the API registration order below Home.
-  %w[/about /faq /guidelines /rules /conduct /badges /tags /u /my/activity /my/messages /review /admin /new-invite].each do |value|
+  %w[/about /faq /guidelines /rules /conduct /badges /tags /u /g /my/activity /my/messages /review /admin /new-invite].each do |value|
     link = section.sidebar_urls.find_by(value: value)
     section.sidebar_section_links.where(linkable: link).destroy_all if link
   end
@@ -22,7 +22,6 @@ SidebarSection.transaction do
   section.sidebar_urls.where(value: ["/companies", "/latest"]).each do |entry|
     section.sidebar_section_links.where(linkable: entry).destroy_all
   end
-  section.sidebar_urls.find_by!(value: "/g").update!(segment: :secondary)
 end
 
 # Overview combines categories and tags; no separate Categories tab.

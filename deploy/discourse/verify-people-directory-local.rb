@@ -33,3 +33,34 @@ raise "Organization directory lost members" unless app.response.parsed_body.fetc
 app.get "/u/#{org.username}.json"
 raise "Company profile became inaccessible" unless app.response.status == 200
 puts "PASS Users hides companies/funds before counts, searches and pagination; fund-only and current-user exclusions hold; organization directory and profiles remain available"
+
+User.transaction do
+  person = User.find_by!(username: "maya-chen")
+  person.update!(trust_level: 2)
+  person.user_option.update!(hide_profile: false)
+  organizations = companies.users.where(admin: false, moderator: false).order(:id).limit(2).to_a
+  raise "Two public organization fixtures required" unless organizations.length == 2
+  field = DiscourseSvdex::CompanyDirectory::FIELDS.fetch("key_people")
+  organizations.each do |organization|
+    organization.custom_fields[field] = [{ "name" => "Maya Chen", "user_id" => person.id }, { "name" => "Maya Chen", "user_id" => person.id }]
+    organization.save_custom_fields
+  end
+  app.get "/directory_items.json", params: { period: "weekly", order: "svdex_organizations" }
+  raise "Organization count query failed" unless app.response.status == 200
+  rows = app.response.parsed_body.fetch("directory_items")
+  member = rows.find { |row| row["id"] == person.id }
+  raise "Guest count missing or duplicate links counted" unless member&.fetch("svdex_organizations") == 2
+  raise "Count sort failed" unless rows.map { |row| row.fetch("svdex_organizations") } == rows.map { |row| row.fetch("svdex_organizations") }.sort.reverse
+  app.get "/directory_items.json", params: { period: "all", order: "svdex_organizations", asc: true }
+  raise "Ascending organization sort failed" unless app.response.status == 200 && app.response.parsed_body.fetch("directory_items").map { |row| row.fetch("svdex_organizations") }.then { |counts| counts == counts.sort }
+  SiteSetting.allow_users_to_hide_profile = true
+  organizations.last.user_option.update!(hide_profile: true)
+  app.get "/directory_items.json", params: { period: "all", username: person.username }
+  raise "Hidden organization leaked through count" unless app.response.parsed_body.fetch("directory_items").first.fetch("svdex_organizations") == 1
+  person.user_option.update!(hide_profile: true)
+  raise "Private person association leaked through count" unless DiscourseSvdex::CompanyDirectory.member_organization_counts(Guardian.new).fetch(person.id, 0) == 0
+  SiteSetting.hide_user_profiles_from_public = true
+  raise "Private profiles leaked through count" unless DiscourseSvdex::CompanyDirectory.member_organization_counts(Guardian.new).empty?
+  raise ActiveRecord::Rollback
+end
+puts "PASS Organizations counts explicit public Key people links once per organization; guest serialization, both sort directions and hidden-profile privacy hold"

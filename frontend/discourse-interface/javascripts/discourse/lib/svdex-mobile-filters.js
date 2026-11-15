@@ -6,5 +6,5 @@ export function activeFilterCount(query = {}, tag, additionalTags = []) {
     ...additionalTags.map(value => value?.name || value),
   ].filter(Boolean));
   if (query.no_tags) names.add("none");
-  return names.size + Number(Boolean(query.svdex_company)) + Number(Boolean(query.svdex_valuation));
+  return names.size + Number(Boolean(query.search)) + Number(Boolean(query.svdex_company)) + Number(Boolean(query.svdex_valuation));
 }

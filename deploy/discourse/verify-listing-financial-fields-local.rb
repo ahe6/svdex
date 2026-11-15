@@ -4,9 +4,19 @@ category = Category.find(SiteSetting.svdex_public_offerings_category_id)
 actor = Discourse.system_user
 Post.transaction do
   post = PostCreator.create!(actor, title: "Financial fields #{SecureRandom.hex(5)}", raw: "Transaction-scoped field verification.", category: category.id,
-    svdex_funds_raised: "USD 250,000", svdex_offering_size: "USD 2,000,000",
+    svdex_instrument_type: "debt", svdex_funds_raised: "USD 250,000", svdex_offering_size: "USD 2,000,000",
     svdex_interest_rate: "8% annually", svdex_terms: "36-month maturity", svdex_post_money_valuation_usd: "50000000", skip_validations: true, skip_jobs: true)
   topic = post.topic.reload
+  raise "instrument create" unless topic.custom_fields["svdex_instrument_type"] == "debt"
+  raise "instrument edit" unless PostRevisor.new(post).revise!(actor, { svdex_instrument_type: "warrant" })
+  raise "instrument not saved" unless topic.reload.custom_fields["svdex_instrument_type"] == "warrant"
+  %w[not-an-instrument Equity].each do |value|
+    begin
+      DiscourseSvdex.validate_field!("svdex_instrument_type", value)
+      raise "invalid instrument accepted"
+    rescue Discourse::InvalidParameters
+    end
+  end
   raise "create" unless topic.custom_fields["svdex_interest_rate"] == "8% annually"
   revisor = PostRevisor.new(post)
   raise "edit" unless revisor.revise!(actor, { svdex_interest_rate: "9% annually" })
@@ -22,6 +32,7 @@ Post.transaction do
   raise "rate changed" unless topic.custom_fields["svdex_interest_rate"] == "9% annually"
   serializer = TopicViewSerializer.new(TopicView.new(topic.id, actor), scope: actor.guardian, root: false)
   values = serializer.as_json.fetch(:svdex_listing)
+  raise "instrument serialization" unless values["instrument_type"] == "warrant"
   raise "serialization" unless values["interest_rate"] == "9% annually" && values["post_money_valuation_usd"] == "50000000"
   raise "raised serialization" unless values["funds_raised"] == "USD 500,000"
   raise "raised clear" unless PostRevisor.new(post).revise!(actor, { svdex_funds_raised: "" })

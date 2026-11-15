@@ -30,6 +30,12 @@ export default class CompaniesController extends UsersController {
   get sectors() { return (this.model?.get?.("resultSetMeta.sectors") || []).map(tag => ({ ...tag, name: sectorLabel(tag.name) })); }
   get stages() { return (this.model?.get?.("resultSetMeta.stages") || []).map(name => ({ id: name, name })).concat({ id: "undisclosed", name: "Undisclosed" }); }
   get locations() { return (this.model?.get?.("resultSetMeta.locations") || []).map(name => ({ id: name, name })).concat({ id: "undisclosed", name: "Undisclosed" }); }
+  get hasDirectoryFilters() { return Boolean(this.name) || this.hasCompanyFilters; }
+  get resetDirectoryLabel() { return this.name ? (this.hasCompanyFilters ? "Clear search and filters" : "Clear search") : "Clear filters"; }
+  @action resetDirectoryFilters() {
+    this.clearCompanyFilters();
+    this.onUsernameFilterChanged("");
+  }
   get hasCompanyFilters() { return COMPANY_FILTER_KEYS.some(key => Boolean(this[key])); }
   @action changeCompanyFilter(key, value) {
     if (COMPANY_FILTER_KEYS.includes(key)) this.set(key, value || null);

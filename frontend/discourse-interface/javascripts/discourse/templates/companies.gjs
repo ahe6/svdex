@@ -22,22 +22,23 @@ import DLoadMore from "discourse/ui-kit/d-load-more";
 import { i18n } from "discourse-i18n";
 
 class CompanyApplicationLink extends Component {
+  @service site;
   @service siteSettings;
   @service currentUser;
   @service store;
   @service modal;
   get isFund() { return this.args.kind === "funds"; }
+  get applicationLabel() { return this.isFund ? "Add fund" : "Add company"; }
+  get buttonLabel() { return this.site.mobileView ? null : this.applicationLabel; }
   @action async open() {
     const name = this.siteSettings.svdex_companies_group_name;
-    if (this.currentUser?.staff) return DiscourseURL.routeTo(`/g/${encodeURIComponent(name)}/requests`);
     if (!this.currentUser) return DiscourseURL.routeTo("/login");
     try {
       const group = await this.store.find("group", name);
-      if (group.is_group_user) return DiscourseURL.routeTo(`/u/${this.currentUser.username}/summary`);
       this.modal.show(CompanyApplication, { model: { group, kind: this.args.kind } });
     } catch (error) { popupAjaxError(error); }
   }
-  <template><DButton @action={{this.open}} @icon="far-pen-to-square" @translatedLabel={{if this.isFund "New fund" "New company"}} class="btn-primary svdex-company-application" /></template>
+  <template><DButton @action={{this.open}} @icon="plus" @translatedLabel={{this.buttonLabel}} @translatedAriaLabel={{this.applicationLabel}} @translatedTitle={{this.applicationLabel}} class="btn-primary svdex-company-application" /></template>
 }
 
 export default <template>
@@ -64,22 +65,11 @@ export default <template>
           <div class="directory-controls">
             <div class="period-controls">
               <h2>{{if @controller.isFund "Funds" "Companies"}}</h2>
-              {{#if @controller.lastUpdatedAt}}
-                <div class="directory-last-updated">
-                  {{i18n "directory.last_updated"}}
-                  {{@controller.lastUpdatedAt}}
-                </div>
-              {{/if}}
             </div>
             <div class="svdex-company-directory-tools">
             <div class="inline-form">
               <label class="total-rows">
-                {{#if @controller.model.totalRows}}
-                  {{i18n
-                    @controller.countKey
-                    count=@controller.model.totalRows
-                  }}
-                {{/if}}
+                {{i18n @controller.countKey count=(or @controller.model.totalRows 0)}}
               </label>
               <Input
                 class="filter-name no-blur"
@@ -90,6 +80,7 @@ export default <template>
                   (withEventValue @controller.onUsernameFilterChanged)
                 }}
               />
+              <CompanyMobileControls @controller={{@controller}} />
               {{#if @controller.showGroupFilter}}
                 <ComboBox
                   class="directory-group-selector"
@@ -99,7 +90,6 @@ export default <template>
                   @value={{@controller.group}}
                 />
               {{/if}}
-              <CompanyMobileControls @controller={{@controller}} />
               <PluginOutlet
                 @name="users-directory-controls"
                 @outletArgs={{lazyHash model=@controller.model}}
@@ -125,8 +115,8 @@ export default <template>
               />
             {{else}}
               <DEmptyState @body={{@controller.emptyMessage}} />
-              {{#if @controller.hasCompanyFilters}}
-                <DButton @translatedLabel="Clear filters" @action={{@controller.clearCompanyFilters}} />
+              {{#if @controller.hasDirectoryFilters}}
+                <DButton class="btn-default" @translatedLabel={{@controller.resetDirectoryLabel}} @action={{@controller.resetDirectoryFilters}} />
               {{/if}}
             {{/if}}
           </DConditionalLoadingSpinner>

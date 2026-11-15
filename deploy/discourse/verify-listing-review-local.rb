@@ -12,6 +12,7 @@ Post.transaction do
   tags = [company_tag.name, "hardware"]
   title = "Listing approval #{SecureRandom.hex(6)}"
   fields = {
+    svdex_instrument_type: "other",
     svdex_summary: "Optical instruments for laboratory research",
     svdex_terms: "Repayment on maturity", svdex_interest_rate: "8% annually",
     svdex_offering_size: "USD 2,000,000", svdex_funds_raised: "USD 250,000",

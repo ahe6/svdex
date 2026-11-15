@@ -7,12 +7,13 @@ import DModal from "discourse/ui-kit/d-modal";
 import DButton from "discourse/ui-kit/d-button";
 import DModalCancel from "discourse/ui-kit/d-modal-cancel";
 import DiscourseURL from "discourse/lib/url";
+import { ajax } from "discourse/lib/ajax";
 import { popupAjaxError } from "discourse/lib/ajax-error";
 import { companyApplication } from "../lib/svdex-company-application";
 export default class CompanyApplication extends Component {
   @service currentUser;
-  @tracked name = this.currentUser?.name || "";
-  @tracked representative = "";
+  @tracked name = "";
+  @tracked representative = this.currentUser?.name || "";
   @tracked description = "";
   @tracked website = "";
   @tracked authorized = false;
@@ -30,14 +31,31 @@ export default class CompanyApplication extends Component {
     if (result.error) { this.error = result.error; return; }
     this.saving = true;
     try {
-      const response = await this.args.model.group.requestMembership(result.reason);
+      const group = this.args.model.group;
+      let url;
+      if (group.is_group_user) {
+        // Approved members and staff need another profile reviewed, not a
+        // second membership. Use the same owners' native private-message inbox.
+        const members = await ajax(`/groups/${encodeURIComponent(group.name)}/members.json`, { data: { limit: 1 } });
+        const owners = members.owners.map(owner => owner.username);
+        if (!owners.length) throw new Error("No application reviewers are available.");
+        const post = await ajax("/posts.json", { type: "POST", data: {
+          archetype: "private_message", target_recipients: owners.join(","),
+          title: `${this.isFund ? "Fund" : "Company"} application: ${this.name.trim()}`,
+          raw: result.reason,
+        } });
+        url = `/t/${post.topic_slug}/${post.topic_id}`;
+      } else {
+        const response = await group.requestMembership(result.reason);
+        url = response.relative_url;
+      }
       this.args.closeModal();
-      DiscourseURL.routeTo(response.relative_url);
+      DiscourseURL.routeTo(url);
     } catch (error) { popupAjaxError(error); }
     finally { this.saving = false; }
   }
   <template>
-    <DModal @title={{if this.isFund "New fund" "New company"}} @closeModal={{@closeModal}} @inline={{@inline}}>
+    <DModal @title={{if this.isFund "Add fund" "Add company"}} @closeModal={{@closeModal}} @inline={{@inline}} class="svdex-company-application-modal">
       <:body>
         <p>{{if this.isFund "Tell us about your fund and its strategy. Staff review every application before adding a fund profile." "Tell us about your company or project. Early-stage and pre-incorporation projects are welcome. Staff review every application."}}</p>
         {{#if this.error}}<p class="alert alert-error" role="alert">{{this.error}}</p>{{/if}}

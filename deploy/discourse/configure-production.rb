@@ -14,6 +14,8 @@ SiteSetting.enable_site_owner_onboarding = false
 SiteSetting.tagging_enabled = true
 SiteSetting.tags_listed_by_group = true
 SiteSetting.chat_enabled = true
+SiteSetting.nested_replies_enabled = true
+SiteSetting.nested_replies_default = true
 SiteSetting.discourse_events_enabled = true
 SiteSetting.discourse_post_event_enabled = true
 SiteSetting.discourse_post_event_allowed_on_groups = "1|2|10"
@@ -155,14 +157,13 @@ TranslationOverride.upsert!("en", "js.badges.title", "Achievements")
 section = SidebarSection.find_by!(section_type: :community, public: true)
   # The theme API now owns primary directory/feed links and active states.
 
-%w[/about /faq /guidelines /rules /conduct /badges /tags /u /my/activity /my/messages /review /admin /new-invite].each do |value|
+%w[/about /faq /guidelines /rules /conduct /badges /tags /u /g /my/activity /my/messages /review /admin /new-invite].each do |value|
   url = section.sidebar_urls.find_by(value: value)
   section.sidebar_section_links.where(linkable: url).destroy_all if url
 end
 section.sidebar_urls.where(value: ["/companies", "/latest"]).each do |entry|
   section.sidebar_section_links.where(linkable: entry).destroy_all
 end
-section.sidebar_urls.find_by!(value: "/g").update!(segment: :secondary)
 
 badge_group = BadgeGrouping.find_by(name: "SVDEX") || BadgeGrouping.create!(name: "SVDEX", description: "SVDEX contributions and verification", position: 0)
 [

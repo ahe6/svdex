@@ -29,7 +29,10 @@ export function offeringTerms(data, title = "") {
     progress = Math.min(100, Math.max(0, raised.value / target.value * 100));
   }
   if (!secondary) {
-    secondary = /\bSAFE\b/i.test(title) ? "SAFE" : /^secondary\b/i.test(data?.summary || "") ? "Secondary" : data?.terms?.trim() || "";
+    const instrumentLabels = { equity: "Equity", safe: "SAFE", convertible_note: "Convertible note", debt: "Debt", warrant: "Warrant", other: "" };
+    secondary = data?.instrument_type && Object.hasOwn(instrumentLabels, data.instrument_type)
+      ? data?.terms?.trim() || instrumentLabels[data.instrument_type]
+      : /\bSAFE\b/i.test(title) ? "SAFE" : /^secondary\b/i.test(data?.summary || "") ? "Secondary" : data?.terms?.trim() || "";
   }
   return { primary, secondary, progress, missing: !primaryKey };
 }

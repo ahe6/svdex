@@ -1,3 +1,4 @@
+import { usesSectorFilter, isOverviewDirectory } from "../lib/svdex-sector-navigation";
 import { isOfferingCategory } from "../lib/svdex-offering-categories";
 import Component from "@glimmer/component";
 import { service } from "@ember/service";
@@ -15,7 +16,10 @@ export default class ListingMobileFilters extends Component {
     return isOfferingCategory(this.args.outletArgs.category?.id, this.siteSettings);
   }
   get visible() {
-    return !this.homeFeed && this.site.mobileView && Boolean(this.args.outletArgs.category || this.args.outletArgs.tag);
+    if (isOverviewDirectory(this.router.currentRouteName) || this.router.currentRouteName?.startsWith("chat")) return false;
+    const args = this.args.outletArgs;
+    if (this.siteSettings.tagging_enabled && usesSectorFilter(args.category, args.tag, this.router.currentRouteName, this.siteSettings)) return false;
+    return this.homeFeed || Boolean(args.category || args.tag);
   }
   get homeFeed() {
     const homeFeed = !this.args.outletArgs.category && !this.args.outletArgs.tag &&
@@ -28,12 +32,12 @@ export default class ListingMobileFilters extends Component {
   get active() { return this.count > 0; }
   get title() { return this.active ? `Filters (${this.count} active)` : "Filters"; }
   @action open() {
-    this.modal.show(HomeFiltersModal, { model: { ...this.args.outletArgs, isOffering: this.isOffering } });
+    this.modal.show(HomeFiltersModal, { model: { ...this.args.outletArgs, isOffering: this.isOffering, homeFeed: this.homeFeed } });
   }
   <template>
     {{#if this.visible}}
       <span class={{if this.homeFeed "svdex-mobile-filters svdex-home-filters" "svdex-mobile-filters"}}>
-        <DButton @icon="filter" @translatedTitle={{this.title}} @translatedAriaLabel={{this.title}} class={{if this.active "btn-primary" "btn-default"}} @action={{this.open}} />
+        <DButton @icon="angle-right" @translatedLabel="Filter" @translatedTitle={{this.title}} @translatedAriaLabel={{this.title}} class={{if this.active "btn-primary svdex-filter-trigger" "btn-default svdex-filter-trigger"}} @action={{this.open}} />
       </span>
     {{/if}}
   </template>

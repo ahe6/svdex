@@ -1,6 +1,8 @@
+import { instrumentData } from "./svdex-offering-instruments.js";
 import { formatFinancialAmount, formatValuation } from "./svdex-financial-format.js";
 
 export function listingFigures(data) {
+  data = instrumentData(data);
   if (!data) return [];
   return [
     { key: "valuation", label: "Valuation", value: formatValuation(data.post_money_valuation_usd, true) },

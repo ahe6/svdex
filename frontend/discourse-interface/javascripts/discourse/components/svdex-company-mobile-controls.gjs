@@ -8,7 +8,6 @@ import CompanySearchModal from "./svdex-company-search-modal.gjs";
 
 export default class CompanyMobileControls extends Component {
   @service modal;
-  @service site;
   @tracked filtersOpen = false;
   @action filters(event) { this.filterTrigger = event?.currentTarget; this.filtersOpen = true; }
   @action closeFilters() { this.filtersOpen = false; this.filterTrigger?.focus(); }
@@ -16,8 +15,8 @@ export default class CompanyMobileControls extends Component {
   get filterTitle() { return this.args.controller.hasCompanyFilters ? "Filters (active)" : "Filters"; }
   <template>
       <span class="svdex-company-mobile-controls">
-        {{#if this.site.mobileView}}<DButton @icon="magnifying-glass" @translatedTitle={{@controller.searchTitle}} @translatedAriaLabel={{@controller.searchTitle}} @action={{this.search}} class={{if @controller.name "btn-primary" "btn-default"}} />{{/if}}
-        <DButton @icon="filter" @translatedTitle={{this.filterTitle}} @translatedAriaLabel={{this.filterTitle}} @action={{this.filters}} class={{if @controller.hasCompanyFilters "btn-primary" "btn-default"}} />
+        <DButton @icon="magnifying-glass" @translatedTitle={{@controller.searchTitle}} @translatedAriaLabel={{@controller.searchTitle}} @action={{this.search}} class={{if @controller.name "btn-primary svdex-company-search-trigger" "btn-default svdex-company-search-trigger"}} />
+        <DButton @icon="angle-right" @translatedLabel="Filter" @translatedTitle={{this.filterTitle}} @translatedAriaLabel={{this.filterTitle}} @action={{this.filters}} class={{if @controller.hasCompanyFilters "btn-primary svdex-filter-trigger" "btn-default svdex-filter-trigger"}} />
       </span>
       {{#if this.filtersOpen}}
         <CompanyFiltersModal @model={{@controller}} @closeModal={{this.closeFilters}} />

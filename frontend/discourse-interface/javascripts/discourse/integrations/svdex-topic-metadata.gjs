@@ -17,7 +17,15 @@ export default function registerTopicMetadata(api, { settings, router, site }) {
     const name = typeof tag === "string" ? tag : tag.name;
     const color = tagColor(name, settings.svdex_overview_tag_colors);
     // Core still owns the tag label, escaping, URL, classes and count.
-    return defaultRenderTag(tag, params).replace(">", `><span class="svdex-tag-marker" style="background-color:#${color}" aria-hidden="true"></span>`);
+    let rendered = defaultRenderTag(tag, params);
+    // Preserve the canonical slug while spelling this acronym consistently.
+    if (name === "ai") rendered = rendered.replace(">ai<", ">AI<");
+    // Visibility names are compact in topic rows; URLs, selector labels and
+    // data attributes retain the actual native tag name.
+    if (params?.mode === "list" && ["public-offering", "private-offering"].includes(name)) {
+      rendered = rendered.replace(`>${name}<`, `>${name.split("-")[0]}<`);
+    }
+    return rendered.replace(">", `><span class="svdex-tag-marker" style="background-color:#${color}" aria-hidden="true"></span>`);
   });
   const markHomeTopicLabels = ({ value, context }) => {
     const path = router.currentURL.split("?")[0];
