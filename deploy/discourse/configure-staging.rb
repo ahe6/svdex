@@ -14,7 +14,11 @@ actor.email_tokens.update_all(confirmed: true)
 ENV["DISCOURSE_DEVELOPER_EMAILS"] = actor.email
 ENV["SVDEX_INITIAL_SETUP"] = "1"
 load File.join(__dir__, "configure-production.rb")
+ENV["SVDEX_CONFIGURE_UPGRADE"] = "1"
+load File.join(__dir__, "configure-upgrade-production.rb")
 load File.join(__dir__, "configure-marketplace.rb")
+ENV["SVDEX_RETIRE_INFORMATION_PAGES"] = "1"
+load File.join(__dir__, "retire-information-pages.rb")
 SiteSetting.svdex_private_access_form_url = ""
 SiteSetting.enable_google_oauth2_logins = false
 SiteSetting.allow_index_in_robots_txt = false

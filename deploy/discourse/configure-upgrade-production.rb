@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 # Apply reviewed native configuration without importing any local fixture data.
-abort "Explicit production upgrade required" unless GlobalSetting.hostname == "svdex.com" && ENV["SVDEX_CONFIGURE_UPGRADE"] == "1"
+staging = GlobalSetting.hostname == "staging.svdex.com" && ENV["SVDEX_STAGING_SETUP"] == "1" && SiteSetting.disable_emails == "yes" && SiteSetting.login_required && !SiteSetting.allow_new_registrations
+abort "Explicit deployment upgrade required" unless (GlobalSetting.hostname == "svdex.com" || staging) && ENV["SVDEX_CONFIGURE_UPGRADE"] == "1"
 
 actor = User.find_by_email(ENV.fetch("DISCOURSE_DEVELOPER_EMAILS").split(",").first.strip)
 raise "Expected active owner" unless actor&.admin? && actor.active?
@@ -24,7 +25,7 @@ ActiveRecord::Base.transaction do
   raise "Unexpected support category" unless %w[help feedback].include?(feedback.slug) && !feedback.read_restricted?
   feedback.update!(name: "Feedback", slug: "feedback")
   SiteSetting.meta_category_id = feedback.id
-  SiteSetting.contact_url = "https://svdex.com#{feedback.url}"
+  SiteSetting.contact_url = "#{Discourse.base_url}#{feedback.url}"
 
   section = SidebarSection.find_by!(section_type: :community, public: true)
   section.sidebar_urls.where(value: %w[/about /faq /guidelines /rules /conduct /g]).each do |url|
@@ -67,7 +68,7 @@ ActiveRecord::Base.transaction do
   raise "Private category visible to guests" if Guardian.new.can_see_category?(category)
   SiteSetting.svdex_private_offerings_category_id = category.id
   SiteSetting.svdex_private_access_contact = actor.username
-  SiteSetting.svdex_private_access_form_url = "https://tally.so/r/xVM7or"
+  SiteSetting.svdex_private_access_form_url = staging ? "" : "https://tally.so/r/xVM7or"
 
   grouping = BadgeGrouping.find_by!(name: "SVDEX")
   Badge.find_by!(name: "Early Explorer").update!(icon: "compass")
