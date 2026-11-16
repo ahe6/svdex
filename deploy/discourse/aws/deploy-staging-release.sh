@@ -59,6 +59,7 @@ tar -xzf "$work/release.tar.gz" -C "$work"
 shared=/var/discourse/shared/standalone/svdex-release
 mkdir -p "$shared"
 chmod 755 /var/discourse/shared /var/discourse/shared/standalone
+install -d -m 755 /var/discourse/shared/standalone/log/var-log
 cp -a "$work/." "$shared/"
 bash "$work/aws/replace-theme-sources.sh" "$work" "$shared"
 phase=build
@@ -86,9 +87,13 @@ PY
 cd /var/discourse
 expected_docker=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["docker_revision"])' "$work/manifest.json")
 test "$(git rev-parse HEAD)" = "$expected_docker"
-./launcher rebuild app </dev/null >>"$log" 2>&1
+(umask 022; ./launcher rebuild app </dev/null) >>"$log" 2>&1
 find "$shared" -type d -exec chmod 755 {} +
 find "$shared" -type f ! -name app.yml -exec chmod 644 {} +
+phase=ready
+# Launcher returns before Redis/PostgreSQL/Rails have necessarily started.
+# HTTPS health must succeed before a Rails runner tries its first connection.
+curl -fsS --retry 30 --retry-all-errors --retry-delay 5 --max-time 10 https://staging.svdex.com/srv/status >>"$log" 2>&1
 phase=configure
 aws ssm get-parameter --name /svdex/staging/admin-password --with-decryption --query Parameter.Value --output text > "$work/admin-password"
 cat "$work/admin-password" | docker exec -i -u discourse -e SVDEX_STAGING_SETUP=1 app bash -lc \

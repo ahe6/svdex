@@ -17,6 +17,8 @@ load File.join(__dir__, "configure-production.rb")
 load File.join(__dir__, "configure-marketplace.rb")
 SiteSetting.svdex_private_access_form_url = ""
 SiteSetting.enable_google_oauth2_logins = false
+SiteSetting.allow_index_in_robots_txt = false
+SiteSetting.enable_sitemap = false
 SiteSetting.svdex_interest_enabled = true
 SiteSetting.svdex_bids_enabled = true
 SiteSetting.svdex_interest_public_totals = true

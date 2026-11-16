@@ -118,6 +118,6 @@ if staging
 end
 FileUtils.mkdir_p("#{output_path}/aws")
 Dir.glob("#{root}/deploy/discourse/aws/*").select { |path| File.file?(path) }.each { |path| FileUtils.cp(path, "#{output_path}/aws/") }
-puts(upgrade_only ? "Prepared credential-free upgrade assets; live configuration is preserved." : "Prepared private installation configuration; registration and anonymous access remain closed.")
+puts(staging ? "Prepared isolated staging assets with no production credentials." : upgrade_only ? "Prepared credential-free upgrade assets; live configuration is preserved." : "Prepared private installation configuration; registration and anonymous access remain closed.")
 puts "No services were deployed."
 warn "Source contains uncommitted changes; commit and regenerate before release." unless dirty.empty?
