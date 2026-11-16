@@ -13,19 +13,23 @@ def aws(*args):
 
 
 def main():
+    target = os.environ.get("SVDEX_DEPLOY_ENVIRONMENT", "production")
+    if target not in ("production", "staging"): raise ValueError("Invalid deployment environment")
+    prefix = "svdex-staging" if target == "staging" else "svdex-discourse"
+    document = "SVDEX-DeployStagingRelease" if target == "staging" else "SVDEX-DeployReviewedRelease"
     sha = os.environ["GITHUB_SHA"]
     run = f'{os.environ["GITHUB_RUN_ID"]}-{os.environ["GITHUB_RUN_ATTEMPT"]}'
     bucket = os.environ["SVDEX_ARTIFACT_BUCKET"]
     instance = os.environ["SVDEX_INSTANCE_ID"]
     if not re.fullmatch(r"[0-9a-f]{40}", sha): raise ValueError("Invalid source revision")
     if not re.fullmatch(r"[0-9]{1,20}-[0-9]{1,5}", run): raise ValueError("Invalid run identifier")
-    if not re.fullmatch(r"svdex-discourse-[0-9]{12}-[a-z0-9-]+", bucket): raise ValueError("Invalid release bucket")
+    if not re.fullmatch(rf"{prefix}-[0-9]{{12}}-[a-z0-9-]+", bucket): raise ValueError("Invalid release bucket")
     if not re.fullmatch(r"i-[0-9a-f]+", instance): raise ValueError("Invalid host identifier")
     artifact = Path("artifacts/release.tar.gz")
     digest = hashlib.sha256(artifact.read_bytes()).hexdigest()
     aws("s3", "cp", str(artifact), f"s3://{bucket}/releases/github/{run}/release.tar.gz", "--sse", "AES256", "--only-show-errors")
     parameters = json.dumps({"ReleaseSha": [sha], "ArchiveSha256": [digest], "RunId": [run]})
-    aws("ssm", "send-command", "--document-name", "SVDEX-DeployReviewedRelease", "--instance-ids", instance, "--parameters", parameters, "--comment", f"SVDEX reviewed release {sha}")
+    aws("ssm", "send-command", "--document-name", document, "--instance-ids", instance, "--parameters", parameters, "--comment", f"SVDEX reviewed release {sha}")
     # No permission to read arbitrary SSM command output or private backups.
     receipt = Path("artifacts/deployment-receipt.json")
     for _ in range(230):

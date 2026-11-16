@@ -2,13 +2,6 @@ name: Native Discourse checks
 on:
   workflow_call:
   pull_request:
-    paths:
-      - frontend/**
-      - deploy/discourse/**
-      - scripts/**
-      - test/**
-      - package*.json
-      - .github/workflows/**
   workflow_dispatch:
 permissions:
   contents: read
@@ -25,15 +18,32 @@ jobs:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
+          fetch-depth: 0
       - uses: actions/setup-node@v7
         with:
           node-version: '24'
           cache: npm
       - run: npm ci
       - run: npm run check
+      - name: Classify pull request changes
+        id: changes
+        if: github.event_name == 'pull_request'
+        env:
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          git diff --name-only -z "$PR_BASE_SHA" HEAD > "$RUNNER_TEMP/svdex-changed-files"
+          python3 - <<'PY'
+          import os,pathlib
+          names=pathlib.Path(os.environ['RUNNER_TEMP'],'svdex-changed-files').read_bytes().decode('utf8',errors='surrogateescape').split('\0')
+          prefixes=('frontend/','deploy/discourse/','scripts/','test/','.github/workflows/')
+          needed=any(name and not name.endswith('.md') and (name.startswith(prefixes) or name.startswith('package') and name.endswith('.json')) for name in names)
+          with open(os.environ['GITHUB_OUTPUT'],'a') as out: out.write(f'needs_forum={str(needed).lower()}\n')
+          PY
       - name: Build a fresh pinned forum and local configuration
+        if: github.event_name != 'pull_request' || steps.changes.outputs.needs_forum == 'true'
         run: npm run setup
       - name: Native permissions, financial workflows and theme compilation
+        if: github.event_name != 'pull_request' || steps.changes.outputs.needs_forum == 'true'
         run: npm run check:discourse
       - name: Runtime diagnostics without credential or database artifacts
         if: failure()

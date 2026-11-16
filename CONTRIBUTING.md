@@ -111,10 +111,14 @@ Discourse job, then retains a source archive/checksum as a short-lived Actions
 artifact. It does not create a GitHub release, change repository visibility or
 deploy a site. No production secrets are provided to contributor workflows.
 
-Relevant updates to `main` run the approval-gated **Deliver SVDEX production**
-workflow. Contributor pull requests never get its production identity; maintainers
-review and merge first. The production reviewer approves a checked main revision
-in GitHub Actions. No AWS access is needed to contribute or run native checks.
+Maintainers push trusted candidates to `staging` for an automatic isolated preview,
+review it, then merge the same source into `main`. **Deliver SVDEX production**
+requires successful staging verification and native checks, then deploys without
+another approval click. The dedicated staging branch is replaceable: maintainers
+may use `git push --force-with-lease origin HEAD:staging` when a squash merge means
+the next candidate has a different history. Never force-push main. Contributor
+pull requests never receive either server's
+identity. No AWS access is needed to contribute or run native checks.
 
 Maintainers deploy paired plugin/themes using the preserving production upgrade
 in [production operations](deploy/discourse/PRODUCTION.md). A public source

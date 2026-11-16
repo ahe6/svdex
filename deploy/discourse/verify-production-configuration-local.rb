@@ -2,7 +2,7 @@
 abort "Local verification only" unless GlobalSetting.hostname == "localhost" && SiteSetting.port.to_s == "4080"
 
 source = File.read("/tmp/configure-upgrade-production.rb")
-guard = 'GlobalSetting.hostname == "svdex.com" && ENV["SVDEX_CONFIGURE_UPGRADE"] == "1"'
+guard = '(GlobalSetting.hostname == "svdex.com" || staging) && ENV["SVDEX_CONFIGURE_UPGRADE"] == "1"'
 raise "Production guard changed; review test adaptation" unless source.include?(guard)
 source = source.sub(guard, 'GlobalSetting.hostname == "localhost" && SiteSetting.port.to_s == "4080"')
 source = source.sub('User.find_by_email(ENV.fetch("DISCOURSE_DEVELOPER_EMAILS").split(",").first.strip)', 'User.find_by!(username: "svdex")')

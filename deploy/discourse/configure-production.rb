@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 # Fresh-site setup only: no local users, topics, company facts or fixture imports.
-abort "Expected the closed svdex.com production installation" unless GlobalSetting.hostname == "svdex.com" && SiteSetting.login_required && !SiteSetting.allow_new_registrations
+staging = GlobalSetting.hostname == "staging.svdex.com" && ENV["SVDEX_STAGING_SETUP"] == "1" && SiteSetting.disable_emails == "yes"
+abort "Expected a closed, explicitly authorized installation" unless (GlobalSetting.hostname == "svdex.com" || staging) && SiteSetting.login_required && !SiteSetting.allow_new_registrations
 abort "Explicit setup flag required" unless ENV["SVDEX_INITIAL_SETUP"] == "1"
 actor = User.find_by_email(ENV.fetch("DISCOURSE_DEVELOPER_EMAILS").split(",").first.strip)
 raise "Production administrator required" unless actor&.admin? && actor.active?
@@ -42,7 +43,7 @@ end
 SiteSetting.svdex_listings_category_id = categories.fetch("offerings").id
 SiteSetting.svdex_help_category_id = categories.fetch("feedback").id
 SiteSetting.meta_category_id = categories.fetch("feedback").id
-SiteSetting.contact_url = "https://svdex.com#{categories.fetch("feedback").url}"
+SiteSetting.contact_url = "#{Discourse.base_url}#{categories.fetch("feedback").url}"
 feedback_category = categories.fetch("feedback")
 native_topics = [Topic.find_by(id: SiteSetting.guidelines_topic_id.to_i),
   Topic.find_by(slug: "welcome-to-svdex", user_id: Discourse.system_user.id)].compact.uniq

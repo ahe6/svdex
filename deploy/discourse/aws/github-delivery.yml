@@ -7,6 +7,10 @@ Parameters:
   ArtifactBucket:
     Type: String
     AllowedPattern: 'svdex-discourse-[0-9]{12}-[a-z0-9-]+'
+  StageArtifactBucket:
+    Type: String
+    Default: ''
+    AllowedPattern: '(|svdex-staging-[0-9]{12}-[a-z0-9-]+)'
   HostRoleName:
     Type: String
     AllowedPattern: '[A-Za-z0-9+=,.@_-]+'
@@ -24,7 +28,21 @@ Parameters:
   GitHubRepositoryId:
     Type: String
     AllowedPattern: '[0-9]+'
+Conditions:
+  HasStagingBucket: !Not [!Equals [!Ref StageArtifactBucket, '']]
 Resources:
+  StagingVerificationRead:
+    Type: AWS::IAM::Policy
+    Condition: HasStagingBucket
+    Properties:
+      PolicyName: ReadVerifiedStagingSource
+      Roles: [!Ref DeployRole]
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action: s3:GetObject
+            Resource: !Sub 'arn:${AWS::Partition}:s3:::${StageArtifactBucket}/deployments/verified.json'
   GitHubIdentity:
     Type: AWS::IAM::OIDCProvider
     Properties:

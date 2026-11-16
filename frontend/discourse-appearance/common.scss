@@ -1022,7 +1022,14 @@ html.has-full-page-chat body #main-outlet:has(> .svdex-discussion-chat-navigatio
 }
 
 // The same text + caret geometry for SelectKit and modal-based Filter controls.
-.svdex-filter-trigger { padding-inline: .75em; }
+// Use the native SelectKit foreground for every inactive Filter control.
+// Keep core's primary/active and hover states intact.
+.svdex-filter-trigger {
+  padding-inline: .75em;
+  --d-button-default-text-color: var(--primary);
+  --d-button-default-icon-color: var(--primary-high);
+  font-weight: 500;
+}
 .svdex-filter-trigger .d-icon { margin: 0; padding: 0; width: 1em; height: 1em; }
 .select-kit.combo-box.svdex-sector-filter .select-kit-header {
   padding-inline: .75em;

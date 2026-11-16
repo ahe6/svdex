@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 local = GlobalSetting.hostname == "localhost" && SiteSetting.port.to_s == "4080"
-abort "Explicit SVDEX page retirement required" unless local || (GlobalSetting.hostname == "svdex.com" && ENV["SVDEX_RETIRE_INFORMATION_PAGES"] == "1")
+staging = GlobalSetting.hostname == "staging.svdex.com" && ENV["SVDEX_STAGING_SETUP"] == "1" && SiteSetting.disable_emails == "yes" && SiteSetting.login_required && !SiteSetting.allow_new_registrations
+abort "Explicit SVDEX page retirement required" unless local || ((GlobalSetting.hostname == "svdex.com" || staging) && ENV["SVDEX_RETIRE_INFORMATION_PAGES"] == "1")
 raise "Install the updated page routes first" unless defined?(DiscourseSvdex::RetiredGuidelinesPages)
 actor = local ? User.find_by!(username: "svdex") : User.find_by_email(ENV.fetch("DISCOURSE_DEVELOPER_EMAILS").split(",").first.strip)
 raise "Active administrator required" unless actor&.admin? && actor.active?

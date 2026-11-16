@@ -60,8 +60,8 @@ public Interface/plugin pull requests. A manual source-release validation workfl
 reuses the fresh native job and packages checked, committed source only. The native job compiles Glimmer/SCSS and
 runs server workflow checks; it can also be started manually. Neither job has
 production deployment credentials. Relevant updates merged to `main` also run
-the **Deliver SVDEX production** workflow, which waits for production approval
-before using temporary, narrowly scoped AWS access. See
+the **Deliver SVDEX production** workflow, which requires a successful matching staging preview
+and deploys merged code automatically using temporary, narrowly scoped AWS access. See
 [production operations](deploy/discourse/PRODUCTION.md#github-delivery).
 
 ## Licensing and publication
