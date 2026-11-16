@@ -7,7 +7,9 @@ https://staging.svdex.com before merging the same candidate into main. The stagi
 branch is persistent; feature branches and forks never receive staging credentials.
 Do not run unreviewed public PR code in a privileged `pull_request_target` job.
 
-Main requires pull-request source/native checks. **Deliver SVDEX production** then
+Main requires successful source/native checks on pull requests. Documentation-only
+PRs still report the required native job, but skip building a forum; production
+always runs the complete native checks. **Deliver SVDEX production** then
 runs fresh native checks, verifies the successful staging source tree, backs up the
 live site, and deploys without a separate approval click. Merging is the release
 decision. If main advances while a release is queued it is refused. If the source

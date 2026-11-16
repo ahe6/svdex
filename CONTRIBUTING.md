@@ -114,7 +114,10 @@ deploy a site. No production secrets are provided to contributor workflows.
 Maintainers push trusted candidates to `staging` for an automatic isolated preview,
 review it, then merge the same source into `main`. **Deliver SVDEX production**
 requires successful staging verification and native checks, then deploys without
-another approval click. Contributor pull requests never receive either server's
+another approval click. The dedicated staging branch is replaceable: maintainers
+may use `git push --force-with-lease origin HEAD:staging` when a squash merge means
+the next candidate has a different history. Never force-push main. Contributor
+pull requests never receive either server's
 identity. No AWS access is needed to contribute or run native checks.
 
 Maintainers deploy paired plugin/themes using the preserving production upgrade
