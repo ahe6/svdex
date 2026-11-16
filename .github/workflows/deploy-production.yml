@@ -4,15 +4,14 @@ on:
     branches: [main]
     paths:
       - frontend/**
-      - deploy/discourse/plugins/**
-      - deploy/discourse/aws/**
-      - deploy/discourse/native-defaults.rb
-      - deploy/discourse/configure-upgrade-production.rb
-      - deploy/discourse/configure-marketplace.rb
-      - deploy/discourse/production.json.example
+      - assets/brand/**
+      - deploy/discourse/**
+      - '!deploy/discourse/**/*.md'
       - scripts/prepare-discourse-production.rb
       - scripts/deploy-from-github.py
+      - scripts/verify-staging.py
       - .github/workflows/deploy-production.yml
+      - .github/workflows/deploy-staging.yml
   workflow_dispatch:
 permissions:
   contents: read
@@ -35,7 +34,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
-      - name: Refuse stale approvals
+      - name: Refuse stale releases
         env:
           GH_TOKEN: ${{ github.token }}
         run: test "$(gh api repos/ahe6/svdex/git/ref/heads/main --jq .object.sha)" = "$GITHUB_SHA"
@@ -55,6 +54,12 @@ jobs:
           aws-region: us-east-1
           role-duration-seconds: 3600
           role-session-name: svdex-${{ github.run_id }}
+      - name: Require the matching staging preview
+        env:
+          SVDEX_STAGING_BUCKET: ${{ vars.SVDEX_STAGING_BUCKET }}
+        run: |
+          aws s3 cp "s3://$SVDEX_STAGING_BUCKET/deployments/verified.json" artifacts/staging-proof.json --only-show-errors
+          python3 scripts/verify-staging.py artifacts/staging-proof.json
       - name: Deliver reviewed release
         env:
           SVDEX_ARTIFACT_BUCKET: ${{ vars.SVDEX_ARTIFACT_BUCKET }}

@@ -2,7 +2,8 @@
 # Reviewed native configuration only; no local financial fixtures are imported.
 local = GlobalSetting.hostname == "localhost" && SiteSetting.port.to_s == "4080"
 production = GlobalSetting.hostname == "svdex.com" && ENV["SVDEX_CONFIGURE_MARKETPLACE"] == "1"
-abort "Local setup or explicit production migration required" unless local || production
+staging = GlobalSetting.hostname == "staging.svdex.com" && ENV["SVDEX_STAGING_SETUP"] == "1" && SiteSetting.disable_emails == "yes" && SiteSetting.login_required && !SiteSetting.allow_new_registrations
+abort "Local setup or explicit deployment configuration required" unless local || production || staging
 actor = local ? User.find_by!(username: "svdex") : User.find_by_email(ENV.fetch("DISCOURSE_DEVELOPER_EMAILS").split(",").first.strip)
 raise "Active administrator required" unless actor&.admin? && actor.active?
 ActiveRecord::Base.transaction do
@@ -29,7 +30,7 @@ ActiveRecord::Base.transaction do
   group.add_owner(actor) unless group.group_users.exists?(user: actor, owner: true)
   group.update!(public_admission: false, public_exit: false, allow_membership_requests: true,
     membership_request_template: "Apply as a company using the company application form. Staff review every request before approval.")
-  SiteSetting.svdex_private_access_form_url = "https://tally.so/r/xVM7or"
+  SiteSetting.svdex_private_access_form_url = staging ? "" : "https://tally.so/r/xVM7or"
   private_group = Group.find_by(name: SiteSetting.svdex_private_offerings_group_name)
   private_group&.update!(full_name: "Private Deals members")
   access_badge = Badge.find_by(name: "Private Access")

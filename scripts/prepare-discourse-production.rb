@@ -8,13 +8,15 @@ require "fileutils"
 require "open3"
 require "tmpdir"
 
-abort "Usage: ruby scripts/prepare-discourse-production.rb PRIVATE_CONFIG.json|--upgrade OUTPUT_DIRECTORY" unless ARGV.size == 2
+abort "Usage: ruby scripts/prepare-discourse-production.rb PRIVATE_CONFIG.json|--upgrade|--staging OUTPUT_DIRECTORY" unless ARGV.size == 2
 root = File.expand_path("..", __dir__)
-upgrade_only = ARGV.first == "--upgrade"
+staging = ARGV.first == "--staging"
+upgrade_only = ARGV.first == "--upgrade" || staging
 output_path = File.expand_path(ARGV.last)
 if upgrade_only
   # Code-only updates never need SMTP/OAuth credentials or a production export.
   config = JSON.parse(File.read("#{root}/deploy/discourse/production.json.example"))
+  config["hostname"] = "staging.svdex.com" if staging
 else
   config_path = File.expand_path(ARGV.first)
   abort "Private configuration must have permissions 600" unless (File.stat(config_path).mode & 0o777) == 0o600
@@ -41,11 +43,13 @@ _, error, style_status = Open3.capture3("node", "#{root}/scripts/build-styles.js
 abort "Appearance build is stale: #{error}" unless style_status.success?
 source_dirs = [plugin, "frontend/discourse-sidebar", "frontend/discourse-interface", "frontend/discourse-appearance", "assets/brand", "deploy/discourse/aws", "deploy/discourse/site-pages"]
 sources = (source_dirs.flat_map { |path| Dir.glob("#{root}/#{path}/**/*").select { |entry| File.file?(entry) && !entry.include?("/__pycache__/") } } + %w[native-defaults.rb configure-production.rb configure-upgrade-production.rb configure-marketplace.rb retire-information-pages.rb apply-site-pages.rb verify-production.rb].map { |name| "#{root}/deploy/discourse/#{name}" }).sort
+sources << "#{root}/deploy/discourse/configure-staging.rb" if staging
 plugin_archive, status = Open3.capture2({ "COPYFILE_DISABLE" => "1" }, "tar", "-czf", "-", "-C", "#{root}/deploy/discourse/plugins", "discourse-svdex")
 abort "Could not package plugin" unless status.success?
 files = sources.to_h { |path| [path.delete_prefix("#{root}/"), Digest::SHA256.file(path).hexdigest] }
 head, status = Open3.capture2("git", "-C", root, "rev-parse", "HEAD")
 abort "Could not identify source revision" unless status.success?
+tree, = Open3.capture2("git", "-C", root, "rev-parse", "HEAD^{tree}")
 dirty, = Open3.capture2("git", "-C", root, "status", "--porcelain")
 
 app = if upgrade_only
@@ -95,8 +99,8 @@ FileUtils.mkdir_p(output_path, mode: 0o700)
 File.chmod(0o700, output_path)
 File.write("#{output_path}/app.yml", YAML.dump(app), perm: 0o600)
 File.write("#{output_path}/manifest.json", JSON.pretty_generate({
-  release_kind: upgrade_only ? "upgrade" : "installation",
-  hostname: config.fetch("hostname"), source_commit: head.strip, source_dirty: !dirty.empty?,
+  release_kind: staging ? "staging" : upgrade_only ? "upgrade" : "installation",
+  hostname: config.fetch("hostname"), source_commit: head.strip, source_tree: tree.strip, source_dirty: !dirty.empty?,
   discourse_revision: config.fetch("discourse_revision"), docker_revision: config.fetch("docker_revision"),
   files: files, app_sha256: Digest::SHA256.file("#{output_path}/app.yml").hexdigest,
 }) + "\n", perm: 0o600)
@@ -107,6 +111,10 @@ FileUtils.cp_r("#{root}/assets/brand", "#{output_path}/brand")
 FileUtils.cp_r("#{root}/deploy/discourse/site-pages", "#{output_path}/site-pages")
 %w[native-defaults.rb configure-production.rb configure-upgrade-production.rb configure-marketplace.rb retire-information-pages.rb apply-site-pages.rb verify-production.rb].each do |name|
   FileUtils.cp("#{root}/deploy/discourse/#{name}", "#{output_path}/#{name}")
+end
+if staging
+  FileUtils.cp("#{root}/deploy/discourse/configure-staging.rb", "#{output_path}/configure-staging.rb")
+  File.write("#{output_path}/staging-plugin.b64", Base64.strict_encode64(plugin_archive), perm: 0o600)
 end
 FileUtils.mkdir_p("#{output_path}/aws")
 Dir.glob("#{root}/deploy/discourse/aws/*").select { |path| File.file?(path) }.each { |path| FileUtils.cp(path, "#{output_path}/aws/") }

@@ -47,8 +47,8 @@ ruby scripts/prepare-discourse-production.rb \
 Use a new output directory for each release. The private input must have mode
 `600`; preparation refuses to overwrite output, embeds exact plugin bytes and
 records source hashes and Git revision. Commit before generating the release and
-verify `source_dirty` is false. No database, invented content or credential files
-are included. Never commit the generated bundle or private configuration.
+verify `source_dirty` is false. No database or invented content is included. Installation `app.yml` contains
+private mail credentials; never commit the generated bundle or configuration.
 
 The private production configuration retains the live credentials and reviewed
 immutable Discourse/discourse_docker revisions. The preserving release script
@@ -135,10 +135,15 @@ as a verification shortcut. Configure administrator MFA/passkeys and recovery.
 
 ## GitHub delivery
 
-Relevant pushes to `main` run the fresh pinned native checks, then wait for the
-`production` environment reviewer. Approve in GitHub Actions to release; no AWS
-sign-in is needed. Documentation-only changes do not trigger delivery. A stale
-approval is refused if main has advanced. Production deliveries are serialized.
+Trusted development revisions pushed to `staging` automatically update the isolated
+preview at `staging.svdex.com`. Review that site, then merge the same source into
+`main`. Relevant main updates run fresh native checks and deploy automatically;
+there is no second approval click. Production requires a host-written successful
+staging receipt for the exact Git source tree, so a merge/squash commit can retain
+its new commit ID while shipping identical reviewed files. Unstaged or changed
+source is refused. Documentation-only changes do not trigger delivery. Stale
+releases are refused if the branch has advanced. Deliveries are serialized per
+environment. See [staging operations](STAGING.md).
 
 The production job builds with `ruby scripts/prepare-discourse-production.rb
 --upgrade artifacts/release`. This code-only package has no installation
@@ -156,9 +161,10 @@ operator session. The runner can upload encrypted code archives and read small
 status receipts; it cannot read backups, credentials or arbitrary command logs.
 The privileged workflow actions are pinned to reviewed commits.
 
-Configure the production environment for required review, no administrator
-bypass, and deployment from `main` only. Set its nonsecret variables
-`SVDEX_DEPLOY_ROLE_ARN`, `SVDEX_ARTIFACT_BUCKET`, `SVDEX_INSTANCE_ID`. Enable the
+Configure the production environment for deployment from `main` only, without a
+required reviewer. Protect main with pull requests and required source/native
+checks. Set its nonsecret variables `SVDEX_DEPLOY_ROLE_ARN`,
+`SVDEX_ARTIFACT_BUCKET`, `SVDEX_INSTANCE_ID`, `SVDEX_STAGING_BUCKET`. Enable the
 repository variable `SVDEX_DEPLOY_ENABLED=true` only after the host helper and
 AWS stack are ready. Disable that variable to stop future automated deliveries;
 it does not interrupt one already running. Forks need their own infrastructure

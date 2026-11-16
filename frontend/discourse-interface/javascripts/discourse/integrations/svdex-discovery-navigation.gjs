@@ -1,5 +1,6 @@
 import registerDiscoveryTabs from "./svdex-discovery-tabs.gjs";
 import { isOverviewDirectory } from "../lib/svdex-sector-navigation";
+import DiscoveryTopicHeader from "../components/svdex-discovery-topic-header.gjs";
 import SectorFilter from "../components/svdex-sector-filter.gjs";
 import DiscoverySearch from "../components/svdex-discovery-search.gjs";
 import EventsNavigation from "../components/svdex-events-navigation.gjs";
@@ -15,6 +16,14 @@ import ListingTagGroupFilters from "../components/svdex-tag-group-filters.gjs";
 
 export default function registerDiscoveryNavigation(api, { settings, router, site }) {
   registerDiscoveryTabs(api);
+  api.registerValueTransformer("topic-list-columns", ({ value: columns, context }) => {
+    if (context.listContext === "discovery" &&
+      (isOfferingCategory(context.category?.id, settings) ||
+        Number(context.category?.id) > 0 && Number(context.category.id) === Number(settings.svdex_events_category_id))) {
+      columns.replace("topic", { header: DiscoveryTopicHeader });
+    }
+    return columns;
+  });
   api.renderInOutlet("top-notices", EventsNavigation);
   api.registerValueTransformer("create-topic-icon", () => "plus");
   api.registerValueTransformer("can-create-topic-button", ({ value }) =>
