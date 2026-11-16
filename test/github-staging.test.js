@@ -38,6 +38,10 @@ test("staging infrastructure has no production storage, credentials or administr
   const template = JSON.parse(readFileSync("deploy/discourse/aws/staging-host.json"));
   const hostPolicies = template.Resources.HostRole.Properties.Policies;
   const deployPolicies = template.Resources.StageDeployRole.Properties.Policies;
+  // SSM's managed agent policy otherwise permits reading unrelated parameters.
+  const deny = hostPolicies[0].PolicyDocument.Statement.find(rule => rule.Effect === "Deny");
+  assert.deepEqual(deny.Action, ["ssm:GetParameter", "ssm:GetParameters", "ssm:GetParametersByPath"]);
+  assert.ok(JSON.stringify(deny.NotResource).endsWith('/svdex/staging/admin-password"}'));
   const policies = JSON.stringify([hostPolicies, deployPolicies]);
   assert.doesNotMatch(policies, /svdex-discourse|AdministratorAccess|s3:\*|ssm:\*/);
   assert.ok(policies.includes("/svdex/staging/admin-password"));

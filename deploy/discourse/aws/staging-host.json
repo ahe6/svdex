@@ -152,6 +152,17 @@
                   "Resource": {
                     "Fn::Sub": "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/svdex/staging/admin-password"
                   }
+                },
+                {
+                  "Effect": "Deny",
+                  "Action": [
+                    "ssm:GetParameter",
+                    "ssm:GetParameters",
+                    "ssm:GetParametersByPath"
+                  ],
+                  "NotResource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/svdex/staging/admin-password"
+                  }
                 }
               ]
             }
