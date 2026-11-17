@@ -9,6 +9,7 @@ import dAvatar from "discourse/ui-kit/helpers/d-avatar";
 import dCategoryLink from "discourse/ui-kit/helpers/d-category-link";
 import dDiscourseTags from "discourse/ui-kit/helpers/d-discourse-tags";
 import dFormatDate from "discourse/ui-kit/helpers/d-format-date";
+import { presaleTerms } from "../lib/svdex-presales";
 import { offeringTerms } from "../lib/svdex-offering-terms";
 
 // Keep the same compact offering preview in dedicated lists and mixed feeds.
@@ -16,12 +17,13 @@ import { offeringTerms } from "../lib/svdex-offering-terms";
 export default class OfferingMobileCard extends Component {
   @service site;
   get topic() { return this.args.outletArgs.topic; }
-  get visible() { return this.site.mobileView && this.topic.svdex_listing; }
+  get data() { return this.topic.svdex_listing || this.topic.svdex_presale; }
+  get visible() { return this.site.mobileView && this.data; }
   get termsText() {
-    const { primary, secondary } = offeringTerms(this.topic.svdex_listing, this.topic.title);
+    const { primary, secondary } = this.topic.svdex_presale ? presaleTerms(this.data) : offeringTerms(this.data, this.topic.title);
     return [primary, secondary].filter(Boolean).join(" · ");
   }
-  get summary() { return this.topic.svdex_listing.summary; }
+  get summary() { return this.data?.summary; }
 
   <template>
     {{#if this.visible}}

@@ -137,6 +137,7 @@ export default class OfferingSearch extends Component {
   <template>
       {{#if this.showSearch}}
       <li class="svdex-company-search-item">
+        {{#if this.hasOfferingCount}}<span class="total-rows">{{this.offeringCountLabel}}</span>{{/if}}
         <form class="svdex-company-search-form select-kit single-select combo-box tag-drop" role="search" aria-label="Search offering" {{on "submit" this.submitSearch}} {{on "click" this.focusSearch}}>
           <DFilterInput
             @value={{this.companyQuery}}
@@ -154,7 +155,6 @@ export default class OfferingSearch extends Component {
             {{this.companyAutocomplete}}
           />
         </form>
-        {{#if this.hasOfferingCount}}<span class="total-rows">{{this.offeringCountLabel}}</span>{{/if}}
       </li>
       {{/if}}
 

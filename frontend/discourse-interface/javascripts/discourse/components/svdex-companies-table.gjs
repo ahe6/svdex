@@ -39,7 +39,7 @@ class CompanyRow extends Component {
             {{#if fact.interestSide}}{{#if this.siteSettings.svdex_interest_enabled}}
               <InterestButton @organizationId={{@item.user.id}} @organizationName={{this.organizationName}} @side={{fact.interestSide}} @label={{fact.value}} @title={{fact.interestTitle}} @buttonClass={{if fact.missingInterest "btn-link svdex-directory-interest svdex-directory-interest--unknown" "btn-link svdex-directory-interest"}} @onChange={{@refreshInterest}} />
               {{else}}{{fact.value}}{{/if}}
-            {{else if fact.people}}<OrganizationReferences @entries={{this.company.key_people}} @limit={{2}} @profileUrl={{this.profileUrl}} />
+            {{else if fact.people}}<OrganizationReferences @entries={{this.company.key_people}} @showRoles={{false}} @limit={{2}} @profileUrl={{this.profileUrl}} />
             {{else if fact.url}}<a href={{fact.url}}>{{fact.value}}</a>{{else}}{{fact.value}}{{/if}}
           </span>
         </div>

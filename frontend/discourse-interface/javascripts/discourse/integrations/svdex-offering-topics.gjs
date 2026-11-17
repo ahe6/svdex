@@ -1,3 +1,5 @@
+import PresaleFields from "../components/svdex-presale-fields.gjs";
+import { isPresaleCategory } from "../lib/svdex-presales";
 import moment from "moment";
 import PostEventBuilder from "discourse/plugins/discourse-events/discourse/components/modal/post-event-builder";
 import DiscoursePostEventEvent from "discourse/plugins/discourse-events/discourse/models/discourse-post-event-event";
@@ -34,7 +36,7 @@ export default function registerOfferingTopics(api, { settings, router, site }) 
       const result = await super.openNewTopic(options);
       if (this.model && (this.model !== previous || Number(this.model.categoryId) === Number(options.category?.id))) {
         const savedScope = this.model.svdex_category_scope;
-        const scope = ["offerings", "community"].includes(savedScope) ? savedScope : originScope;
+        const scope = ["offerings", "presales", "community"].includes(savedScope) ? savedScope : originScope;
         this.model.set("svdex_category_scope", scope);
         composerScopes.set(this.model, scope);
       }
@@ -56,7 +58,7 @@ export default function registerOfferingTopics(api, { settings, router, site }) 
     if (!component.element?.closest("#reply-control")) return content;
     const model = api.container.lookup("service:composer").model;
     const savedScope = model?.svdex_category_scope;
-    const scope = composerScopes.get(model) || (["offerings", "community", "unrestricted"].includes(savedScope) ? savedScope : scopeFor(model?.categoryId));
+    const scope = composerScopes.get(model) || (["offerings", "presales", "community", "unrestricted"].includes(savedScope) ? savedScope : scopeFor(model?.categoryId));
     return composerCategoryChoices(content, scope, settings);
   });
   api.registerValueTransformer("post-menu-buttons", ({ value: dag, context: { buttonKeys, collapsedButtons } }) => {
@@ -64,6 +66,7 @@ export default function registerOfferingTopics(api, { settings, router, site }) 
     collapsedButtons.show("svdex-bid");
   });
   api.registerValueTransformer("create-topic-label", ({ value, context }) => {
+    if ((value === "topic.create" || value === "") && isPresaleCategory(context.category?.id, settings)) return "svdex.new_presale";
     if ((value === "topic.create" || value === "") && Number(context.category?.id) === Number(settings.svdex_events_category_id)) return "discourse_post_event.new_event";
     if ((value === "topic.create" || value === "") && isOfferingCategory(context.category?.id, settings)) return "svdex.new_offering";
     // Core uses an empty mobile label for the icon-only button. Keep its
@@ -82,6 +85,7 @@ export default function registerOfferingTopics(api, { settings, router, site }) 
   api.renderInOutlet("discovery-list-area", OfferingsEmptyState);
   api.renderInOutlet("topic-list-item", OfferingMobileCard);
   api.renderInOutlet("composer-fields", ListingFields);
+  api.renderInOutlet("composer-fields", PresaleFields);
   api.renderInOutlet("topic-list-main-link-bottom", ListingHomePreview);
   api.renderAfterWrapperOutlet("post-content-cooked-html", ListingOverview);
   api.renderInOutlet("after-reviewable-queued-post-body", ListingOverview);
@@ -99,11 +103,11 @@ export default function registerOfferingTopics(api, { settings, router, site }) 
     return columns;
   });
   api.registerValueTransformer("topic-list-class", ({ value, context }) => {
-    if (isOfferingCategory(context.category?.id, settings)) value.push("svdex-listing-topics");
+    if (isOfferingCategory(context.category?.id, settings) || isPresaleCategory(context.category?.id, settings)) value.push("svdex-listing-topics");
     return value;
   });
   api.registerValueTransformer("topic-list-item-class", ({ value, context }) => {
-    if (context.topic.svdex_listing) value.push("svdex-listing-topic");
+    if (context.topic.svdex_listing || context.topic.svdex_presale) value.push("svdex-listing-topic");
     return value;
   });
 }

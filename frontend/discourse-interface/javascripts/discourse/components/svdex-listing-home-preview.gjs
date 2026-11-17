@@ -5,7 +5,7 @@ import { homeOfferFigures } from "../lib/svdex-home-offer-figures";
 export default class ListingHomePreview extends Component {
   @service site;
   get topic() { return this.args.outletArgs.topic; }
-  get data() { return this.topic.svdex_listing; }
+  get data() { return this.topic.svdex_listing || this.topic.svdex_presale; }
   get visible() { return Boolean(this.data); }
   get summary() {
     // Pinned topics can already have core's excerpt; do not print it twice.

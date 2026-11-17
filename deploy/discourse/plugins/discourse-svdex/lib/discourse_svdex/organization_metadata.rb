@@ -74,7 +74,7 @@ module DiscourseSvdex
         # privacy still applies. Names never trigger automatic user matching.
         if entry["user_id"]
           user = reference_users ? reference_users[entry["user_id"].to_i] : User.find_by(id: entry["user_id"])
-          result["url"] = user.url if user && guardian.can_see_profile?(user)
+          result["url"] = user.relative_url if user && guardian.can_see_profile?(user)
         end
         result
       end

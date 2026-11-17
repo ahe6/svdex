@@ -14,6 +14,7 @@ User.transaction do
     email: "svdex-fund-i@example.invalid", password: SecureRandom.hex(32),
     active: true, approved: true, trust_level: 1)
   [companies, funds].each { |group| group.add(user) unless group.users.exists?(id: user.id) }
+  Group.find_by(name: SiteSetting.svdex_maintained_accounts_group_name)&.add(user)
   if created
     user.email_tokens.update_all(confirmed: true)
     profile = user.user_profile

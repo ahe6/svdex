@@ -1,4 +1,4 @@
 export default {
   resource: "user.userActivity",
-  map() { this.route("interest"); },
+  map() { this.route("interest"); this.route("discoveries"); },
 };

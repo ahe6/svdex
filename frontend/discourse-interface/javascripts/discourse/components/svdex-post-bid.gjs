@@ -1,4 +1,5 @@
 import Component from "@glimmer/component";
+import { getOwner } from "@ember/owner";
 import { action } from "@ember/object";
 import { service } from "@ember/service";
 import DButton from "discourse/ui-kit/d-button";
@@ -12,6 +13,7 @@ export default class PostBid extends Component {
   @service currentUser;
   @service siteSettings;
   @action open() {
+    if (!this.currentUser) return getOwner(this).lookup("route:application").send("showLogin");
     const topic = this.args.post.topic;
     this.modal.show(OfferingBidModal, { model: {
       topicId: topic.id,
@@ -20,8 +22,8 @@ export default class PostBid extends Component {
     } });
   }
   <template>
-    {{#if this.currentUser}}{{#if this.siteSettings.svdex_bids_enabled}}
+    {{#if this.siteSettings.svdex_bids_enabled}}
       <DButton ...attributes class="post-action-menu__svdex-bid btn-primary" @translatedLabel="Submit bid" @translatedAriaLabel="Submit bid" @translatedTitle="Submit bid" @action={{this.open}} />
-    {{/if}}{{/if}}
+    {{/if}}
   </template>
 }

@@ -18,13 +18,14 @@ particular financing/security. No separate company entity database exists.
 
 ## Navigation and feeds
 
-The main sidebar order is Home, Companies, Funds, Offerings, Discussions, Events,
-Messages, My posts, My Bids, Bookmarks and Achievements. Users and Groups sit together under More.
+The main sidebar order is Home, Companies, Funds, Offerings, Pre-sales, People,
+Discussions, Events, Messages, My posts, My Bids, Bookmarks and Achievements. Users
+and Groups remain under More.
 Member-only links require sign-in; staff tools retain native visibility. More
 contains secondary destinations, including All tags, Groups and configured
 Privacy/Terms links. About/Guidelines routes are deliberately retired.
 
-Home Latest/Top includes viewer-visible offerings and Company & Fund Updates.
+Home Latest/Top includes viewer-visible offerings, approved Pre-sales and Updates.
 Ordinary discussions, Feedback and community Events are outside that allowlist.
 Its native Sector dropdown narrows the existing feed; it does not silently
 broaden into the global tag feed. Latest/Top retains the tag selection. Standalone
@@ -47,8 +48,8 @@ inside Filter without a category selector. RSVP/reminders/preferences remain nat
 ## Companies and Funds
 
 The organization directory inherits the native Users route/controller and composes
-native controls/table components. Ordinary Users omits company/fund accounts
-before search, pagination and counts. The organization identity links directly
+native controls/table components. Users includes independently managed personal, company and fund accounts; profiles
+explicitly marked SVDEX-maintained are excluded before search, pagination and counts. The organization identity links directly
 to its Summary; ordinary user links keep native profile cards.
 
 Current desktop columns after the identity/description area:
@@ -92,6 +93,25 @@ organization/representative/authority details. It does not automatically classif
 or verify the applicant. Staff ownership of the group does not make staff a
 company. Buy/Sell actions in the directory or Summary open the viewer's own
 indication with that side preselected; guests enter native login.
+
+## Pre-sales
+
+Pre-sales is a separate public native category for product preorders and early
+access. Its More link leads to Latest/Top with the shared structured topic layout:
+product title/summary, Terms, and native replies/views/activity. Terms emphasizes
+the purchase price and unit or access period, followed by what buyers receive
+and expected delivery. Mobile uses the same compact card presentation as Offerings.
+
+Five bounded native topic custom fields store summary, price, included product,
+expected delivery and other terms. The native composer, drafts, first-post edits
+and review queue carry those fields. New member topics require review; replies
+use normal native behavior. Approved products also appear in Home.
+
+Presentation is shared with Offerings; product data and securities data remain
+separate. Products do not accept securities bids, gain public/private offering
+tags, or contribute to company/fund offering counts. There is no checkout or
+payment processing. Local fixture products are installed only by the guarded
+`setup-presales-local.rb`; release configuration creates only the empty category.
 
 ## Offerings and metadata
 
@@ -322,3 +342,112 @@ Native nested replies are enabled and the default topic view locally. Fresh-site
 and upgrade configuration carry the same native settings for the next release.
 Private messages retain core behavior; this does not change permissions or the
 mobile composer. No custom reply renderer is introduced.
+
+### People and Users
+
+`/people` reuses the native Users directory table, search, sorting and profiles.
+The public, staff-curated `people` group selects named individuals; company/fund
+accounts and profiles hidden from the viewer are excluded before counts and
+pagination. Names alone never enroll an account. The initial period is All time,
+so inactive staff-maintained profiles can appear. Group membership does not verify
+identity, transfer account control or imply participation. Account handover remains
+a separate staff process using native account controls.
+
+`/u` is labeled Users and includes independently managed accounts of every type.
+Its native activity columns and optional group filters remain available. Production setup
+creates an empty People group; local professional fixtures are never published.
+
+People columns are Person (real name, photo and a short background line), Current roles,
+Location and Est. net worth. Current roles pair each organization with its specific
+role underneath. Details are vertically centered on desktop and remain left-aligned.
+Focus and general role remain available as native profile fields. They use native responsive directory
+rows instead of account activity stats. Organizations reverse explicit Key people
+account links, respecting profile/group visibility. Person sorting uses real names.
+Background, Role/Focus and net-worth disclosures are optional native UserFields
+maintained by staff; location and full biography remain native profile fields.
+The directory background covers relevant experience, education or current studies and is independent of the
+biography. Missing background stays blank. Staff keep organization Key people
+links current; past roles belong in Background. Directory estimates
+require an HTTPS source, valid as-of date and written basis; missing estimates use
+an em dash. Clicking a disclosed estimate opens its source, date and assumptions.
+Users retains its existing activity columns.
+
+### Account management
+
+The private, staff-only `svdex-maintained` group is an explicit management marker,
+separate from People/Companies/Funds catalog membership and from login activity.
+Ordinary registrations are participants by default. When creating a profile on
+someone else's behalf, staff add it to this group. After completing an account
+handover, staff remove it. This classification grants no permissions and does not
+perform the credential/email handover itself. Independently operated company and
+fund accounts appear alongside personal users in `/u`.
+
+The native Users directory excludes maintained accounts before counts, searching,
+group filtering, pagination and current-user prioritization. Explicit company/fund
+and People catalog endpoints retain these profiles while preserving native group
+and profile permissions. Catalog membership alone never implies account management.
+Production configuration creates an empty management group, without reclassifying
+existing accounts. Local setup marks only its known fixture accounts.
+
+People's Filter action opens native controls for current organization and location.
+Selections apply immediately, persist in the URL and pagination, and can be cleared.
+Choices derive from all accessible curated profiles, not just the current result
+page. Hidden organizations/people do not contribute filter choices or counts.
+The offerings count precedes the offering search input, matching catalog searches.
+
+Key people in company/fund directory cells show linked names on one line, with
+roles available on hover and in full on profiles. Names contribute their full
+intrinsic width to the scrollable table. Directory searches use a compact 12rem desktop width; topic and offering
+searches use 14rem for longer queries. Controls keep their native height and
+fluid mobile layouts.
+
+## Discovery attribution
+
+Companies, Funds and People retain separate discovery provenance on native user
+profiles. Classification captures the first SVDEX indexing timestamp; it never
+assumes that the account owner, current editor or staff importer discovered the
+entity. Existing records are backfilled as staff-added with an unknown listing
+date. Imported/staff-added records show that source without personal discovery
+credit. Self-listed records are labeled explicitly and do not count as discoveries
+of other entities. An indexed Person is not proof of registration or endorsement.
+
+Staff review discovery credit under the native Admin user details page. Accepting
+credit requires a named, substantive profile, an explicit contributor, a known
+listing timestamp and a review reason/evidence. Staff must resolve duplicates and
+source quality. These checks support manual review; they are not an automated
+notability or duplicate detector. Ordinary profile editing and ownership changes
+cannot assign credit. Existing timestamps cannot be rewritten; original entity
+and first contributor IDs survive later audited corrections.
+
+Profiles show a compact attribution and contributor Summary shows up to five
+visible discoveries, linked to Activity → Discoveries. The full history shows all discoveries newest first with pagination, without filter dropdowns.
+Names include the same staff-maintained background used in People, or the existing
+company/fund description. Type/date filtering remains available in the underlying
+API for future use. Native user
+profile and directory-group permissions apply before counts, previews and pages;
+removed entities and withdrawn/disputed credits contribute no public counts.
+Staff evidence/audit history is not public. No new sidebar item or automatic
+achievement scoring is introduced.
+
+The plugin stores provenance plus append-only review/merge snapshots in
+`svdex_discoveries` and `svdex_discovery_events`, included in normal Discourse
+PostgreSQL backups. Native account merges move current references while retaining
+original IDs. Duplicate entity merges preserve both records and hide credit until
+staff reconcile the conflict. Deletion nullifies live account links without
+removing historical audit records. These records have the same staff-only audit
+retention requirements as other moderation evidence.
+
+Use `npm run check:discourse` for permissions, capture/review, corrections, native
+merges, deletion, sorting and pagination regression coverage. `bash
+scripts/discourse-local.sh discoveries` initializes provenance and local visual
+fixtures. Production release configuration initializes only actual directory
+classifications; local credit fixtures never enter production.
+
+People Summary includes Affiliations, styled like the Discoveries preview. It
+reuses explicit current organization Key People links, roles and native account
+avatars; it does not infer affiliations from names or biography text. Duplicate
+links are collapsed, and native profile/group visibility excludes hidden
+organizations (including funds whose directory membership is restricted).
+Company/fund Summary keeps the native section headings, smaller fact typography,
+equal native text-button Buy/Sell interest actions immediately beside the details heading, and discovery
+attribution below its main content. Submission and consent behavior is unchanged.

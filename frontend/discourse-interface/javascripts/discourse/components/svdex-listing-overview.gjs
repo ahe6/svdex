@@ -1,3 +1,4 @@
+import { isPresaleCategory, PRESALE_FIELDS } from "../lib/svdex-presales";
 import { isOfferingCategory } from "../lib/svdex-offering-categories";
 import Component from "@glimmer/component";
 import { service } from "@ember/service";
@@ -5,9 +6,11 @@ import { formatFinancialAmount, formatValuation } from "../lib/svdex-financial-f
 
 export default class ListingOverview extends Component {
   @service siteSettings;
+  get isPresale() { const { post, model } = this.args.outletArgs; return Boolean(post?.topic?.svdex_presale) || (model?.type === "ReviewableQueuedPost" && isPresaleCategory(model.category_id ?? model.category?.id, this.siteSettings)); }
   get data() {
     const post = this.args.outletArgs.post;
     const reviewable = this.args.outletArgs.model;
+    if (reviewable?.type === "ReviewableQueuedPost" && this.isPresale) return Object.fromEntries(PRESALE_FIELDS.map(field => [field.key, reviewable.payload?.[`svdex_presale_${field.key}`]]));
     if (reviewable?.type === "ReviewableQueuedPost" &&
         isOfferingCategory(reviewable.category_id ?? reviewable.category?.id, this.siteSettings)) {
       const payload = reviewable.payload || {};
@@ -15,13 +18,14 @@ export default class ListingOverview extends Component {
         .map(key => [key, payload[`svdex_${key}`]]));
     }
     if (Number(post?.post_number) === 1 && !post.hidden && !post.deleted && !post.cooked_hidden) {
-      return post.topic?.svdex_listing;
+      return post.topic?.svdex_listing || post.topic?.svdex_presale;
     }
   }
   get summary() { return this.data?.summary?.trim(); }
   get rows() {
     const data = this.data;
     if (!data) return [];
+    if (this.isPresale) return PRESALE_FIELDS.filter(field => field.key !== "summary" && data[field.key]?.trim()).map(field => ({ label: field.name, value: data[field.key] }));
     const valuation = formatValuation(data.post_money_valuation_usd);
     const interestRows = !this.siteSettings.svdex_bids_enabled && Object.hasOwn(data, "interest_totals") ? ["buy", "sell"].map(side => ({
       label: `Offering ${side} interest`,
@@ -45,7 +49,7 @@ export default class ListingOverview extends Component {
   get visible() { return this.data && (this.summary || this.rows.length); }
   <template>
     {{#if this.visible}}
-      <section class="cooked svdex-topic-overview" aria-label="Company or offering details">
+      <section class="cooked svdex-topic-overview" aria-label={{if this.isPresale "Pre-sale details" "Company or offering details"}}>
         {{#if this.summary}}<p>{{this.summary}}</p>{{/if}}
         {{#if this.rows.length}}
           <dl>

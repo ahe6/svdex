@@ -34,7 +34,7 @@
     {
       "path": "frontend/discourse/app/controllers/users.js",
       "sha256": "bd7d81b5f3e39d61c2cb599c9b74f28813ad32dcebfd2048f195d991df330e1a",
-      "integration": "Native directory inheritance and organization-group exclusion"
+      "integration": "Native directory inheritance for participating Users and curated People"
     },
     {
       "path": "frontend/discourse/app/controllers/discovery/list.js",
@@ -90,6 +90,21 @@
       "path": "app/models/topic_list.rb",
       "sha256": "5247ac80e9469741140f8d93e8cf2be750dc04b9af9907e6973780ab1c534e58",
       "integration": "Offering count serialization on native category/topic lists"
+    },
+    {
+      "path": "app/services/user_merger.rb",
+      "sha256": "bd7c11246df79a174ddfac61db0ecee9e1b3a6573f41a09a5348ec7206e9c38c",
+      "integration": "Native merging_users hook preserves discovery identities and duplicate audit"
+    },
+    {
+      "path": "app/models/group.rb",
+      "sha256": "4f53a5cfc4e861a7a1ac2d9c6cf131987cdd4e45694b523c551128faef79d91f",
+      "integration": "Native directory classification events capture discovery provenance"
+    },
+    {
+      "path": "frontend/discourse/app/templates/user/summary.gjs",
+      "sha256": "6a9f2e4bf73e651c59fdb31ae12720fafb436b812a12d19f9f17a3c61b67b6ce",
+      "integration": "Native below-user-summary-stats outlet for discovery preview"
     }
   ]
 }

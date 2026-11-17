@@ -177,3 +177,9 @@ unless Chat::CategoryChannel.exists?(chatable: categories.fetch("discussion"), n
 end
 PluginStore.set("svdex", "production_setup_source", JSON.parse(File.read("#{root}/manifest.json")).fetch("source_commit"))
 puts "Production structure configured; no company accounts, financial facts or offering fixtures imported. Access remains closed."
+
+require_relative "configure-people"
+
+require_relative "configure-presales"
+
+require_relative "configure-discoveries"

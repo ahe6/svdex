@@ -18,7 +18,7 @@ app.host! "localhost"
 end
 app.get "/categories.json"
 public_ids = app.response.parsed_body.fetch("category_list").fetch("categories").map { |row| row.fetch("id") }
-raise "Private category appears in public directory" unless public_ids.sort == (primary + [SiteSetting.svdex_introductions_category_id.to_i, SiteSetting.svdex_events_category_id.to_i]).sort
+raise "Private category appears in public directory" unless public_ids.sort == (primary + [SiteSetting.svdex_introductions_category_id.to_i, SiteSetting.svdex_events_category_id.to_i, SiteSetting.svdex_presales_category_id.to_i]).sort
 app.get "/categories_and_latest.json"
 raise "Overview native data failed" unless app.response.status == 200
 rows = app.response.parsed_body.fetch("topic_list").fetch("topics")

@@ -1,4 +1,13 @@
 plugins:
+  svdex_presales_category_id:
+    default: 0
+    type: category
+    client: true
+  svdex_maintained_accounts_group_name:
+    default: "svdex-maintained"
+  svdex_people_group_name:
+    default: "people"
+    client: true
   svdex_bids_enabled:
     default: false
     client: true

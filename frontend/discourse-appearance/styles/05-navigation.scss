@@ -55,9 +55,19 @@ html:has(body.desktop-view) {
   .svdex-company-summary-actions {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--space-2);
+    gap: var(--space-4);
+    .btn-link { padding-block: var(--space-2); }
     clear: both;
-    margin-block-start: var(--space-4);
+    margin: 0;
+  }
+  .svdex-company-details-header {
+    display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-4);
+    .stats-title { width: auto; margin: 0; }
+  }
+  .stats-section .user-stat {
+    display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-1);
+    .value { font-size: var(--font-0); font-weight: 500; }
+    .label { font-size: var(--font-down-1); }
   }
   .stats-section > ul {
     display: grid;
@@ -110,3 +120,7 @@ nav.post-controls .actions button.post-action-menu__svdex-bid.btn-primary {
 
 // Offering visibility is selectable through native tags; avoid a second selector.
 .svdex-offerings-filters .category-breadcrumb > li:has(> .category-drop) { display: none; }
+
+// Nested replies center a narrow reading column by default. Anchor the complete
+// topic at the page edge, retaining native width, avatar gutters and reply depth.
+.desktop-view #topic.nested-view { margin-inline: 0 auto; }

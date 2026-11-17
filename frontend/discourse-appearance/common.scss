@@ -39,6 +39,10 @@
   min-height: min(650px, calc(100dvh - 70px));
 }
 
+// Match the native Users input in common/base/discourse.scss. Directory inputs
+// inherit that rule directly; composed topic search controls need the same width.
+.desktop-view { --svdex-topic-search-width: 210px; }
+
 // Native filter input; only size it to fit the existing breadcrumb row.
 .svdex-company-search-form {
   display: flex;
@@ -92,7 +96,7 @@
 .desktop-view .list-controls .navigation-container:has(.svdex-company-search-item) {
   justify-content: flex-end;
   column-gap: var(--space-3);
-  .svdex-company-search-form { width: 15em; }
+  .svdex-company-search-form { width: var(--svdex-topic-search-width); }
   .navigation-controls { order: 3; }
   #navigation-bar { order: -1; }
   .category-breadcrumb {
@@ -252,9 +256,6 @@
   pointer-events: none;
 }
 
-// The longer company search prompt should remain readable at desktop widths.
-.desktop-view .svdex-companies-page .directory-controls .filter-name { width: 15em; }
-
 // Use native heading typography and ComboBox controls for company navigation.
 .svdex-companies-page {
   .svdex-company-directory-tools {
@@ -348,7 +349,14 @@
 
 .svdex-organization-reference { display: block; white-space: normal; }
 .svdex-organization-reference__role { color: var(--primary-medium); }
-.svdex-companies-table .svdex-organization-reference { max-width: 16em; }
+// Whole names supply the column's intrinsic minimum, rather than each word.
+// Keep profiles' full role descriptions and multiline entity references intact.
+.svdex-companies-table .svdex-organization-reference {
+  max-width: 16em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .svdex-company-entity-label { color: var(--primary-medium); }
 .svdex-admin-reference { margin-block: var(--space-3); label { display: block; } }
 
@@ -384,6 +392,130 @@
       max-width: 70%;
     }
   }
+}
+
+// People shares native responsive directory rows, type and mobile leaders.
+.svdex-people-page {
+  .directory-controls {
+    align-items: center;
+    gap: var(--space-3);
+  }
+  .period-controls {
+    display: flex;
+    align-items: center;
+    h2 { margin: 0; }
+  }
+  .inline-form {
+    align-items: center;
+    gap: .5em;
+    > .filter-name, > .total-rows { margin: 0; }
+  }
+  .total-rows {
+    font-size: var(--font-down-1);
+    line-height: var(--line-height-medium);
+    white-space: nowrap;
+  }
+  .horizontal-scroll-sync__top-scroll { display: none; }
+  .user-info.svdex-person-named .name-line {
+    .username-wrapper { display: none; }
+    .name-wrapper .name { font-weight: bold; }
+  }
+  .svdex-company-summary {
+    flex-basis: 100%;
+    contain: inline-size;
+    min-width: 0;
+    color: var(--primary-medium);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    white-space: normal;
+  }
+  .svdex-person-affiliation {
+    display: block;
+    + .svdex-person-affiliation { margin-block-start: var(--space-2); }
+  }
+  .svdex-person-organization, .svdex-person-role { display: block; }
+  .svdex-person-role { font-size: var(--font-down-1); color: var(--primary-medium); }
+  .svdex-person-estimate { padding: 0; font: inherit; }
+}
+@container directory-table (min-width: 47em) {
+  .svdex-people-table {
+    // Related details form a single block, vertically centered against the
+    // identity/biography. Keep labels and values on the same left edge.
+    .directory-table__column-header {
+      justify-content: flex-start;
+      .header-contents { text-align: start; }
+    }
+    .directory-table__row > .directory-table__cell { align-items: center; }
+    .directory-table__cell--user-field {
+      justify-content: flex-start;
+      align-items: center;
+      min-width: 0;
+    }
+    .directory-table__value--user-field {
+      font-size: var(--font-0);
+      white-space: normal;
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+  }
+}
+@media (max-width: 600px) {
+  .svdex-people-page .directory-controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--space-2);
+    .period-controls { grid-column: 1; grid-row: 1; }
+    .inline-form { display: contents; }
+    .total-rows { grid-column: 2; grid-row: 1; justify-self: end; }
+    .filter-name { grid-column: 1; grid-row: 2; width: 100%; min-width: 0; }
+    .svdex-people-filter-control { grid-column: 2; grid-row: 2; }
+  }
+}
+// Share the compact native card treatment used by Funds: long professional
+// facts can use available row space instead of reserving half for short labels.
+@container directory-table (max-width: 47em) {
+  .svdex-people-table {
+    .directory-table__label { flex: 1 0 0; min-width: 7em; }
+    .directory-table__value--user-field { flex: 0 1 auto; max-width: 70%; }
+  }
+}
+
+// Discovery attribution lives in native profile Summary/Activity, not catalog rows.
+.svdex-discovery-attribution, .svdex-discovery-count { color: var(--primary-medium); font-size: var(--font-down-1); font-weight: normal; }
+:is(.svdex-discoveries-summary, .svdex-affiliations-summary) {
+  .svdex-discovery-preview { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3) var(--space-4); list-style: none; padding: 0; margin: 0 0 var(--space-3); }
+  li { min-width: 0; }
+  .user-detail > a { display: block; }
+  .user-detail > span { color: var(--primary-medium); font-size: var(--font-down-1); }
+}
+.svdex-discovery-controls, .svdex-discovery-pagination { display: flex; gap: var(--space-3); align-items: center; flex-wrap: wrap; margin-block-end: var(--space-4); }
+.svdex-discovery-controls > span, .svdex-discovery-self { color: var(--primary-medium); font-size: var(--font-down-1); }
+.svdex-discovery-list {
+  .user-info { display: flex; align-items: center; gap: var(--space-3); }
+  .user-image { margin: 0; flex-shrink: 0; }
+  .user-detail { min-width: 0; }
+  .svdex-discovery-self { display: block; }
+  .svdex-discovery-kind, .svdex-discovery-date { text-align: left; white-space: nowrap; }
+}
+.mobile-view .svdex-discovery-list {
+  tr { display: grid; grid-template-columns: 1fr auto; }
+  td.main-link { grid-column: 1 / -1; }
+  .svdex-discovery-date { text-align: right; }
+}
+.svdex-discovery-admin .value p { color: var(--primary-medium); font-size: var(--font-down-1); }
+
+.mobile-view :is(.svdex-discoveries-summary, .svdex-affiliations-summary) .svdex-discovery-preview { grid-template-columns: 1fr; }
+
+.svdex-discovery-list .svdex-discovery-background {
+  font-size: var(--font-0);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  white-space: normal;
+  color: var(--primary-medium);
 }
 
 // Mobile offerings share a directory-style identity and compact financial text.
@@ -565,9 +697,19 @@ html:has(body.desktop-view) {
   .svdex-company-summary-actions {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--space-2);
+    gap: var(--space-4);
+    .btn-link { padding-block: var(--space-2); }
     clear: both;
-    margin-block-start: var(--space-4);
+    margin: 0;
+  }
+  .svdex-company-details-header {
+    display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-4);
+    .stats-title { width: auto; margin: 0; }
+  }
+  .stats-section .user-stat {
+    display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-1);
+    .value { font-size: var(--font-0); font-weight: 500; }
+    .label { font-size: var(--font-down-1); }
   }
   .stats-section > ul {
     display: grid;
@@ -620,6 +762,10 @@ nav.post-controls .actions button.post-action-menu__svdex-bid.btn-primary {
 
 // Offering visibility is selectable through native tags; avoid a second selector.
 .svdex-offerings-filters .category-breadcrumb > li:has(> .category-drop) { display: none; }
+
+// Nested replies center a narrow reading column by default. Anchor the complete
+// topic at the page edge, retaining native width, avatar gutters and reply depth.
+.desktop-view #topic.nested-view { margin-inline: 0 auto; }
 
 // Lounge retains the native chat shell, with a non-scrolling Discussions toolbar.
 .svdex-discussion-chat-navigation {
@@ -792,7 +938,7 @@ html.has-full-page-chat body #main-outlet:has(> .svdex-discussion-chat-navigatio
   .svdex-company-search-item .svdex-company-search-form { flex: 1; min-width: 9rem; }
   .svdex-discovery-search {
     margin: 0;
-    .filter-input-container { width: 15em; }
+    .filter-input-container { width: var(--svdex-topic-search-width); min-width: 0; }
     input { width: 100%; margin: 0; }
   }
   .navigation-container:has(.svdex-discovery-search) .navigation-controls { align-items: center; gap: var(--space-3); }
@@ -801,9 +947,6 @@ html.has-full-page-chat body #main-outlet:has(> .svdex-discussion-chat-navigatio
 .mobile-view .svdex-topic-count { display: none; }
 @container (max-width: 55rem) {
   .desktop-view .list-controls .navigation-container:has(.svdex-company-search-item) .svdex-company-search-item { max-width: none; }
-}
-@media (max-width: 70rem) {
-  .desktop-view .svdex-discovery-search .filter-input-container { width: 12em; }
 }
 .svdex-discovery-search form { margin: 0; }
 @container (max-width: 55rem) {
@@ -815,7 +958,7 @@ html.has-full-page-chat body #main-outlet:has(> .svdex-discussion-chat-navigatio
 }
 .desktop-view .category-breadcrumb > .svdex-company-search-item {
   justify-content: flex-end;
-  .svdex-company-search-form { max-width: 15em; }
+  .svdex-company-search-form { max-width: var(--svdex-topic-search-width); }
 }
 @container (max-width: 55rem) {
   .desktop-view .list-controls .navigation-container:has(.svdex-company-search-item) .category-breadcrumb > .svdex-company-search-item {
@@ -848,9 +991,6 @@ html.has-full-page-chat body #main-outlet:has(> .svdex-discussion-chat-navigatio
   .svdex-companies-page .svdex-company-directory-tools .inline-form { gap: var(--space-2); }
 }
 .mobile-view .svdex-companies-page .svdex-company-directory-tools .inline-form { gap: var(--space-2); }
-@container (max-width: 55rem) {
-  .desktop-view .svdex-discovery-search .filter-input-container { width: 10em; }
-}
 // Every discovery toolbar shares a boxed Filters action before creation.
 .svdex-panel-search {
   margin-block-end: var(--space-4);
@@ -1069,4 +1209,15 @@ html.has-full-page-chat body #main-outlet:has(> .svdex-discussion-chat-navigatio
 }
 @media (max-width: 767px) {
   .d-header .title:not(.title--minimized) { --d-logo-height: 22px; }
+}
+// Keep the offering count and input as one group at tablet widths too.
+// Earlier breadcrumb flattening separated them into different grid cells.
+@container (max-width: 55rem) {
+  .desktop-view .list-controls .navigation-container:has(.svdex-company-search-item) .category-breadcrumb > .svdex-company-search-item {
+    display: flex;
+    grid-column: 1;
+    grid-row: 2;
+    min-width: 0;
+    .svdex-company-search-form { min-width: 0; width: auto; }
+  }
 }

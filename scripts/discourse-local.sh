@@ -51,12 +51,15 @@ case "$command_name" in
     "$0" community
     "$0" help
     "$0" companies
+    "$0" people
     "$0" chat
     "$0" appearance
     "$0" achievements
     "$0" private-offerings
     "$0" marketplace
     "$0" events
+    "$0" presales
+    "$0" discoveries
     "$0" fixtures
     ;;
   configure)
@@ -93,8 +96,14 @@ print("Discourse: http://localhost:4080")
 print("Admin credentials: " + str(credentials_path))
 PYTHON
     ;;
+  discoveries)
+    for script in configure-discoveries setup-discoveries-local; do
+      docker cp "$repo_dir/deploy/discourse/$script.rb" "$config:/tmp/$script.rb"
+      docker exec -u discourse "$config" bash -lc "cd /var/www/discourse && bundle exec rails runner /tmp/$script.rb"
+    done
+    ;;
   fixtures)
-    for script in setup-offering-row-fixtures-local setup-private-offering-fixture-local refresh-content-local setup-financial-activity-local; do
+    for script in setup-offering-row-fixtures-local setup-private-offering-fixture-local refresh-content-local setup-financial-activity-local setup-discoveries-local; do
       docker cp "$repo_dir/deploy/discourse/$script.rb" "$config:/tmp/$script.rb"
       docker exec -u discourse "$config" bash -lc "cd /var/www/discourse && bundle exec rails runner /tmp/$script.rb"
     done
@@ -123,6 +132,20 @@ PYTHON
     docker cp "$repo_dir/deploy/discourse/consolidate-community-categories.rb" "$config:/tmp/svdex-consolidate-categories.rb"
     exec docker exec -u discourse "$config" bash -lc \
       'cd /var/www/discourse && bundle exec rails runner /tmp/svdex-consolidate-categories.rb'
+    ;;
+  presales)
+    docker cp "$repo_dir/deploy/discourse/configure-presales.rb" "$config:/tmp/configure-presales.rb"
+    docker exec -u discourse "$config" bash -lc 'cd /var/www/discourse && bundle exec rails runner /tmp/configure-presales.rb'
+    docker cp "$repo_dir/deploy/discourse/setup-presales-local.rb" "$config:/tmp/setup-presales-local.rb"
+    exec docker exec -u discourse "$config" bash -lc 'cd /var/www/discourse && bundle exec rails runner /tmp/setup-presales-local.rb'
+    ;;
+  people)
+    docker cp "$repo_dir/deploy/discourse/configure-people.rb" "$config:/tmp/svdex-configure-people.rb"
+    docker exec -u discourse "$config" bash -lc \
+      'cd /var/www/discourse && bundle exec rails runner /tmp/svdex-configure-people.rb'
+    docker cp "$repo_dir/deploy/discourse/setup-people-local.rb" "$config:/tmp/svdex-people-local.rb"
+    exec docker exec -u discourse "$config" bash -lc \
+      'cd /var/www/discourse && bundle exec rails runner /tmp/svdex-people-local.rb'
     ;;
   companies)
     docker cp "$repo_dir/deploy/discourse/setup-company-accounts.rb" "$config:/tmp/svdex-company-accounts.rb"
@@ -190,5 +213,5 @@ PYTHON
   status)
     docker ps -a --filter "name=^/$config$" --filter 'name=^/miscdex-discourse-mail$' --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
     ;;
-  *) echo 'Usage: scripts/discourse-local.sh setup|configure|theme|appearance|achievements|private-offerings|fixtures|events|chat|community|introductions|marketplace|help|companies|fund|listings|start|stop|restart|logs|status' >&2; exit 2 ;;
+  *) echo 'Usage: scripts/discourse-local.sh setup|configure|theme|appearance|achievements|private-offerings|fixtures|events|presales|discoveries|chat|community|introductions|marketplace|help|companies|people|fund|listings|start|stop|restart|logs|status' >&2; exit 2 ;;
 esac

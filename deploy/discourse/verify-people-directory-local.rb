@@ -7,32 +7,46 @@ org_ids = GroupUser.joins(:user).where(users: { admin: false, moderator: false }
 raise "Organization fixtures missing" if org_ids.empty?
 app = ActionDispatch::Integration::Session.new(Rails.application)
 app.host! "localhost"
+maintained = Group.find_by!(name: SiteSetting.svdex_maintained_accounts_group_name)
+maintained_ids = maintained.users.pluck(:id)
 %w[all weekly].each do |period|
   app.get "/directory_items.json", params: { period: period, order: "username", asc: true }
   raise "Users request failed" unless app.response.status == 200
-  payload = app.response.parsed_body
-  ids = payload.fetch("directory_items").map { |row| row.fetch("id") }
-  raise "Organization leaked into Users" if (ids & org_ids).any?
-  expected = DirectoryItem.where(period_type: DirectoryItem.period_types.fetch(period.to_sym)).where.not(user_id: org_ids).count
-  raise "Users count includes organizations" unless payload.dig("meta", "total_rows_directory_items") == expected
+  expected = DirectoryItem.where(period_type: DirectoryItem.period_types.fetch(period.to_sym)).where.not(user_id: maintained_ids).count
+  raise "Users count includes maintained profiles" unless app.response.parsed_body.dig("meta", "total_rows_directory_items") == expected
 end
 org = User.find(org_ids.first)
 app.get "/directory_items.json", params: { period: "all", username: org.username }
-raise "Exact user search exposes an organization" unless app.response.parsed_body.fetch("directory_items").empty?
-app.get "/directory_items.json", params: { period: "all", name: org.username }
-raise "Name search exposes an organization" if app.response.parsed_body.fetch("directory_items").any? { |row| org_ids.include?(row.fetch("id")) }
+raise "Maintained organization entered Users" unless app.response.parsed_body.fetch("directory_items").empty?
+people = Group.find_by!(name: SiteSetting.svdex_people_group_name)
+raise "People must stay staff-curated" if people.public_admission || people.allow_membership_requests
 User.transaction do
-  fund = User.find_by!(username: "svdex-fund-i")
-  GroupUser.where(group_id: companies.id, user_id: fund.id).destroy_all
-  result = DirectoryItemsQuery.new(user: fund, guardian: Guardian.new(fund)).call(period_type: DirectoryItem.period_types[:all], prioritize_user: true)
-  raise "Fund-only membership/current-user priority bypassed exclusion" if result.items.any? { |row| org_ids.include?(row.user_id) }
+  person = User.create!(username: "person_#{SecureRandom.hex(4)}", name: "Directory Person",
+    email: "#{SecureRandom.hex(8)}@example.invalid", password: SecureRandom.hex(24), active: true, approved: true, trust_level: 2)
+  unnamed = User.create!(username: "unnamed_#{SecureRandom.hex(4)}", name: "",
+    email: "#{SecureRandom.hex(8)}@example.invalid", password: SecureRandom.hex(24), active: true, approved: true, trust_level: 2)
+  people.add(person)
+  people.add(unnamed)
+  people.add(org)
+  DirectoryItem.refresh_period!(:all)
+  person.user_option.update!(hide_profile: false)
+  query = -> { DirectoryItemsQuery.new(user: nil, guardian: Guardian.new).call(period_type: DirectoryItem.period_types[:all], svdex_catalog: "people", group_name: people.name, order: "username") }
+  result = query.call
+  ids = result.items.map(&:user_id)
+  raise "Curated person missing" unless ids.include?(person.id)
+  raise "Organization or nameless account entered People" if (ids & [unnamed.id, org.id]).any?
+  app.get "/people/directory_items.json", params: { period: "all", group: people.name, name: person.username }
+  raise "People search/count failed" unless app.response.status == 200 && app.response.parsed_body.dig("meta", "total_rows_directory_items") == 1
+  result = DirectoryItemsQuery.new(user: unnamed, guardian: Guardian.new(unnamed)).call(period_type: DirectoryItem.period_types[:all], svdex_catalog: "people", group_name: people.name, prioritize_user: true)
+  raise "Current-user priority bypassed curation" if result.items.any? { |row| row.user_id == unnamed.id }
+  SiteSetting.allow_users_to_hide_profile = true
+  person.user_option.update!(hide_profile: true)
+  raise "Hidden profile leaked into People" if query.call.items.any? { |row| row.user_id == person.id }
   raise ActiveRecord::Rollback
 end
-app.get "/directory_items.json", params: { period: "all", group: companies.name }
-raise "Organization directory lost members" unless app.response.parsed_body.fetch("directory_items").map { |row| row.fetch("id") }.sort == companies.users.where(admin: false, moderator: false).pluck(:id).sort
 app.get "/u/#{org.username}.json"
 raise "Company profile became inaccessible" unless app.response.status == 200
-puts "PASS Users hides companies/funds before counts, searches and pagination; fund-only and current-user exclusions hold; organization directory and profiles remain available"
+puts "PASS Users excludes maintained profiles; People enforces curation, real names, organization exclusion, search, counts and native profile privacy"
 
 User.transaction do
   # Own the test participant rather than relying on a developer's visual-review

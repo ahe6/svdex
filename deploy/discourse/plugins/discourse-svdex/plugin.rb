@@ -21,7 +21,7 @@ module ::DiscourseSvdex
   end
 
   def self.home_category_ids
-    (offering_category_ids + [SiteSetting.svdex_introductions_category_id.to_i]).select(&:positive?).uniq
+    (offering_category_ids + [SiteSetting.svdex_introductions_category_id.to_i, SiteSetting.svdex_presales_category_id.to_i]).select(&:positive?).uniq
   end
 
   def self.offering_category?(id)
@@ -76,6 +76,21 @@ after_initialize do
   AboutController.prepend(DiscourseSvdex::RetiredAboutPage)
   StaticController.prepend(DiscourseSvdex::RetiredGuidelinesPages)
   require_relative "lib/discourse_svdex/company_directory"
+  require_relative "lib/discourse_svdex/people_directory"
+  require_relative "app/models/discourse_svdex/discovery"
+  require_relative "lib/discourse_svdex/discoveries"
+  require_relative "app/controllers/discourse_svdex/discoveries_controller"
+  on(:user_added_to_group) { |user, _group, *_args| DiscourseSvdex::Discoveries.capture!(user) }
+  on(:user_removed_from_group) { |user, _group, *_args| DiscourseSvdex::Discoveries.capture!(user) }
+  on(:merging_users) { |source, target| DiscourseSvdex::Discoveries.merge!(source, target) }
+  add_to_serializer(:admin_detailed_user, :svdex_discovery_entity) { DiscourseSvdex::Discoveries.kind(object) }
+  add_to_serializer(:user, :svdex_discovery_entity, include_condition: -> { scope.is_staff? }) { DiscourseSvdex::Discoveries.kind(object) }
+  add_to_serializer(:user, :svdex_discovery, include_condition: -> { DiscourseSvdex::Discoveries.visible?(object, scope) }) do
+    DiscourseSvdex::Discoveries.credit(object, scope)
+  end
+  add_to_serializer(:user, :svdex_discoveries, include_condition: -> { DiscourseSvdex::Discoveries.visible?(object, scope) }) do
+    DiscourseSvdex::Discoveries.history(object, scope, limit: 5)
+  end
   require_relative "lib/discourse_svdex/offering_structure"
   on(:topic_created) { |topic, *_args| DiscourseSvdex::OfferingStructure.sync_visibility!(topic) }
   on(:approved_post) { |_reviewable, post| DiscourseSvdex::OfferingStructure.sync_visibility!(post.topic) }
@@ -88,8 +103,16 @@ after_initialize do
   require_relative "app/controllers/discourse_svdex/my_interest_controller"
   require_relative "app/controllers/discourse_svdex/company_details_controller"
   require_relative "app/controllers/discourse_svdex/company_directory_controller"
+  require_relative "app/controllers/discourse_svdex/people_directory_controller"
   require_relative "app/controllers/discourse_svdex/private_access_controller"
-  User.class_eval { attr_accessor :svdex_company_directory_details }
+  User.class_eval { attr_accessor :svdex_company_directory_details, :svdex_person_directory_details }
+  add_to_serializer(:user_name, :svdex_person, include_condition: -> {
+    object.is_a?(User) && object.svdex_person_directory_details && scope.public_can_see_profiles? && scope.can_see_profile?(object)
+  }) { object.svdex_person_directory_details }
+  add_to_serializer(:user, :svdex_affiliations, include_condition: -> { DiscourseSvdex::PeopleDirectory.profile_eligible?(object, scope) }) do
+    DiscourseSvdex::PeopleDirectory.populate([object], scope)
+    object.svdex_person_directory_details[:organizations]
+  end
   DirectoryItem.class_eval { attr_accessor :svdex_organizations }
   add_to_serializer(:directory_item, :svdex_organizations) { object.svdex_organizations || 0 }
   DiscourseSvdex::CompanyDirectory::FIELDS.each do |key, field|
@@ -119,6 +142,8 @@ after_initialize do
   end
   require_relative "lib/discourse_svdex/topic_discovery"
   DiscourseSvdex::TopicDiscovery.install!(self)
+  require_relative "lib/discourse_svdex/presales"
+  DiscourseSvdex::Presales.install!(self)
 
   DiscourseSvdex::FIELDS.each do |name, length|
     register_topic_custom_field_type(name, name == DiscourseSvdex::VALUATION_FIELD ? :integer : :string, max_length: length)
@@ -191,6 +216,8 @@ after_initialize do
   Discourse::Application.routes.append do
     get "/private-offerings/summary", to: "discourse_svdex/private_access#summary", defaults: { format: :json }
     get "/private-offerings", to: "discourse_svdex/private_access#index", constraints: { format: "html" }
+    get "/people/directory_items", to: "discourse_svdex/people_directory#index", defaults: { format: :json }
+    get "/people", to: "users#index", constraints: { format: "html" }
     get "/companies", to: "users#index", constraints: { format: "html" }
     get "/all-forums", to: "categories#index", constraints: { format: "html" }
     get "/discussion-forums", to: "categories#index", constraints: { format: "html" }

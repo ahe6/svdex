@@ -18,7 +18,7 @@ module DiscourseSvdex
       result = DirectoryItemsQuery.new(user: current_user, guardian: guardian).call(
         period_type: DirectoryItem.period_types[:all], group_name: SiteSetting.svdex_companies_group_name,
         name: params[:name], order: order, ascending: params[:asc].present?,
-        page: page, limit: limit, prioritize_user: false, svdex_filters: filters,
+        page: page, limit: limit, prioritize_user: false, svdex_catalog: "companies", svdex_filters: filters,
       )
       more = params.permit(:kind, :name, :order, :asc, *CompanyDirectory::FILTER_KEYS).to_h.merge(page: page + 1, limit: limit)
       render_json_dump(

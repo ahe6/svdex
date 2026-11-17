@@ -11,6 +11,7 @@ ActiveRecord::Base.transaction do
   welcome = Topic.find_by(slug: "welcome-to-svdex", user_id: Discourse.system_user.id) ||
     PostCreator.create!(Discourse.system_user, title: "Welcome to SVDEX", raw: "Company research and community conversation.",
       category: Category.find_by!(slug: "discussion").id, tags: ["community"], skip_validations: true, skip_jobs: true).topic
+  people_members_before = Group.find_by!(name: SiteSetting.svdex_people_group_name).users.pluck(:id).sort
   before = [User.count, Topic.with_deleted.count, Post.with_deleted.count, UserBadge.count]
   qa_old_welcome_raw = welcome.first_post.raw
   raw = qa_old_welcome_raw + "\n\n[Site Feedback](/c/site-feedback/2) and #site-feedback"
@@ -47,6 +48,13 @@ ActiveRecord::Base.transaction do
   eval(source, binding, "/tmp/configure-upgrade-production.rb")
   raise "Repeated migration duplicates tags" unless vocabulary.reload.tags.pluck(:id).sort == ids
   raise "Repeated migration changes content counts" unless before == [User.count, Topic.with_deleted.count, Post.with_deleted.count, UserBadge.count]
-  puts "PASS native configuration migration is idempotent"
+  people = Group.find_by!(name: SiteSetting.svdex_people_group_name)
+  raise "People migration changed membership" unless people.users.pluck(:id).sort == people_members_before
+  raise "People is not curated" if people.public_admission || people.allow_membership_requests
+  raise "Users title missing" unless I18n.t("js.directory.title", locale: :en) == "Users"
+  maintained = Group.find_by!(name: SiteSetting.svdex_maintained_accounts_group_name)
+  raise "Management marker permits self-classification" if maintained.public_admission || maintained.public_exit || maintained.allow_membership_requests
+  raise "Management marker exposed" unless maintained.visibility_level == Group.visibility_levels[:staff] && maintained.members_visibility_level == Group.visibility_levels[:staff]
+  puts "PASS native configuration migration is idempotent; People membership remains unchanged and Users vocabulary is configured"
   raise ActiveRecord::Rollback
 end
