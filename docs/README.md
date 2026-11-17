@@ -7,6 +7,7 @@
 - [Current product behavior](product.md)
 - [Source boundaries, checks and upstream upgrades](discourse-maintenance.md)
 - [Local and remote development operations](operations.md)
+- [Cloud editing, browser reports and PR previews](cloud-development.md)
 
 ## Runtime and release
 

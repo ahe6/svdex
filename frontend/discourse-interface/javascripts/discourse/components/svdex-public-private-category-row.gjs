@@ -1,7 +1,6 @@
 import { cached } from "@glimmer/tracking";
 import CategoryRow from "discourse/select-kit/components/category-row";
-import { publicPrivateCategory } from "../lib/svdex-public-private-category";
-export const PRIVATE_ACCESS_ID = "svdex-private-access-info";
+import { publicPrivateCategory, PRIVATE_ACCESS_ID } from "../lib/svdex-public-private-category";
 export default class PublicPrivateCategoryRow extends CategoryRow {
   get hideParentCategory() {
     // The unified navigation dropdown already lists Offerings separately.

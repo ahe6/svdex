@@ -892,11 +892,6 @@ html.has-full-page-chat body #main-outlet:has(> .svdex-discussion-chat-navigatio
       &__primary { font-size: var(--font-0); }
       &__secondary { font-size: var(--font-down-1); }
     }
-    .list-controls .navigation-container:has(.svdex-company-search-item) {
-      justify-content: flex-start;
-      gap: var(--space-2);
-      .category-breadcrumb { display: contents; }
-    }
   }
 }
 
@@ -929,17 +924,7 @@ html.has-full-page-chat body #main-outlet:has(> .svdex-discussion-chat-navigatio
   > ul { display: flex; align-items: center; gap: var(--space-2); }
   > ul > li { margin: 0; }
 }
-@container (max-width: 55rem) {
-  .desktop-view .list-controls .navigation-container:has(.svdex-company-search-item) {
-    justify-content: flex-start;
-    gap: var(--space-2);
-    .category-breadcrumb { display: contents; }
-    .svdex-offering-filter-group { flex-basis: 100%; }
-    .svdex-company-search-item { flex: 1 1 9rem; min-width: 9rem; max-width: 15em; margin-inline-start: auto; }
-    .svdex-company-search-form { width: 100%; }
-    .navigation-controls { margin-inline-start: 0; }
-  }
-}
+
 // The mobile dialog keeps its original stacked fields and search-first layout.
 .svdex-mobile-filter-fields {
   .svdex-offering-filter-group, .svdex-offering-filter-group > ul { display: contents; }
@@ -963,9 +948,7 @@ html.has-full-page-chat body #main-outlet:has(> .svdex-discussion-chat-navigatio
   .navigation-container:has(.svdex-discovery-search) .category-breadcrumb { margin-inline-start: auto; }
 }
 .mobile-view .svdex-topic-count { display: none; }
-@container (max-width: 55rem) {
-  .desktop-view .list-controls .navigation-container:has(.svdex-company-search-item) .svdex-company-search-item { max-width: none; }
-}
+
 .svdex-discovery-search form { margin: 0; }
 @container (max-width: 55rem) {
   .desktop-view .list-controls .navigation-container:has(.svdex-discovery-search) {
@@ -978,27 +961,9 @@ html.has-full-page-chat body #main-outlet:has(> .svdex-discussion-chat-navigatio
   justify-content: flex-end;
   .svdex-company-search-form { max-width: var(--svdex-topic-search-width); }
 }
-@container (max-width: 55rem) {
-  .desktop-view .list-controls .navigation-container:has(.svdex-company-search-item) .category-breadcrumb > .svdex-company-search-item {
-    flex: 1 1 9rem;
-    min-width: 9rem;
-    .svdex-company-search-form { min-width: 7.5rem; }
-  }
-}
+
 // Native Latest/Top tabs replace the offering sort selector.
 .desktop-view .navigation-container:has(.svdex-discovery-search) > .category-breadcrumb > li:has(> .tag-drop) { display: none; }
-@container (max-width: 55rem) {
-  .desktop-view .list-controls .navigation-container:has(.svdex-company-search-item) {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto auto;
-    align-items: center;
-    #navigation-bar { grid-column: 1; grid-row: 1; }
-    .svdex-offering-filter-group { grid-column: 2 / -1; grid-row: 1; justify-self: end; }
-    .category-breadcrumb > .svdex-company-search-item { grid-column: 1; grid-row: 2; width: 100%; }
-    .category-breadcrumb > li:has(> .tag-drop:not(.svdex-company-search-form)) { grid-column: 2; grid-row: 2; }
-    .navigation-controls { grid-column: 3; grid-row: 2; }
-  }
-}
 
 // Directory controls use the same gaps on both sides of search.
 .svdex-companies-page .svdex-company-directory-tools .inline-form {
@@ -1017,20 +982,7 @@ html.has-full-page-chat body #main-outlet:has(> .svdex-discussion-chat-navigatio
 }
 .svdex-listing-filters-modal .svdex-home-tags { width: 100%; .select-kit { width: 100%; } }
 .desktop-view .svdex-mobile-filters { display: inline-flex; }
-// Without standalone financial selectors, a narrow offering toolbar needs only
-// a navigation row and the search/tags/filter/create row.
-@container (max-width: 55rem) {
-  .desktop-view .list-controls .navigation-container:has(.svdex-company-search-item) {
-    #navigation-bar { grid-column: 1 / -1; }
-  }
-}
-@container (max-width: 55rem) {
-  .desktop-view .list-controls .navigation-container:has(.svdex-company-search-item) {
-    .category-breadcrumb > .svdex-company-search-item { display: contents; }
-    .svdex-topic-count { grid-column: 2 / -1; grid-row: 1; justify-self: end; }
-    .svdex-company-search-form { grid-column: 1; grid-row: 2; width: 100%; min-width: 0; }
-  }
-}
+
 .mobile-view .navigation-container:has(.svdex-home-tags) .navigation-controls > .svdex-mobile-filters { order: 0; }
 .svdex-listing-filters-modal .d-modal__body > .tag-drop { width: 100%; margin-block-end: var(--space-4); }
 @container (max-width: 55rem) {
@@ -1098,15 +1050,6 @@ html.has-full-page-chat body #main-outlet:has(> .svdex-discussion-chat-navigatio
   }
 }
 .desktop-view .navigation-container:has(.svdex-discovery-search) > .navigation-controls { margin-inline-start: auto; }
-// Search and Filter form one browsing group; create actions sit a little apart.
-
-@container (max-width: 55rem) {
-  .desktop-view .list-controls .navigation-container:has(.svdex-company-search-item) {
-    grid-template-columns: minmax(0, 1fr) auto;
-    .svdex-topic-count { grid-column: 2; }
-    .navigation-controls { grid-column: 2; }
-  }
-}
 
 .navigation-container:has(.svdex-sector-control) > .category-breadcrumb > li:has(> .tag-drop:not(.svdex-company-search-form)) { display: none; }
 .svdex-sector-control .select-kit { max-width: 13em; }
@@ -1228,14 +1171,32 @@ html.has-full-page-chat body #main-outlet:has(> .svdex-discussion-chat-navigatio
 @media (max-width: 767px) {
   .d-header .title:not(.title--minimized) { --d-logo-height: 22px; }
 }
-// Keep the offering count and input as one group at tablet widths too.
-// Earlier breadcrumb flattening separated them into different grid cells.
+
+// Final tablet offering layout: tabs above, then count/search and actions.
+// The count remains inside the search group instead of becoming a grid item.
 @container (max-width: 55rem) {
-  .desktop-view .list-controls .navigation-container:has(.svdex-company-search-item) .category-breadcrumb > .svdex-company-search-item {
-    display: flex;
-    grid-column: 1;
-    grid-row: 2;
-    min-width: 0;
-    .svdex-company-search-form { min-width: 0; width: auto; }
+  .desktop-view .list-controls .navigation-container:has(.svdex-company-search-item) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    justify-content: flex-start;
+    gap: var(--space-2);
+    .category-breadcrumb { display: contents; }
+    #navigation-bar { grid-column: 1 / -1; grid-row: 1; }
+    .svdex-offering-filter-group { flex-basis: 100%; grid-column: 2 / -1; grid-row: 1; justify-self: end; }
+    .svdex-company-search-item { flex: 1 1 9rem; min-width: 9rem; max-width: none; margin-inline-start: auto; }
+    .svdex-company-search-form { width: 100%; }
+    .category-breadcrumb > .svdex-company-search-item {
+      display: flex;
+      flex: 1 1 9rem;
+      grid-column: 1;
+      grid-row: 2;
+      width: 100%;
+      min-width: 0;
+      .svdex-company-search-form { min-width: 0; width: auto; }
+    }
+    .category-breadcrumb > li:has(> .tag-drop:not(.svdex-company-search-form)) { grid-column: 2; grid-row: 2; }
+    .navigation-controls { margin-inline-start: 0; grid-column: 2; grid-row: 2; }
+    .svdex-topic-count { grid-column: 2; grid-row: 1; justify-self: end; }
   }
 }

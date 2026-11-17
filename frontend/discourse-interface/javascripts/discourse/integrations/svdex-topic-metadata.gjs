@@ -1,6 +1,7 @@
 import { defaultRenderTag } from "discourse/lib/render-tag";
 import { tagColor } from "../lib/svdex-tag-colors";
 import { defaultCategoryLinkRenderer } from "discourse/ui-kit/helpers/d-category-link";
+import { PRIVATE_ACCESS_ID } from "../lib/svdex-public-private-category";
 
 export default function registerTopicMetadata(api, { settings, router, site }) {
   // Keep native full names in selectors/directories, and expose a compact
@@ -9,7 +10,10 @@ export default function registerTopicMetadata(api, { settings, router, site }) {
   // Keep model display names plain: core also uses them in document titles.
   // Add the metadata-only variants inside the native badge renderer instead.
   api.replaceCategoryLinkRenderer((category, options) => {
-    const rendered = defaultCategoryLinkRenderer(category, options);
+    // Discourse stores a single renderer, so access links and compact labels
+    // must compose here rather than independently replacing one another.
+    const rendered = defaultCategoryLinkRenderer(category,
+      category?.id === PRIVATE_ACCESS_ID ? { ...options, url: "/private-offerings" } : options);
     const id = Number(category?.id);
     const short = id === Number(settings.svdex_public_offerings_category_id) ? "public"
       : id === Number(settings.svdex_private_offerings_category_id) ? "private"

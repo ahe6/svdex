@@ -17,6 +17,17 @@ differs from staging, push the new candidate to staging and review it first.
 Documentation-only changes need no deployment, but the next code release must
 include the full current source tree in its staging preview.
 
+## Previewing a reviewed PR without a local push
+
+The manual workflow accepts `reviewed_pr` when run on the `staging` branch.
+It requires an open PR targeting main, current main ancestry and successful
+required source/native checks. It checks out the resolved head and refuses a
+changed head before deployment; the host receipt records that candidate rather
+than the workflow branch SHA. Existing OIDC and environment boundaries stay in
+place, and the workflow receives no repository-write permission. This is an
+explicit maintainer review action, not automatic public-PR deployment.
+See [cloud development](../../docs/cloud-development.md) for commands and limits.
+
 ## Isolation
 
 `aws/staging-host.json` provisions a separate encrypted host, bucket and IAM roles.

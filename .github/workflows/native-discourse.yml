@@ -36,7 +36,7 @@ jobs:
           import os,pathlib
           names=pathlib.Path(os.environ['RUNNER_TEMP'],'svdex-changed-files').read_bytes().decode('utf8',errors='surrogateescape').split('\0')
           prefixes=('frontend/','deploy/discourse/','scripts/','test/','.github/workflows/')
-          needed=any(name and not name.endswith('.md') and (name.startswith(prefixes) or name.startswith('package') and name.endswith('.json')) for name in names)
+          needed=any(name and not name.endswith('.md') and (name.startswith(prefixes) or name == 'playwright.config.js' or name.startswith('package') and name.endswith('.json')) for name in names)
           with open(os.environ['GITHUB_OUTPUT'],'a') as out: out.write(f'needs_forum={str(needed).lower()}\n')
           PY
       - name: Build a fresh pinned forum and local configuration
@@ -45,6 +45,22 @@ jobs:
       - name: Native permissions, financial workflows and theme compilation
         if: github.event_name != 'pull_request' || steps.changes.outputs.needs_forum == 'true'
         run: npm run check:discourse
+      - name: Install browser for isolated UI checks
+        if: github.event_name != 'pull_request' || steps.changes.outputs.needs_forum == 'true'
+        run: npx playwright install --with-deps chromium --only-shell
+      - name: Guest navigation and responsive browser checks
+        if: github.event_name != 'pull_request' || steps.changes.outputs.needs_forum == 'true'
+        run: npm run check:browser
+      - name: Retain disposable-site browser screenshots and report
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: browser-review-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            artifacts/browser-results/
+            artifacts/browser-report/
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Runtime diagnostics without credential or database artifacts
         if: failure()
         run: |

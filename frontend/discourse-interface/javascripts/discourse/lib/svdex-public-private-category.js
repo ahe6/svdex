@@ -1,6 +1,8 @@
 import EmberObject from "@ember/object";
 import { i18n } from "discourse-i18n";
 
+export const PRIVATE_ACCESS_ID = "svdex-private-access-info";
+
 // View-only native-row adapter. Never register it in the category store or use
 // it for authorization. Restricted counts are supplied only to viewers with native category access.
 export function publicPrivateCategory(summary = {}) {
@@ -9,7 +11,7 @@ export function publicPrivateCategory(summary = {}) {
   const week = summary.topics_week ?? 0;
   const number = `<span class="value">${known ? count : "—"}</span>`;
   return EmberObject.create({
-    id: "svdex-private-access-info", name: "Private offerings", displayName: "Private offerings",
+    id: PRIVATE_ACCESS_ID, name: "Private offerings", displayName: "Private offerings",
     url: "/private-offerings", slug: "private-offerings", color: "0088CC", text_color: "FFFFFF",
     style_type: "square", read_restricted: true,
     descriptionText: "Access-restricted primary offerings and private secondary sale opportunities. Request access for individual review.",

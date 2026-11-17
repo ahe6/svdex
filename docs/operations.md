@@ -65,9 +65,10 @@ Review affected desktop/mobile screens afterward.
 
 Run `npm run check:discourse -- --list` to list available focused checks, then
 pass one or more names while iterating. The local-host guard still runs first.
-No arguments means the full suite; CI and releases use that default. Browser
-startup/console and actual create flows need manual review too: theme compilation
-alone cannot detect every initializer-order or responsive-layout problem.
+No arguments means the full suite; CI and releases use that default. The focused browser suite (`npm run check:browser`) checks guest entry points,
+private-access links, filters and responsive overflow after the native suite. It
+retains review screenshots in CI. Signed-in composer flows and aesthetics still
+need manual review; compilation and browser assertions do not prove visual quality.
 
 The source workflow runs lightweight checks. `native-discourse.yml` builds a
 fresh pinned forum and runs the native suite for public contribution PRs and

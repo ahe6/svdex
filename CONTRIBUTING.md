@@ -87,6 +87,9 @@ not merely replacing its stored hash.
 Native scenarios must create extra participants inside their rollback scope;
 visual-review accounts on a developer's machine are not test prerequisites.
 
+For remote edits and PR previews without a local forum, see
+[cloud development](docs/cloud-development.md).
+
 ## Remote/cloud development
 
 A dedicated Linux machine with Docker can use the same scripts. The forum and
