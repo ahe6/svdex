@@ -3,6 +3,7 @@
 ## Start here
 
 - [Project setup](../README.md) and [contributing](../CONTRIBUTING.md)
+- [Your first contribution: setup, edit, test and troubleshoot](first-contribution.md)
 - [Current product behavior](product.md)
 - [Source boundaries, checks and upstream upgrades](discourse-maintenance.md)
 - [Local and remote development operations](operations.md)
@@ -13,6 +14,7 @@
 - [Appearance and sidebar](../frontend/discourse-appearance/README.md)
 - [Company/fund data](../deploy/discourse/company-directory.md)
 - [Production operations](../deploy/discourse/PRODUCTION.md)
+- [Staging isolation and release promotion](../deploy/discourse/STAGING.md)
 - [Release verification and recovery exercise](release-verification.md)
 - [Frontend visual review — November 15](visual-review-2026-11-15.md)
 - [Native policy publishing](../deploy/discourse/site-pages/README.md)

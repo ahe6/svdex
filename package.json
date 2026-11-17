@@ -8,6 +8,7 @@
     "node": ">=24"
   },
   "scripts": {
+    "doctor": "node scripts/doctor.js",
     "setup": "bash scripts/discourse-local.sh setup",
     "start": "bash scripts/discourse-local.sh start",
     "stop": "bash scripts/discourse-local.sh stop",
@@ -15,6 +16,9 @@
     "test": "node --test test/*.test.js",
     "check": "node scripts/check.js && npm test",
     "check:discourse": "bash scripts/check-discourse-local.sh",
+    "sync:themes": "bash scripts/discourse-local.sh theme",
+    "sync:styles": "bash scripts/discourse-local.sh appearance",
+    "sync:plugin": "bash scripts/discourse-local.sh listings",
     "build:styles": "node scripts/build-styles.js",
     "package:source": "node scripts/package-source.js"
   },
