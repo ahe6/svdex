@@ -59,6 +59,7 @@ case "$command_name" in
     "$0" marketplace
     "$0" events
     "$0" presales
+    "$0" products
     "$0" discoveries
     "$0" fixtures
     ;;
@@ -132,6 +133,12 @@ PYTHON
     docker cp "$repo_dir/deploy/discourse/consolidate-community-categories.rb" "$config:/tmp/svdex-consolidate-categories.rb"
     exec docker exec -u discourse "$config" bash -lc \
       'cd /var/www/discourse && bundle exec rails runner /tmp/svdex-consolidate-categories.rb'
+    ;;
+  products)
+    for script in configure-products setup-products-local; do
+      docker cp "$repo_dir/deploy/discourse/$script.rb" "$config:/tmp/$script.rb"
+      docker exec -u discourse "$config" bash -lc "cd /var/www/discourse && bundle exec rails runner /tmp/$script.rb"
+    done
     ;;
   presales)
     docker cp "$repo_dir/deploy/discourse/configure-presales.rb" "$config:/tmp/configure-presales.rb"
@@ -213,5 +220,5 @@ PYTHON
   status)
     docker ps -a --filter "name=^/$config$" --filter 'name=^/miscdex-discourse-mail$' --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
     ;;
-  *) echo 'Usage: scripts/discourse-local.sh setup|configure|theme|appearance|achievements|private-offerings|fixtures|events|presales|discoveries|chat|community|introductions|marketplace|help|companies|people|fund|listings|start|stop|restart|logs|status' >&2; exit 2 ;;
+  *) echo 'Usage: scripts/discourse-local.sh setup|configure|theme|appearance|achievements|private-offerings|fixtures|events|presales|products|discoveries|chat|community|introductions|marketplace|help|companies|people|fund|listings|start|stop|restart|logs|status' >&2; exit 2 ;;
 esac

@@ -80,7 +80,7 @@ docker exec -u discourse app bash -lc 'cd /var/www/discourse && bundle exec rail
 '\'''
 install -m 644 "$release_dir/native-defaults.rb" "$shared/native-defaults.rb"
 # Configuration entry points require their code-only catalog helpers beside them.
-for helper in configure-people.rb configure-presales.rb configure-discoveries.rb; do
+for helper in configure-people.rb configure-presales.rb configure-products.rb configure-discoveries.rb; do
   install -m 644 "$release_dir/$helper" "$shared/$helper"
 done
 install -m 644 "$release_dir/configure-upgrade-production.rb" "$shared/configure-upgrade-production.rb"

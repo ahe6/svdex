@@ -32,7 +32,7 @@ public_offerings = Category.find(SiteSetting.svdex_public_offerings_category_id)
 assert!(offerings.slug == "offerings" && offerings.topic_posting_review_mode == "everyone" && offerings.reply_posting_review_mode == "no_one", "Offerings requires new-topic review and permits native replies")
 assert!(Category.find_by!(slug: "staff").read_restricted?, "Staff category stays private")
 public_categories = Category.secured(Guardian.new(nil)).where.not(id: SiteSetting.uncategorized_category_id).pluck(:slug).sort
-assert!(public_categories == %w[company-updates discussion events feedback offerings pre-sales public-offerings], "only configured community, product and public-offering categories are public")
+assert!(public_categories == %w[company-updates discussion events feedback offerings pre-sales products public-offerings], "only configured community, product and public-offering categories are public")
 assert!(SiteSetting.backup_with_uploads && SiteSetting.backup_frequency == 1, "daily native backups include uploads")
 assert!(Badge.find_by!(name: "Verified Accredited Investor").grant_count == 0, "verification badge has no automatic or fixture awards")
 assert!(DiscourseSvdex::CompanyDirectory::STAGES.include?("Non-venture") && !DiscourseSvdex::CompanyDirectory::STAGES.include?("Bootstrapped"), "stage vocabulary uses Non-venture")

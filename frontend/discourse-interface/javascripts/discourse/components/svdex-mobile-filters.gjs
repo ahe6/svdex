@@ -5,6 +5,7 @@ import { service } from "@ember/service";
 import { action } from "@ember/object";
 import HomeFiltersModal from "./svdex-home-filters-modal.gjs";
 import { activeFilterCount } from "../lib/svdex-mobile-filters";
+import { isProductCatalog, productFilterValue } from "../lib/svdex-products";
 import DButton from "discourse/ui-kit/d-button";
 
 export default class ListingMobileFilters extends Component {
@@ -27,7 +28,8 @@ export default class ListingMobileFilters extends Component {
     return homeFeed;
   }
   get count() {
-    return activeFilterCount(this.router.currentRoute?.queryParams, this.args.outletArgs.tag, this.args.outletArgs.additionalTags);
+    const typeActive = isProductCatalog(this.args.outletArgs.category?.id, this.siteSettings) && productFilterValue(this.args.outletArgs.category?.id, this.router.currentURL, this.siteSettings) !== "all";
+    return activeFilterCount(this.router.currentRoute?.queryParams, this.args.outletArgs.tag, this.args.outletArgs.additionalTags) + Number(typeActive);
   }
   get active() { return this.count > 0; }
   get title() { return this.active ? `Filters (${this.count} active)` : "Filters"; }

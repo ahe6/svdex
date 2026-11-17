@@ -264,13 +264,14 @@
 @media (max-width: 600px) {
   .svdex-people-page .directory-controls {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr) auto auto;
     gap: var(--space-2);
     .period-controls { grid-column: 1; grid-row: 1; }
     .inline-form { display: contents; }
-    .total-rows { grid-column: 2; grid-row: 1; justify-self: end; }
+    .total-rows { grid-column: 2 / -1; grid-row: 1; justify-self: end; }
     .filter-name { grid-column: 1; grid-row: 2; width: 100%; min-width: 0; }
     .svdex-people-filter-control { grid-column: 2; grid-row: 2; }
+    .svdex-company-application { grid-column: 3; grid-row: 2; justify-self: end; }
   }
 }
 // Share the compact native card treatment used by Funds: long professional

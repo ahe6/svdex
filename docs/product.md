@@ -18,15 +18,22 @@ particular financing/security. No separate company entity database exists.
 
 ## Navigation and feeds
 
-The main sidebar order is Home, Companies, Funds, Offerings, Pre-sales, People,
+The main sidebar order is Home, Companies, Funds, Offerings, Products, People,
 Discussions, Events, Messages, My posts, My Bids, Bookmarks and Achievements. Users
 and Groups remain under More.
 Member-only links require sign-in; staff tools retain native visibility. More
 contains secondary destinations, including All tags, Groups and configured
 Privacy/Terms links. About/Guidelines routes are deliberately retired.
 
+Public Home, Offerings, Products/Pre-sales, Discussions and Events views keep
+their native create actions visible to guests; clicking one goes to `/login`.
+Companies, Funds and People use the same login destination for their add actions.
+Add person opens a native private-message draft to the configured staff contact
+for signed-in members. Staff review suggestions and maintain People membership;
+the button does not automatically publish a profile or grant account ownership.
+
 Home Latest/Top includes viewer-visible offerings, approved Pre-sales and Updates.
-Ordinary discussions, Feedback and community Events are outside that allowlist.
+Ordinary products, discussions, Feedback and community Events are outside that allowlist.
 Its native Sector dropdown narrows the existing feed; it does not silently
 broaden into the global tag feed. Latest/Top retains the tag selection. Standalone
 tag pages remain broader and respect native topic security.
@@ -94,10 +101,28 @@ or verify the applicant. Staff ownership of the group does not make staff a
 company. Buy/Sell actions in the directory or Summary open the viewer's own
 indication with that side preselected; guests enter native login.
 
+## Products
+
+Products are permanent native topics in their own public category. The catalog
+uses native topic rows, author avatars, company/sector tags, a cached description
+preview and replies/views/activity. New submissions require review; replies and
+edits use the native workflow. The post body holds product descriptions, company
+profile links, websites and links to related pre-sale campaigns. There is no new
+product-account system, checkout, bidding or financial field storage. Ordinary
+products do not enter Home's financing/updates feed. Local fixtures are installed
+by `setup-products-local.rb`; deployment config creates only the empty category.
+
 ## Pre-sales
 
-Pre-sales is a separate public native category for product preorders and early
-access. Its More link leads to Latest/Top with the shared structured topic layout:
+Products combines regular products and pre-sales in one Latest/Top list. Pre-sales
+is a native subcategory of Products; the Filter panel selects All products,
+Products only (no subcategories), or Pre-sales only. Offerings keeps only its
+Latest/Top securities navigation; pre-sales is reached through Products. Both
+product views activate Products in the sidebar. Creation forms and campaign terms
+remain separate; mobile uses the native navigation dropdown.
+
+Pre-sales is a public native subcategory for product preorders and early
+access. Its filtered view uses Latest/Top with the shared structured topic layout:
 product title/summary, Terms, and native replies/views/activity. Terms emphasizes
 the purchase price and unit or access period, followed by what buyers receive
 and expected delivery. Mobile uses the same compact card presentation as Offerings.
@@ -108,7 +133,7 @@ and review queue carry those fields. New member topics require review; replies
 use normal native behavior. Approved products also appear in Home.
 
 Presentation is shared with Offerings; product data and securities data remain
-separate. Products do not accept securities bids, gain public/private offering
+separate. Pre-sales do not accept securities bids, gain public/private offering
 tags, or contribute to company/fund offering counts. There is no checkout or
 payment processing. Local fixture products are installed only by the guarded
 `setup-presales-local.rb`; release configuration creates only the empty category.

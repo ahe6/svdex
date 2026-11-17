@@ -14,6 +14,7 @@ checks=(
   verify-organization-metadata-local
   verify-listings-local
   verify-presales-local
+  verify-products-local
   verify-listing-financial-fields-local
   verify-listing-valuation-local
   verify-company-search-local
@@ -64,6 +65,7 @@ docker exec "$container" bash -lc 'test "$(printenv DISCOURSE_HOSTNAME)" = local
 docker cp deploy/discourse/verify-production.rb "$container:/tmp/svdex-production-smoke.rb"
 docker cp deploy/discourse/configure-discoveries.rb "$container:/tmp/configure-discoveries.rb"
 docker cp deploy/discourse/configure-presales.rb "$container:/tmp/configure-presales.rb"
+docker cp deploy/discourse/configure-products.rb "$container:/tmp/configure-products.rb"
 docker cp deploy/discourse/configure-people.rb "$container:/tmp/configure-people.rb"
 docker cp deploy/discourse/native-defaults.rb "$container:/tmp/native-defaults.rb"
 docker cp deploy/discourse/configure-upgrade-production.rb "$container:/tmp/configure-upgrade-production.rb"

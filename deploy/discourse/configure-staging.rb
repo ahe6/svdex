@@ -94,6 +94,16 @@ unless Topic.exists?(title: title, category_id: presales.id)
     svdex_presale_price: "$120 per year", svdex_presale_includes: "12 months of research tools", svdex_presale_delivery: "Access from January 2027",
     svdex_presale_terms: "One named user.", skip_validations: true, skip_jobs: true)
 end
+products = Category.find(SiteSetting.svdex_products_category_id)
+product_title = "SVDEX Research"
+unless Topic.exists?(title: product_title, category_id: products.id)
+  campaign = Topic.find_by(title: title, category_id: presales.id)
+  links = ["[Company profile](/u/svdex-company/summary)"]
+  links << "[Pre-sale campaign](/t/#{campaign.slug}/#{campaign.id})" if campaign
+  PostCreator.create!(User.find_by!(username: "svdex-company"), title: product_title,
+    raw: "Company research and private-market data in one workspace.\n\nExplore companies, funds and private-market opportunities.\n\n#{links.join(' · ')}",
+    category: products.id, tags: %w[svdex finance], skip_validations: true, skip_jobs: true)
+end
 [User.find_by!(username: "svdex-company"), fund, person].each do |entity|
   discovery = DiscourseSvdex::Discoveries.capture!(entity, listed_at: nil)
   next if discovery.contributor_user_id

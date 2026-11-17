@@ -1,16 +1,22 @@
 import { defaultRenderTag } from "discourse/lib/render-tag";
 import { tagColor } from "../lib/svdex-tag-colors";
+import { defaultCategoryLinkRenderer } from "discourse/ui-kit/helpers/d-category-link";
 
 export default function registerTopicMetadata(api, { settings, router, site }) {
   // Keep native full names in selectors/directories, and expose a compact
   // variant only where topic metadata is rendered. CSS hides the unused
   // variant from both sighted readers and assistive technology.
-  api.registerValueTransformer("category-display-name", ({ value, context }) => {
-    const id = Number(context.category?.id);
+  // Keep model display names plain: core also uses them in document titles.
+  // Add the metadata-only variants inside the native badge renderer instead.
+  api.replaceCategoryLinkRenderer((category, options) => {
+    const rendered = defaultCategoryLinkRenderer(category, options);
+    const id = Number(category?.id);
     const short = id === Number(settings.svdex_public_offerings_category_id) ? "public"
       : id === Number(settings.svdex_private_offerings_category_id) ? "private"
       : id === Number(settings.svdex_introductions_category_id) ? "updates" : null;
-    return short ? `<span class="svdex-category-full">${value}</span><span class="svdex-category-short svdex-category-short--${short}">${short}</span>` : value;
+    if (!short) return rendered;
+    return rendered.replace(/(<span class="badge-category__name"[^>]*>)([\s\S]*?)(<\/span>)/,
+      (_match, start, label, end) => `${start}<span class="svdex-category-full">${label}</span><span class="svdex-category-short svdex-category-short--${short}">${short}</span>${end}`);
   });
 
   api.replaceTagRenderer((tag, params) => {
@@ -32,6 +38,7 @@ export default function registerTopicMetadata(api, { settings, router, site }) {
     const home = path === "/" || path === "/all-forums" || /^\/(latest|top|new|unread|unseen|hot|posted)(\/|$)/.test(path);
     if (home && context.topic.category?.slug === "discussion") value.push("svdex-home-discussion");
     if (context.topic.svdex_listing || context.topic.svdex_presale) value.push("svdex-home-listing");
+    if (context.topic.svdex_product) value.push("svdex-product-topic");
     return value;
   };
   api.registerValueTransformer("topic-list-item-class", markHomeTopicLabels);

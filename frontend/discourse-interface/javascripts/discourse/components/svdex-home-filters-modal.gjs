@@ -12,6 +12,8 @@ import BreadCrumbs from "discourse/components/bread-crumbs";
 import DiscourseURL from "discourse/lib/url";
 import ListingTagGroupFilters from "./svdex-tag-group-filters.gjs";
 import { activeFilterCount } from "../lib/svdex-mobile-filters";
+import { isProductCatalog, productFilterValue } from "../lib/svdex-products";
+import ProductTypeFilter from "./svdex-product-type-filter.gjs";
 
 // Use the same selectors as core breadcrumbs, inside the mobile filter panel.
 export default class HomeFiltersModal extends Component {
@@ -33,14 +35,18 @@ export default class HomeFiltersModal extends Component {
   }
 
   get active() {
-    return activeFilterCount(this.router.currentRoute?.queryParams, this.args.model.tag, this.args.model.additionalTags) > 0;
+    return activeFilterCount(this.router.currentRoute?.queryParams, this.args.model.tag, this.args.model.additionalTags) > 0 ||
+      (this.productCatalog && productFilterValue(this.args.model.category?.id, this.router.currentURL, this.siteSettings) !== "all");
   }
+  get productCatalog() { return isProductCatalog(this.args.model.category?.id, this.siteSettings); }
 
   @action clear() {
     const params = new URLSearchParams(this.router.currentURL.split("?")[1]);
     ["tags", "match_all_tags", "no_tags", "svdex_company", "svdex_valuation", "search", "page"].forEach(key => params.delete(key));
     const mode = /\/(top|latest|new|unread|unseen|hot)$/.exec(this.router.currentURL.split("?")[0])?.[1] || "latest";
-    const path = this.args.model.category ? `${this.args.model.category.url}/l/${mode}` : `/${mode}`;
+    const products = this.site.categories.find(category => Number(category.id) === Number(this.siteSettings.svdex_products_category_id));
+    const category = this.productCatalog ? products : this.args.model.category;
+    const path = category ? `${category.url}/l/${mode}` : `/${mode}`;
     DiscourseURL.routeTo(`${path}${params.size ? `?${params}` : ""}`);
   }
 
@@ -48,7 +54,10 @@ export default class HomeFiltersModal extends Component {
     <DModal @title="Filters" @closeModal={{@closeModal}} class={{if @model.isOffering "svdex-listing-filters-modal svdex-offerings-filters" "svdex-listing-filters-modal"}}>
       <:body>
         {{#unless @model.isOffering}}<DiscoverySearch @panel={{true}} @outletArgs={{@model}} />{{/unless}}
-        {{#if @model.isOffering}}
+        {{#if this.productCatalog}}
+          <ProductTypeFilter @model={{@model}} />
+          <TagDrop @currentCategory={{@model.category}} @tag={{@model.tag}} />
+        {{else if @model.isOffering}}
           <TagDrop @currentCategory={{@model.category}} @tag={{@model.tag}} />
         {{else if @model.homeFeed}}
           <HomeTags @outletArgs={{@model}} />

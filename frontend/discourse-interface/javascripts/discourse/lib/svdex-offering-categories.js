@@ -1,4 +1,5 @@
 import { isPresaleCategory } from "./svdex-presales.js";
+import { isProductCategory } from "./svdex-products.js";
 export function isOfferingCategory(id, settings) {
   return Number(id) > 0 && [settings.svdex_listings_category_id, settings.svdex_public_offerings_category_id, settings.svdex_private_offerings_category_id].some(value => Number(value) === Number(id));
 }
@@ -7,6 +8,7 @@ export function composerCategoryScope(categoryId, settings, discussionId, origin
   const path = originUrl.split("?")[0].replace(/\/$/, "") || "/";
   if (originUrl && (path === "/" || /^\/(latest|top|all-forums|new|unread|unseen|hot|posted)(\/|$)/.test(path))) return "community";
   if (isPresaleCategory(categoryId, settings)) return "presales";
+  if (isProductCategory(categoryId, settings)) return "products";
   if (isOfferingCategory(categoryId, settings)) return "offerings";
   return Number(categoryId) > 0 && Number(categoryId) === Number(discussionId) ? "community" : "unrestricted";
 }
@@ -14,5 +16,5 @@ export function composerCategoryChoices(content, scope, settings) {
   const parent = Number(settings.svdex_listings_category_id);
   const children = [Number(settings.svdex_public_offerings_category_id), Number(settings.svdex_private_offerings_category_id)];
   return content.filter(category => Number(category.id) !== parent &&
-    (scope === "presales" ? isPresaleCategory(category.id, settings) : scope === "offerings" ? children.includes(Number(category.id)) : scope === "community" ? !isOfferingCategory(category.id, settings) : true));
+    (scope === "products" ? isProductCategory(category.id, settings) || isPresaleCategory(category.id, settings) : scope === "presales" ? isPresaleCategory(category.id, settings) : scope === "offerings" ? children.includes(Number(category.id)) : scope === "community" ? !isOfferingCategory(category.id, settings) : true));
 }
