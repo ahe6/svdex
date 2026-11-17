@@ -299,6 +299,7 @@
     align-items: center;
     justify-content: flex-start;
     gap: var(--space-2);
+    column-gap: .5em;
     .category-breadcrumb { display: contents; }
     #navigation-bar { grid-column: 1 / -1; grid-row: 1; }
     .svdex-offering-filter-group { flex-basis: 100%; grid-column: 2 / -1; grid-row: 1; justify-self: end; }

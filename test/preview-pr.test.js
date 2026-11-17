@@ -4,7 +4,7 @@ import { spawnSync } from "node:child_process";
 
 test("staging PR resolution rejects drafts, stale source and incomplete required checks", () => {
   const result = spawnSync("python3", ["-c", `
-import copy,runpy
+import runpy
 validate=runpy.run_path('scripts/resolve-preview-pr.py')['validate']
 pr=dict(state='open',draft=False,base=dict(ref='main'),head=dict(sha='a'*40))
 checks=[dict(name='check',state='SUCCESS'),dict(name='native',state='SUCCESS')]
