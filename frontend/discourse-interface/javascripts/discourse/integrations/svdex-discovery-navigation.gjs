@@ -1,3 +1,4 @@
+import { isPresaleCategory } from "../lib/svdex-presales";
 import registerDiscoveryTabs from "./svdex-discovery-tabs.gjs";
 import { isOverviewDirectory } from "../lib/svdex-sector-navigation";
 import DiscoveryTopicHeader from "../components/svdex-discovery-topic-header.gjs";
@@ -18,7 +19,7 @@ export default function registerDiscoveryNavigation(api, { settings, router, sit
   registerDiscoveryTabs(api);
   api.registerValueTransformer("topic-list-columns", ({ value: columns, context }) => {
     if (context.listContext === "discovery" &&
-      (isOfferingCategory(context.category?.id, settings) ||
+      (isOfferingCategory(context.category?.id, settings) || isPresaleCategory(context.category?.id, settings) ||
         Number(context.category?.id) > 0 && Number(context.category.id) === Number(settings.svdex_events_category_id))) {
       columns.replace("topic", { header: DiscoveryTopicHeader });
     }

@@ -6,7 +6,7 @@ def assert_updates!(ok, message)
   puts "PASS #{message}"
 end
 category = Category.find(SiteSetting.svdex_introductions_category_id)
-assert_updates!(category.name == "Company & Fund Updates" && category.slug == "company-updates" && !Category.exists?(slug: "introductions"), "Updates replaces the standalone Introductions category")
+assert_updates!(category.name == "Updates" && category.slug == "company-updates" && !Category.exists?(slug: "introductions"), "Updates replaces the standalone Introductions category")
 actor = User.find_by!(username: "svdex")
 company = User.find_by!(username: "svdex-company")
 tag = Tag.find(company.custom_fields.fetch("svdex_company_tag_id"))

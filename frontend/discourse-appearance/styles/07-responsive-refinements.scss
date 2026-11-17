@@ -74,7 +74,7 @@
   .svdex-company-search-item .svdex-company-search-form { flex: 1; min-width: 9rem; }
   .svdex-discovery-search {
     margin: 0;
-    .filter-input-container { width: 15em; }
+    .filter-input-container { width: var(--svdex-topic-search-width); min-width: 0; }
     input { width: 100%; margin: 0; }
   }
   .navigation-container:has(.svdex-discovery-search) .navigation-controls { align-items: center; gap: var(--space-3); }
@@ -83,9 +83,6 @@
 .mobile-view .svdex-topic-count { display: none; }
 @container (max-width: 55rem) {
   .desktop-view .list-controls .navigation-container:has(.svdex-company-search-item) .svdex-company-search-item { max-width: none; }
-}
-@media (max-width: 70rem) {
-  .desktop-view .svdex-discovery-search .filter-input-container { width: 12em; }
 }
 .svdex-discovery-search form { margin: 0; }
 @container (max-width: 55rem) {
@@ -97,7 +94,7 @@
 }
 .desktop-view .category-breadcrumb > .svdex-company-search-item {
   justify-content: flex-end;
-  .svdex-company-search-form { max-width: 15em; }
+  .svdex-company-search-form { max-width: var(--svdex-topic-search-width); }
 }
 @container (max-width: 55rem) {
   .desktop-view .list-controls .navigation-container:has(.svdex-company-search-item) .category-breadcrumb > .svdex-company-search-item {
@@ -130,9 +127,6 @@
   .svdex-companies-page .svdex-company-directory-tools .inline-form { gap: var(--space-2); }
 }
 .mobile-view .svdex-companies-page .svdex-company-directory-tools .inline-form { gap: var(--space-2); }
-@container (max-width: 55rem) {
-  .desktop-view .svdex-discovery-search .filter-input-container { width: 10em; }
-}
 // Every discovery toolbar shares a boxed Filters action before creation.
 .svdex-panel-search {
   margin-block-end: var(--space-4);
@@ -351,4 +345,15 @@
 }
 @media (max-width: 767px) {
   .d-header .title:not(.title--minimized) { --d-logo-height: 22px; }
+}
+// Keep the offering count and input as one group at tablet widths too.
+// Earlier breadcrumb flattening separated them into different grid cells.
+@container (max-width: 55rem) {
+  .desktop-view .list-controls .navigation-container:has(.svdex-company-search-item) .category-breadcrumb > .svdex-company-search-item {
+    display: flex;
+    grid-column: 1;
+    grid-row: 2;
+    min-width: 0;
+    .svdex-company-search-form { min-width: 0; width: auto; }
+  }
 }

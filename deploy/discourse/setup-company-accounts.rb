@@ -27,6 +27,7 @@ User.transaction do
     user ||= User.create!(username: username, name: name, email: "#{username}@example.invalid",
       password: SecureRandom.hex(32), active: true, approved: true, trust_level: 1)
     group.add(user) unless group.users.exists?(id: user.id)
+    Group.find_by(name: SiteSetting.svdex_maintained_accounts_group_name)&.add(user)
     user.email_tokens.update_all(confirmed: true) if created
     user.user_profile.update!(bio_raw: description) if user.user_profile.bio_raw.blank?
     user.custom_fields["svdex_company_tag_id"] ||= Tag.find_by!(name: tag_name).id.to_s

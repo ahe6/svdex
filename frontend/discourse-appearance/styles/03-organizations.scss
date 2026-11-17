@@ -56,9 +56,6 @@
   pointer-events: none;
 }
 
-// The longer company search prompt should remain readable at desktop widths.
-.desktop-view .svdex-companies-page .directory-controls .filter-name { width: 15em; }
-
 // Use native heading typography and ComboBox controls for company navigation.
 .svdex-companies-page {
   .svdex-company-directory-tools {
@@ -152,7 +149,14 @@
 
 .svdex-organization-reference { display: block; white-space: normal; }
 .svdex-organization-reference__role { color: var(--primary-medium); }
-.svdex-companies-table .svdex-organization-reference { max-width: 16em; }
+// Whole names supply the column's intrinsic minimum, rather than each word.
+// Keep profiles' full role descriptions and multiline entity references intact.
+.svdex-companies-table .svdex-organization-reference {
+  max-width: 16em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .svdex-company-entity-label { color: var(--primary-medium); }
 .svdex-admin-reference { margin-block: var(--space-3); label { display: block; } }
 
@@ -188,4 +192,134 @@
       max-width: 70%;
     }
   }
+}
+
+// People shares native responsive directory rows, type and mobile leaders.
+.svdex-people-page {
+  .directory-controls {
+    align-items: center;
+    gap: var(--space-3);
+  }
+  .period-controls {
+    display: flex;
+    align-items: center;
+    h2 { margin: 0; }
+  }
+  .inline-form {
+    align-items: center;
+    gap: .5em;
+    > .filter-name, > .total-rows { margin: 0; }
+  }
+  .total-rows {
+    font-size: var(--font-down-1);
+    line-height: var(--line-height-medium);
+    white-space: nowrap;
+  }
+  .horizontal-scroll-sync__top-scroll { display: none; }
+  .user-info.svdex-person-named .name-line {
+    .username-wrapper { display: none; }
+    .name-wrapper .name { font-weight: bold; }
+  }
+  .svdex-company-summary {
+    flex-basis: 100%;
+    contain: inline-size;
+    min-width: 0;
+    color: var(--primary-medium);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    white-space: normal;
+  }
+  .svdex-person-affiliation {
+    display: block;
+    + .svdex-person-affiliation { margin-block-start: var(--space-2); }
+  }
+  .svdex-person-organization, .svdex-person-role { display: block; }
+  .svdex-person-role { font-size: var(--font-down-1); color: var(--primary-medium); }
+  .svdex-person-estimate { padding: 0; font: inherit; }
+}
+@container directory-table (min-width: 47em) {
+  .svdex-people-table {
+    // Related details form a single block, vertically centered against the
+    // identity/biography. Keep labels and values on the same left edge.
+    .directory-table__column-header {
+      justify-content: flex-start;
+      .header-contents { text-align: start; }
+    }
+    .directory-table__row > .directory-table__cell { align-items: center; }
+    .directory-table__cell--user-field {
+      justify-content: flex-start;
+      align-items: center;
+      min-width: 0;
+    }
+    .directory-table__value--user-field {
+      font-size: var(--font-0);
+      white-space: normal;
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+  }
+}
+@media (max-width: 600px) {
+  .svdex-people-page .directory-controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--space-2);
+    .period-controls { grid-column: 1; grid-row: 1; }
+    .inline-form { display: contents; }
+    .total-rows { grid-column: 2; grid-row: 1; justify-self: end; }
+    .filter-name { grid-column: 1; grid-row: 2; width: 100%; min-width: 0; }
+    .svdex-people-filter-control { grid-column: 2; grid-row: 2; }
+  }
+}
+// Share the compact native card treatment used by Funds: long professional
+// facts can use available row space instead of reserving half for short labels.
+@container directory-table (max-width: 47em) {
+  .svdex-people-table {
+    .directory-table__label { flex: 1 0 0; min-width: 7em; }
+    .directory-table__value--user-field { flex: 0 1 auto; max-width: 70%; }
+  }
+}
+
+// Discovery attribution lives in native profile Summary/Activity, not catalog rows.
+.svdex-discovery-attribution, .svdex-discovery-count { color: var(--primary-medium); font-size: var(--font-down-1); font-weight: normal; }
+:is(.svdex-discoveries-summary, .svdex-affiliations-summary) {
+  .svdex-discovery-preview { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3) var(--space-4); list-style: none; padding: 0; margin: 0 0 var(--space-3); }
+  li { min-width: 0; }
+  .user-detail > a { display: block; }
+  .user-detail > span { color: var(--primary-medium); font-size: var(--font-down-1); }
+}
+.svdex-discovery-controls, .svdex-discovery-pagination { display: flex; gap: var(--space-3); align-items: center; flex-wrap: wrap; margin-block-end: var(--space-4); }
+.svdex-discovery-controls > span, .svdex-discovery-self { color: var(--primary-medium); font-size: var(--font-down-1); }
+.svdex-discovery-list {
+  .user-info { display: flex; align-items: center; gap: var(--space-3); }
+  .user-image { margin: 0; flex-shrink: 0; }
+  .user-detail { min-width: 0; }
+  .svdex-discovery-self { display: block; }
+  .svdex-discovery-kind, .svdex-discovery-date { text-align: left; white-space: nowrap; }
+}
+.mobile-view .svdex-discovery-list {
+  tr { display: grid; grid-template-columns: 1fr auto; }
+  td.main-link { grid-column: 1 / -1; }
+  .svdex-discovery-date { text-align: right; }
+}
+.svdex-discovery-admin .value p { color: var(--primary-medium); font-size: var(--font-down-1); }
+
+.mobile-view :is(.svdex-discoveries-summary, .svdex-affiliations-summary) .svdex-discovery-preview { grid-template-columns: 1fr; }
+
+.svdex-discovery-list .svdex-discovery-background {
+  font-size: var(--font-0);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  white-space: normal;
+  color: var(--primary-medium);
+}
+
+// Core's small user detail text compounds with our secondary line on phones.
+// Inherit the surrounding profile body size once, then apply its secondary size.
+.mobile-view :is(.svdex-discoveries-summary, .svdex-affiliations-summary) {
+  .user-info, .user-detail { font-size: inherit; }
 }

@@ -9,7 +9,7 @@ raise "Active administrator required" unless actor&.admin? && actor.active?
 ActiveRecord::Base.transaction do
   category = Category.find_by(id: SiteSetting.svdex_introductions_category_id) || Category.find_by(slug: "company-updates") || Category.find_by(slug: "introductions") || Category.new(user: actor)
   raise "Unexpected updates category" if category.persisted? && !%w[introductions company-updates].include?(category.slug)
-  category.assign_attributes(name: "Company & Fund Updates", slug: "company-updates", color: "2396BF", text_color: "FFFFFF")
+  category.assign_attributes(name: "Updates", slug: "company-updates", color: "2396BF", text_color: "FFFFFF")
   category.set_permissions("everyone" => :create_post, SiteSetting.svdex_companies_group_name => :full, "staff" => :full)
   category.save!
   category.update!(topic_posting_review_mode: "everyone", reply_posting_review_mode: "no_one",

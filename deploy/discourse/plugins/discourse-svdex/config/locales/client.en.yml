@@ -14,6 +14,9 @@ en:
         title: "All forums"
         help: "Company and sector tags alongside community categories"
     svdex:
+      people:
+        person: "Person"
+      new_presale: "New pre-sale"
       new_offering: "New offering"
       company:
         buy_interest: "Buy interest"

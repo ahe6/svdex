@@ -38,6 +38,10 @@
   min-height: min(650px, calc(100dvh - 70px));
 }
 
+// Match the native Users input in common/base/discourse.scss. Directory inputs
+// inherit that rule directly; composed topic search controls need the same width.
+.desktop-view { --svdex-topic-search-width: 210px; }
+
 // Native filter input; only size it to fit the existing breadcrumb row.
 .svdex-company-search-form {
   display: flex;
@@ -91,7 +95,7 @@
 .desktop-view .list-controls .navigation-container:has(.svdex-company-search-item) {
   justify-content: flex-end;
   column-gap: var(--space-3);
-  .svdex-company-search-form { width: 15em; }
+  .svdex-company-search-form { width: var(--svdex-topic-search-width); }
   .navigation-controls { order: 3; }
   #navigation-bar { order: -1; }
   .category-breadcrumb {
@@ -113,3 +117,6 @@
   .category-list { margin-bottom: 0; }
   .more-topics { margin-top: 1em; }
 }
+
+// A pre-sale has two paired product details after its full-width summary.
+.svdex-composer-fields.svdex-presale-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }

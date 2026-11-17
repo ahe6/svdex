@@ -1,3 +1,4 @@
+import { isPresaleCategory, presaleTerms } from "../lib/svdex-presales";
 import { isOfferingCategory } from "../lib/svdex-offering-categories";
 import Component from "@glimmer/component";
 import { service } from "@ember/service";
@@ -9,7 +10,7 @@ class OfferingContext extends Component {
   @service siteSettings;
   get dedicated() {
     const path = this.router.currentURL.split("?")[0];
-    return this.site.categories.some(category => isOfferingCategory(category.id, this.siteSettings) && (path === category.url || path.startsWith(`${category.url}/`) || path.startsWith(`/tags${category.url}/`)));
+    return this.site.categories.some(category => (isOfferingCategory(category.id, this.siteSettings) || isPresaleCategory(category.id, this.siteSettings)) && (path === category.url || path.startsWith(`${category.url}/`) || path.startsWith(`/tags${category.url}/`)));
   }
 }
 export class HomeOfferHeader extends OfferingContext {
@@ -18,10 +19,11 @@ export class HomeOfferHeader extends OfferingContext {
 
 export function homeOfferColumn(Original) {
   return class extends Component {
-    get terms() { return offeringTerms(this.args.topic.svdex_listing, this.args.topic.title); }
+    get data() { return this.args.topic.svdex_listing || this.args.topic.svdex_presale; }
+    get terms() { return this.args.topic.svdex_presale ? presaleTerms(this.data) : offeringTerms(this.data, this.args.topic.title); }
     get showProgress() { return this.terms.progress !== null; }
     <template>
-      {{#if @topic.svdex_listing}}
+      {{#if this.data}}
         <td class="svdex-home-offer-details topic-list-data">
             <div class="svdex-offering-terms">
               <div class={{if this.terms.missing "svdex-offering-terms__primary svdex-offering-terms__primary--missing" "svdex-offering-terms__primary"}}>{{this.terms.primary}}</div>

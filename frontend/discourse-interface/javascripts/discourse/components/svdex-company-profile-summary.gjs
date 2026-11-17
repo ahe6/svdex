@@ -1,3 +1,4 @@
+import DiscoveriesSummary from "./svdex-discoveries-summary.gjs";
 import InterestButton from "./svdex-interest.gjs";
 import Component from "@glimmer/component";
 import { array } from "@ember/helper";
@@ -56,7 +57,13 @@ export default class CompanyProfileSummary extends Component {
           <DButton @translatedLabel="Try again" @action={{this.load}} />
         {{else if this.data}}
           <div class="top-section stats-section">
+            <div class="svdex-company-details-header">
             <h3 class="stats-title">{{this.heading}}{{#if this.isSpv}} · SPV{{/if}}</h3>
+            <div class="svdex-company-summary-actions">
+              <InterestButton @organizationId={{@user.id}} @organizationName={{@user.name}} @side="buy" @label="Buy interest" @title="Indicate buy interest" @buttonClass="btn-link" @onChange={{this.load}} />
+              <InterestButton @organizationId={{@user.id}} @organizationName={{@user.name}} @side="sell" @label="Sell interest" @title="Indicate sell interest" @buttonClass="btn-link" @onChange={{this.load}} />
+            </div>
+            </div>
             {{#if this.data.company.manager_name}}<p>Manager: {{#if this.data.company.manager_url}}<a href={{this.data.company.manager_url}}>{{this.data.company.manager_name}}</a>{{else}}{{this.data.company.manager_name}}{{/if}}</p>{{/if}}
             <ul>
               {{#each this.facts as |fact|}}
@@ -68,10 +75,7 @@ export default class CompanyProfileSummary extends Component {
             </ul>
             {{#if this.stage}}<p>Stage: {{this.stage}}</p>{{/if}}
             {{#if this.data.company.fund_domicile}}<p>Fund domicile: {{this.data.company.fund_domicile}}</p>{{/if}}
-            <div class="svdex-company-summary-actions">
-              <InterestButton @organizationId={{@user.id}} @organizationName={{@user.name}} @side="buy" @label="Buy interest" @onChange={{this.load}} />
-              <InterestButton @organizationId={{@user.id}} @organizationName={{@user.name}} @side="sell" @label="Sell interest" @buttonClass="btn-default" @onChange={{this.load}} />
-            </div>
+
           </div>
           {{#if this.data.company.facts_as_of}}<p>Facts as of {{this.data.company.facts_as_of}}{{#if this.data.company.source_url}} · <a href={{this.data.company.source_url}}>Source</a>{{/if}}</p>
           {{else if this.data.company.source_url}}<p><a href={{this.data.company.source_url}}>Source</a></p>{{/if}}
@@ -105,6 +109,7 @@ export default class CompanyProfileSummary extends Component {
               </div>
             </div>
           {{/if}}
+          <DiscoveriesSummary @user={{@user}} />
         {{/if}}
       </DConditionalLoadingSpinner>
     </div>

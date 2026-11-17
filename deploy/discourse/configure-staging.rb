@@ -41,6 +41,7 @@ profiles = [
 profiles.each do |username, name, description, facts|
   user = User.find_by(username: username) || User.create!(username: username, name: name,
     email: "#{username}@example.invalid", password: SecureRandom.hex(32), active: true, approved: true)
+  Group.find_by!(name: SiteSetting.svdex_maintained_accounts_group_name).add(user) if user.email == "#{username}@example.invalid"
   companies.add(user) unless companies.users.exists?(user.id)
   funds.add(user) if username == "svdex-fund-i" && !funds.users.exists?(user.id)
   user.email_tokens.update_all(confirmed: true)
@@ -66,6 +67,38 @@ end
   next if Topic.exists?(title: title)
   PostCreator.create!(actor, {title: title, raw: summary, category: category, tags: %w[svdex finance],
     svdex_summary: summary, skip_validations: true, skip_jobs: true}.merge(fields))
+end
+# Isolated preview fixtures for the new catalog surfaces. This file is included
+# only in --staging bundles and its hostname/email/signup guard runs first.
+people = Group.find_by!(name: SiteSetting.svdex_people_group_name)
+maintained = Group.find_by!(name: SiteSetting.svdex_maintained_accounts_group_name)
+person = User.find_by(username: "maya-chen") || User.create!(username: "maya-chen", name: "Maya Chen",
+  email: "maya-chen@example.invalid", password: SecureRandom.hex(32), active: true, approved: true, trust_level: 2)
+raise "Unexpected staging person" unless person.email == "maya-chen@example.invalid"
+people.add(person) unless people.users.exists?(person.id)
+maintained.add(person) unless maintained.users.exists?(person.id)
+person.user_profile.update!(bio_raw: "Investing in financial infrastructure and early-stage software.", location: "New York, US") if person.user_profile.bio_raw.blank?
+background = UserField.find_by!(external_type: DiscourseSvdex::PeopleDirectory::FIELD_TYPE, external_name: "background")
+person.custom_fields["#{User::USER_FIELD_PREFIX}#{background.id}"] ||= "Former engineer at Northstar Instruments."
+person.save_custom_fields
+fund = User.find_by!(username: "svdex-fund-i")
+key_people = DiscourseSvdex::CompanyDirectory::FIELDS.fetch("key_people")
+fund.custom_fields[key_people] ||= [{"name" => person.name, "user_id" => person.id, "role" => "Managing Partner"}]
+fund.save_custom_fields
+presales = Category.find(SiteSetting.svdex_presales_category_id)
+title = "SVDEX Research — Annual early access"
+unless Topic.exists?(title: title, category_id: presales.id)
+  PostCreator.create!(User.find_by!(username: "svdex-company"), title: title,
+    raw: "Company research and private-market data in one workspace. Use this thread for product questions and updates.",
+    category: presales.id, tags: %w[finance], svdex_presale_summary: "Company research and private-market data in one workspace.",
+    svdex_presale_price: "$120 per year", svdex_presale_includes: "12 months of research tools", svdex_presale_delivery: "Access from January 2027",
+    svdex_presale_terms: "One named user.", skip_validations: true, skip_jobs: true)
+end
+[User.find_by!(username: "svdex-company"), fund, person].each do |entity|
+  discovery = DiscourseSvdex::Discoveries.capture!(entity, listed_at: nil)
+  next if discovery.contributor_user_id
+  DiscourseSvdex::Discoveries.record!(entity, actor, provenance: "discovered", status: "accepted", contributor: actor.username,
+    listed_at: discovery.listed_at&.iso8601 || Time.current.utc.iso8601, reason: "Reviewed initial directory entry and contributor provenance")
 end
 DirectoryItem.refresh_period!(:all)
 raise "Staging isolation changed" unless SiteSetting.disable_emails == "yes" && SiteSetting.login_required && !SiteSetting.allow_new_registrations

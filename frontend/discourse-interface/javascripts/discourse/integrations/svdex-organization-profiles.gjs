@@ -1,3 +1,7 @@
+import PersonAffiliations from "../components/svdex-person-affiliations.gjs";
+import DiscoveriesSummary from "../components/svdex-discoveries-summary.gjs";
+import DiscoveriesNav from "../components/svdex-discoveries-nav.gjs";
+import DiscoveryAdmin from "../components/svdex-discovery-admin.gjs";
 import InterestActivityNav from "../components/svdex-interest-activity-nav.gjs";
 import CompanyApplication from "../components/svdex-company-application.gjs";
 import { action, computed } from "@ember/object";
@@ -14,17 +18,6 @@ export default function registerOrganizationProfiles(api, { settings, router, si
   };
   companyApplicationModal.pluginId = "svdex-native-company-application";
   api.modifyClass("component:group-membership-button", companyApplicationModal);
-
-  const peopleGroupChoices = Base => class extends Base {
-    async loadGroups() {
-      await super.loadGroups(...arguments);
-      const organizationGroups = new Set([settings.svdex_companies_group_name, settings.svdex_funds_group_name]);
-      const choices = this.groupOptions?.filter(group => !organizationGroups.has(group.id));
-      this.set("groupOptions", choices?.length ? choices : null);
-    }
-  };
-  peopleGroupChoices.pluginId = "svdex-people-directory-groups";
-  api.modifyClass("controller:users", peopleGroupChoices);
 
   const memberOrganizations = Base => class extends Base {
     setupController(controller, model) {
@@ -65,4 +58,8 @@ export default function registerOrganizationProfiles(api, { settings, router, si
   api.renderInOutlet("after-user-name", CompanySummary);
   api.renderInOutlet("admin-user-details", CompanyAdminFields);
   api.renderInOutlet("user-activity-bottom", InterestActivityNav);
+  api.renderInOutlet("user-activity-bottom", DiscoveriesNav);
+  api.renderInOutlet("below-user-summary-stats", PersonAffiliations);
+  api.renderInOutlet("below-user-summary-stats", DiscoveriesSummary);
+  api.renderInOutlet("admin-user-details", DiscoveryAdmin);
 }

@@ -31,7 +31,7 @@ export default function registerTopicMetadata(api, { settings, router, site }) {
     const path = router.currentURL.split("?")[0];
     const home = path === "/" || path === "/all-forums" || /^\/(latest|top|new|unread|unseen|hot|posted)(\/|$)/.test(path);
     if (home && context.topic.category?.slug === "discussion") value.push("svdex-home-discussion");
-    if (context.topic.svdex_listing) value.push("svdex-home-listing");
+    if (context.topic.svdex_listing || context.topic.svdex_presale) value.push("svdex-home-listing");
     return value;
   };
   api.registerValueTransformer("topic-list-item-class", markHomeTopicLabels);

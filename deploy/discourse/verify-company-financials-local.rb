@@ -126,7 +126,7 @@ User.transaction do
   [["svdex_total_funding", false, northstar.id], ["svdex_total_funding", true, svdex.id], ["svdex_last_valuation", false, svdex.id], ["svdex_last_valuation", true, northstar.id]].each do |order, asc, expected|
     params = { period: "weekly", group: group.name, order: order }
     params[:asc] = "true" if asc
-    directory.get "/directory_items.json", params: params
+    directory.get "/listings/company-directory.json", params: params
     assert!(directory.response.status == 200, "company numeric directory query succeeds")
     rows = directory.response.parsed_body.fetch("directory_items")
     assert!(rows.first.fetch("user").fetch("id") == expected, "#{order} sorts #{asc ? 'ascending' : 'descending'} numerically")
@@ -144,7 +144,7 @@ User.transaction do
   [[true, svdex.id], [false, northstar.id]].each do |asc, first_id|
     params = { period: "all", group: group.name, order: "username" }
     params[:asc] = "true" if asc
-    directory.get "/directory_items.json", params: params
+    directory.get "/listings/company-directory.json", params: params
     assert!(directory.response.parsed_body.fetch("directory_items").first.fetch("id") == first_id, "company-name sorting follows displayed names, not account handles")
   end
   svdex.update!(name: names.first)
@@ -155,7 +155,7 @@ User.transaction do
   Topic.where(id: linked_ids).update_all(closed: true)
   hidden_post = PostCreator.create!(actor, title: "Unlisted financing #{SecureRandom.hex(4)}", raw: "Private layout verification content.", category: SiteSetting.svdex_listings_category_id, tags: ["svdex", "finance"], skip_validations: true, skip_jobs: true)
   hidden_post.topic.update!(visible: false)
-  directory.get "/directory_items.json", params: { period: "all", group: group.name }
+  directory.get "/listings/company-directory.json", params: { kind: "all", period: "all", group: group.name }
   facts = directory.response.parsed_body.fetch("directory_items").find { |row| row["id"] == svdex.id }.fetch("user").fetch("svdex_company")
   assert!(facts["open_offering"] == false, "closed offerings and an unlisted open topic do not mark a company open")
   staff.get endpoint, params: { svdex_open: "no" }
@@ -165,11 +165,11 @@ User.transaction do
 
   assert!(facts["offerings"] == linked_ids.length, "closed offerings remain in the total count while unlisted topics stay excluded")
   Topic.where(id: linked_ids).update_all(closed: false, archived: true)
-  directory.get "/directory_items.json", params: { period: "all", group: group.name }
+  directory.get "/listings/company-directory.json", params: { kind: "all", period: "all", group: group.name }
   facts = directory.response.parsed_body.fetch("directory_items").find { |row| row["id"] == svdex.id }.fetch("user").fetch("svdex_company")
   assert!(facts["open_offering"] == false, "archived offerings do not mark a company open")
   Topic.where(id: linked_ids.first).update_all(archived: false)
-  directory.get "/directory_items.json", params: { period: "all", group: group.name }
+  directory.get "/listings/company-directory.json", params: { kind: "all", period: "all", group: group.name }
   facts = directory.response.parsed_body.fetch("directory_items").find { |row| row["id"] == svdex.id }.fetch("user").fetch("svdex_company")
   assert!(facts["open_offering"] == true, "one listed open offering marks its company open")
   staff.get endpoint, params: { svdex_open: "yes", svdex_stage: "Seed", limit: 1 }
@@ -192,7 +192,7 @@ User.transaction do
   %w[true false].each do |asc|
     params = { period: "all", group: group.name, order: "svdex_last_valuation" }
     params[:asc] = "true" if asc == "true"
-    directory.get "/directory_items.json", params: params
+    directory.get "/listings/company-directory.json", params: params
     assert!(directory.response.parsed_body.fetch("directory_items").last.fetch("id") == svdex.id, "missing valuations sort last in either direction")
   end
   guest.get endpoint, params: { svdex_funding: "under_1m" }
@@ -218,14 +218,14 @@ User.transaction do
   ordinary.get "/listings/company-profile/#{svdex.username}.json"
   assert!([403, 404].include?(ordinary.response.status), "company Summary protects private group membership")
   group.update!(visibility_level: previous_visibility)
-  guest.get "/directory_items.json", params: { period: "all", group: group.name }
+  guest.get "/listings/company-directory.json", params: { kind: "all", period: "all", group: group.name }
   guest.response.parsed_body.fetch("directory_items").each do |row|
     target = User.find(row.fetch("id"))
     if !Guardian.new(nil).can_see_profile?(target)
       assert!(!row.fetch("user").key?("svdex_company"), "company financials respect native profile visibility")
     end
   end
-  guest.get "/directory_items.json", params: { period: "all", group: group.name, name: "Northstar Instruments" }
+  guest.get "/listings/company-directory.json", params: { kind: "all", period: "all", group: group.name, name: "Northstar Instruments" }
   assert!(guest.response.parsed_body.fetch("directory_items").map { |row| row.fetch("id") } == [northstar.id], "directory search matches actual company names")
   guest.get "/directory_items.json", params: { period: "all", order: "likes_given" }
   assert!(guest.response.status == 200 && guest.response.parsed_body.fetch("directory_items").all? { |row| row.key?("likes_given") }, "ordinary Users directory retains its native activity columns")

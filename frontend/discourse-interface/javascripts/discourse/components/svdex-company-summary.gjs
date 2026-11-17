@@ -6,6 +6,7 @@ export default class CompanySummary extends Component {
   get company() { return this.router.currentRouteName === "companies" ? this.args.outletArgs.user?.svdex_company : undefined; }
   get isSpv() { return this.company?.entity_type === "spv"; }
   get summary() {
+    if (this.router.currentRouteName === "people") return this.args.outletArgs.user?.svdex_person?.background;
     return this.router.currentRouteName === "companies" ? this.args.outletArgs.user?.svdex_company_summary : undefined;
   }
   <template>

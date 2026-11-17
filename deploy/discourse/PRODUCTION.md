@@ -22,8 +22,8 @@ database or invented financial fixtures into a production service.
   deployment cannot replace those functions.
 - Company/fund accounts are native users classified by staff-managed groups.
   Their facts are native custom fields. Offering facts are native topic fields.
-- Interest and bids use two plugin-owned tables, included in ordinary database
-  migrations and backups. They do not implement order execution or settlement.
+- Interest, bids and discovery attribution/audit records use plugin-owned tables,
+  included in ordinary database migrations and backups. They do not implement order execution or settlement.
 
 [Product scope](../../docs/product.md) describes current UI behavior and labels.
 [Maintenance](../../docs/discourse-maintenance.md) describes source ownership,
@@ -69,7 +69,7 @@ configuration and theme exports remain available for rollback.
 
 The upgrade runs `configure-upgrade-production.rb` and then
 `configure-marketplace.rb`. These preserve native IDs and permissions, configure
-Public/Private offerings and Company & Fund Updates, and synchronize approved
+Public/Private offerings, Updates, People and Pre-sales, and synchronize approved
 visibility labels. Exemption tags remain staff-assigned. They do not import local
 companies/funds, offering fixtures, monetary records or investor memberships.
 

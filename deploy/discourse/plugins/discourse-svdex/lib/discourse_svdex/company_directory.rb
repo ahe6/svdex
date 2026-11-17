@@ -233,19 +233,26 @@ module DiscourseSvdex
 
     module Query
       def call(**options)
+        @svdex_people_filters = options.delete(:svdex_people_filters) || {}
+        catalog = options.delete(:svdex_catalog)
+        @svdex_people_directory = catalog == "people" && options[:group_name] == SiteSetting.svdex_people_group_name
         @svdex_filters = options.delete(:svdex_filters) || {}
-        @svdex_company_directory = options[:group_name].present? && options[:group_name] == SiteSetting.svdex_companies_group_name
+        @svdex_company_directory = catalog == "companies" && options[:group_name] == SiteSetting.svdex_companies_group_name
         # Business facts are current company facts, not weekly activity totals.
         options[:period_type] = DirectoryItem.period_types[:all] if @svdex_company_directory
         result = super(**options)
         if @svdex_company_directory
           CompanyDirectory.populate(result.items.map(&:user), guardian)
+        elsif @svdex_people_directory
+          PeopleDirectory.populate(result.items.map(&:user), guardian)
         else
           counts = @svdex_member_organizations ||= CompanyDirectory.member_organization_counts(guardian)
           result.items.each { |item| item.svdex_organizations = counts.fetch(item.user_id, 0) }
         end
         result
       ensure
+        @svdex_people_directory = false
+        @svdex_people_filters = {}
         @svdex_company_directory = false
         @svdex_filters = {}
         @svdex_visible_company_user_ids = nil
@@ -254,17 +261,33 @@ module DiscourseSvdex
 
       private
 
-      # Apply before totals and pagination, and tell core not to reinsert a
-      # signed-in organization through its current-user prioritization.
-      def exclude_groups(items, group_names)
-        items, excluded_ids = super
-        return items, excluded_ids if @svdex_company_directory
+      # Curated classification is independent of who owns or operates an account.
+      # Filter before native totals/pagination; native group visibility still applies.
+      def filter_group(items, group_name)
+        items = super
+        return items unless @svdex_people_directory
 
         organization_ids = GroupUser.joins(:user).where(users: { admin: false, moderator: false }).where(group_id: Group.where(name: [
           SiteSetting.svdex_companies_group_name,
           SiteSetting.svdex_funds_group_name,
         ]).select(:id)).pluck(:user_id)
-        [items.where.not(user_id: organization_ids), (excluded_ids + organization_ids).uniq]
+        candidates = items.joins(:user).where.not(user_id: organization_ids)
+          .where("NULLIF(BTRIM(users.name), '') IS NOT NULL")
+        visible_ids = User.where(id: candidates.select(:user_id)).includes(:user_option, :user_stat)
+          .select { |person| guardian.can_see_profile?(person) }.map(&:id)
+        PeopleDirectory.filter_items(items.where(user_id: visible_ids), @svdex_people_filters, guardian)
+      end
+
+      # Classification is independent of identity, activity and login history.
+      # Include managed profiles only in the explicitly scoped catalogs. Apply
+      # before totals/pagination and prevent native current-user reinsertion.
+      def exclude_groups(items, group_names)
+        items, excluded_ids = super
+        return items, excluded_ids if @svdex_company_directory || @svdex_people_directory
+
+        maintained = GroupUser.where(group_id: Group.where(name: SiteSetting.svdex_maintained_accounts_group_name).select(:id))
+        excluded_ids |= [user.id] if user && maintained.exists?(user_id: user.id)
+        [items.where.not(user_id: maintained.select(:user_id)), excluded_ids]
       end
 
       def visible_company_user_ids
@@ -274,6 +297,9 @@ module DiscourseSvdex
       end
 
       def order_items(items, requested_order, ascending)
+        if @svdex_people_directory && requested_order == "username"
+          return items.joins(:user).order(Arel.sql("LOWER(BTRIM(users.name)) #{ascending ? 'ASC' : 'DESC'}"), id: :asc)
+        end
         if !@svdex_company_directory && requested_order == "svdex_organizations"
           counts = @svdex_member_organizations ||= CompanyDirectory.member_organization_counts(guardian)
           cases = counts.map { |id, count| "WHEN #{Integer(id)} THEN #{Integer(count)}" }.join(" ")

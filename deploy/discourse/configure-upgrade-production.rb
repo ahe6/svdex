@@ -91,3 +91,9 @@ ActiveRecord::Base.transaction do
 end
 DiscourseTagging.clear_cache!
 puts "Native upgrade configured: Feedback, secured private-access discovery, badge icons, member Events and reminder preferences. No members added, badges awarded or financial fixtures imported."
+
+require_relative "configure-people"
+
+require_relative "configure-presales"
+
+require_relative "configure-discoveries"

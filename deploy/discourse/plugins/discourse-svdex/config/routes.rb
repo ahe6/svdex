@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 DiscourseSvdex::Engine.routes.draw do
+  get "/discoveries/:username" => "discoveries#index", defaults: { format: :json }
+  get "/discovery-credit/:user_id" => "discoveries#show", defaults: { format: :json }
+  put "/discovery-credit/:user_id" => "discoveries#update", defaults: { format: :json }
   get "/my-interest" => "my_interest#index", defaults: { format: :json }
   delete "/my-interest/:kind/:id" => "my_interest#destroy", defaults: { format: :json }
   get "/offering-bids/:topic_id" => "offering_bids#index", defaults: { format: :json }

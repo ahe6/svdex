@@ -1,5 +1,5 @@
 svg_icons:
-  default: "building|comments|plus|circle-question|bookmark"
+  default: "building|comments|plus|circle-question|bookmark|envelope|file-lines|file-invoice-dollar|address-book|chart-pie|box-open"
   type: list
   list_type: compact
   description: "Icons used by the SVDEX navigation."

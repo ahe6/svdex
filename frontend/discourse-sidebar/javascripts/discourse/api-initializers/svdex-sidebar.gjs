@@ -36,7 +36,7 @@ export default apiInitializer((api) => {
   });
 
   // Separate directory links share one route without sharing active state.
-  for (const [kind, text, icon] of (hasSvdexPlugin ? [["companies", "Companies", "building"], ["funds", "Funds", "layer-group"]] : [])) {
+  for (const [kind, text, icon] of (hasSvdexPlugin ? [["companies", "Companies", "building"], ["funds", "Funds", "chart-pie"]] : [])) {
     api.addCommunitySectionLink(BaseLink => class extends BaseLink {
       get name() { return `svdex-${kind}`; }
       get text() { return text; }
@@ -47,6 +47,7 @@ export default apiInitializer((api) => {
       get currentWhen() { return this.router.currentRouteName === "companies" && (this.router.currentRoute.queryParams.kind || "companies") === kind; }
     });
   }
+
 
   api.addCommunitySectionLink(BaseLink => class extends BaseLink {
     @service site;
@@ -67,6 +68,30 @@ export default apiInitializer((api) => {
     get prefixValue() { return "list"; }
     get shouldDisplay() { return Boolean(this.category); }
   });
+  if (hasSvdexPlugin) {
+    api.addCommunitySectionLink(BaseLink => class extends BaseLink {
+      @service site;
+      get category() { return this.site.categories.find(category => Number(category.id) === Number(this.siteSettings.svdex_presales_category_id)); }
+      get name() { return "svdex-presales"; }
+      get text() { return "Pre-sales"; }
+      get title() { return "Product pre-orders and early access"; }
+      get href() { return this.category?.url; }
+      get prefixValue() { return "box-open"; }
+      get shouldDisplay() { return Boolean(this.category); }
+    });
+  }
+
+  if (hasSvdexPlugin) {
+    api.addCommunitySectionLink(BaseLink => class extends BaseLink {
+      get name() { return "svdex-people"; }
+      get text() { return "People"; }
+      get title() { return "People"; }
+      get route() { return "people"; }
+      get query() { return { period: "all", order: "username", asc: true, name: null }; }
+      get prefixValue() { return "address-book"; }
+    });
+  }
+
   // Independent discussions keep their native category and topic controls,
   // but are no longer mixed into Home's listing/introductions feed.
   api.addCommunitySectionLink(BaseLink => class extends BaseLink {
@@ -132,9 +157,11 @@ export default apiInitializer((api) => {
 
   api.addCommunitySectionLink(() => class extends MyMessagesSectionLink {
     constructor(owner, options) { super(owner, { ...options, overriddenName: "Messages" }); }
+    get prefixValue() { return "envelope"; }
   });
   api.addCommunitySectionLink(() => class extends MyPostsSectionLink {
     constructor(owner, options) { super(owner, { ...options, overriddenName: "My posts" }); }
+    get prefixValue() { return this._hasDraft && this.currentUser?.unified_new_enabled ? "pencil" : "file-lines"; }
   });
   api.addCommunitySectionLink(BaseLink => class extends BaseLink {
     get name() { return "svdex-my-interest"; }
@@ -142,7 +169,7 @@ export default apiInitializer((api) => {
     get title() { return "My Bids"; }
     get route() { return "userActivity.interest"; }
     get model() { return this.currentUser?.username; }
-    get prefixValue() { return "list-check"; }
+    get prefixValue() { return "file-invoice-dollar"; }
     get shouldDisplay() { return Boolean(this.currentUser) && Boolean(this.siteSettings.svdex_companies_group_name); }
   });
 
@@ -163,8 +190,10 @@ export default apiInitializer((api) => {
   api.addCommunitySectionLink(() => class extends BadgesSectionLink {
     get text() { return "Achievements"; }
   });
+
   api.addCommunitySectionLink(() => class extends UsersSectionLink {
     get text() { return "Users"; }
+    get title() { return "Users"; }
   }, true);
   api.addCommunitySectionLink(() => class extends GroupsSectionLink {
     get text() { return "Groups"; }

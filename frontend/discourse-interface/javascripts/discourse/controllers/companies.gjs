@@ -21,7 +21,7 @@ export default class CompaniesController extends UsersController {
     const noun = this.kind === "funds" ? "funds" : this.kind === "all" ? "listings" : "companies";
     return this.hasCompanyFilters ? `No ${noun} match these filters.` : this.name ? `No ${noun} match your search.` : `No ${noun} to show.`;
   }
-  get searchLabel() { return this.kind === "funds" ? "Search by fund name" : this.kind === "all" ? "Search by name" : "Search by company name"; }
+  get searchLabel() { return this.searchTitle; }
   get searchTitle() { return this.kind === "funds" ? "Search funds" : this.kind === "all" ? "Search listings" : "Search companies"; }
   get countKey() { return this.kind === "funds" ? "svdex.company.fund_rows" : this.kind === "all" ? "svdex.company.listing_rows" : "svdex.company.total_rows"; }
   get identityKey() { return this.kind === "funds" ? "svdex.company.fund" : this.kind === "all" ? "svdex.company.name" : "svdex.company.company"; }
