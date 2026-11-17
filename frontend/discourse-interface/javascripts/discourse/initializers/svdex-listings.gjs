@@ -7,6 +7,10 @@ import registerOfferings from "../integrations/svdex-offering-topics.gjs";
 
 export default {
   name: "svdex-topic-listings",
+  after: "inject-objects",
+  // Events eagerly creates the composer service. Register our subclass first
+  // so its event flow and scoped category choices actually apply.
+  before: "add-post-event-builder",
   initialize() {
     withPluginApi((api) => {
       const settings = api.container.lookup("service:site-settings");
