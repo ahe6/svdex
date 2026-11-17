@@ -2,6 +2,9 @@
 
 ## Start here
 
+For a practical setup/edit/review walkthrough, use
+[your first contribution](docs/first-contribution.md).
+
 SVDEX customizes upstream Discourse using native themes and a server plugin.
 Read [product scope](docs/product.md) and
 [maintenance boundaries](docs/discourse-maintenance.md) before a larger change.
@@ -45,6 +48,11 @@ fund fixtures. It checks native permissions, moderation, filters, financial
 records, theme compilation/export/import and the pinned upstream contracts.
 Tests roll back their own records; avoid concurrent browser review while these
 checks temporarily import themes or toggle settings.
+
+During iteration, `npm run check:discourse -- --list` lists the focused check
+names, and `npm run check:discourse -- offering-bids private-offerings` runs just
+those checks. Always distinguish a focused pass from a full run in the PR.
+CI/release jobs continue to run the complete suite without arguments.
 
 ### Finding the right file
 

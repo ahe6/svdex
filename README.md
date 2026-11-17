@@ -13,6 +13,7 @@ Python 3 and Bash are needed for the source/tooling checks; the actual Discourse
 application and its compiler run inside Docker.
 
 ```sh
+npm run doctor
 npm ci
 npm run setup
 npm start
@@ -36,6 +37,10 @@ scripts/discourse-local.sh appearance  # builds styles + installs native themes
 npm run check                         # source and package tests
 npm run check:discourse                # real local Discourse workflow checks
 ```
+
+Use the equivalent `npm run sync:themes`, `npm run sync:styles` and
+`npm run sync:plugin` commands for everyday updates. For step-by-step editing,
+focused checks and common setup failures, see [your first contribution](docs/first-contribution.md).
 
 Backend changes require copying/reloading the plugin; new plugin client routes
 also need asset compilation. See [maintenance](docs/discourse-maintenance.md)

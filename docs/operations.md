@@ -2,6 +2,9 @@
 
 ## Local runtime
 
+`npm run doctor` checks prerequisites and Docker connectivity without changing
+your machine or reading credentials. Start with it when setup fails.
+
 Use `npm run setup` for an initial installation and `npm start` to start the
 existing forum/mail containers. `npm run stop`, `npm run status` and
 `scripts/discourse-local.sh logs` operate on that same local instance. The forum
@@ -30,6 +33,11 @@ configuration commands are local-only, not production release operations.
 | Local example topics and private interest/bid activity | `scripts/discourse-local.sh fixtures` |
 | Local Chat/Events/Achievements | Corresponding `chat`, `events`, `achievements` commands |
 
+Convenience commands: `npm run sync:themes` imports Interface/Sidebar,
+`npm run sync:styles` builds/imports appearance and themes, and
+`npm run sync:plugin` runs the complete `listings` update including migrations,
+asset compilation and local offering configuration. None deploys a remote site.
+
 For a Ruby-only update from the repository root:
 
 ```sh
@@ -54,6 +62,12 @@ moderation, directories, financial records, theme compilation/export/import and
 upstream contracts. It rolls back its own test records and restores temporary
 settings. Do not review the browser concurrently with native theme/flag tests.
 Review affected desktop/mobile screens afterward.
+
+Run `npm run check:discourse -- --list` to list available focused checks, then
+pass one or more names while iterating. The local-host guard still runs first.
+No arguments means the full suite; CI and releases use that default. Browser
+startup/console and actual create flows need manual review too: theme compilation
+alone cannot detect every initializer-order or responsive-layout problem.
 
 The source workflow runs lightweight checks. `native-discourse.yml` builds a
 fresh pinned forum and runs the native suite for public contribution PRs and
