@@ -2,6 +2,7 @@ import { Input } from "@ember/component";
 import { on } from "@ember/modifier";
 import PeopleFilters from "../components/svdex-people-filters.gjs";
 import PeopleTable from "../components/svdex-people-table.gjs";
+import AddPerson from "../components/svdex-add-person.gjs";
 import bodyClass from "discourse/helpers/body-class";
 import hideApplicationFooter from "discourse/helpers/hide-application-footer";
 import withEventValue from "discourse/helpers/with-event-value";
@@ -23,6 +24,7 @@ export default <template>
               <Input class="filter-name no-blur" placeholder="Search by name" @value={{readonly @controller.nameInput}}
                 {{on "input" (withEventValue @controller.onUsernameFilterChanged)}} />
               <PeopleFilters @controller={{@controller}} />
+              <AddPerson />
             </div>
           </div>
           <DConditionalLoadingSpinner @condition={{@controller.isLoading}}>

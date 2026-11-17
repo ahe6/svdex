@@ -25,6 +25,10 @@ plugins:
   svdex_lounge_channel_url:
     default: ""
     client: true
+  svdex_products_category_id:
+    default: 0
+    type: category
+    client: true
   svdex_listings_category_id:
     default: 0
     type: category

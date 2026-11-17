@@ -1,4 +1,5 @@
 import { isPresaleCategory } from "../lib/svdex-presales";
+import { isProductCategory } from "../lib/svdex-products";
 import Component from "@glimmer/component";
 import { service } from "@ember/service";
 import { action } from "@ember/object";
@@ -20,7 +21,7 @@ export default class DiscoverySearch extends Component {
       !/overview|forums|categories/.test(this.router.currentRouteName || "") &&
       (this.router.currentRouteName?.startsWith("discovery.") || (this.category && this.router.currentRouteName?.startsWith("tags.")) || this.router.currentRouteName?.startsWith("discourse-post-event-upcoming-events"));
   }
-  get placeholder() { if (isPresaleCategory(this.category?.id || this.args.outletArgs.category?.id, this.siteSettings)) return "Search pre-sales"; return Number(this.category?.id) === Number(this.siteSettings.svdex_events_category_id) ? "Search events" : "Search topics"; }
+  get placeholder() { if (isProductCategory(this.category?.id, this.siteSettings)) return "Search products"; if (isPresaleCategory(this.category?.id || this.args.outletArgs.category?.id, this.siteSettings)) return "Search pre-sales"; return Number(this.category?.id) === Number(this.siteSettings.svdex_events_category_id) ? "Search events" : "Search topics"; }
   @action update(event) { this.query = event.target.value; }
   @action clear() { this.query = ""; this.change(); }
   @action change(event) {

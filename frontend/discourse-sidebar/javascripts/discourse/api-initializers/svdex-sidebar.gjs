@@ -68,16 +68,22 @@ export default apiInitializer((api) => {
     get prefixValue() { return "list"; }
     get shouldDisplay() { return Boolean(this.category); }
   });
+
   if (hasSvdexPlugin) {
     api.addCommunitySectionLink(BaseLink => class extends BaseLink {
       @service site;
-      get category() { return this.site.categories.find(category => Number(category.id) === Number(this.siteSettings.svdex_presales_category_id)); }
-      get name() { return "svdex-presales"; }
-      get text() { return "Pre-sales"; }
-      get title() { return "Product pre-orders and early access"; }
+      get category() { return this.site.categories.find(category => Number(category.id) === Number(this.siteSettings.svdex_products_category_id)); }
+      get name() { return "svdex-products"; }
+      get text() { return "Products"; }
+      get title() { return "Products and pre-sale campaigns"; }
       get href() { return this.category?.url; }
       get prefixValue() { return "box-open"; }
       get shouldDisplay() { return Boolean(this.category); }
+      get currentWhen() {
+        const path = (this.router.currentURL || "").split("?")[0];
+        const ids = [this.siteSettings.svdex_products_category_id, this.siteSettings.svdex_presales_category_id].map(Number);
+        return this.site.categories.some(category => ids.includes(Number(category.id)) && (path === category.url || path.startsWith(`${category.url}/`) || path.startsWith(`/tags${category.url}/`)));
+      }
     });
   }
 

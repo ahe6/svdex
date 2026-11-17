@@ -181,5 +181,6 @@ puts "Production structure configured; no company accounts, financial facts or o
 require_relative "configure-people"
 
 require_relative "configure-presales"
+require_relative "configure-products"
 
 require_relative "configure-discoveries"

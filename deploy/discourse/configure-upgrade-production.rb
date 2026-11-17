@@ -95,5 +95,6 @@ puts "Native upgrade configured: Feedback, secured private-access discovery, bad
 require_relative "configure-people"
 
 require_relative "configure-presales"
+require_relative "configure-products"
 
 require_relative "configure-discoveries"

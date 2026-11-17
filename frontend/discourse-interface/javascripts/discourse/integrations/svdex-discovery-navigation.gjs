@@ -1,4 +1,5 @@
 import { isPresaleCategory } from "../lib/svdex-presales";
+import { isProductCategory } from "../lib/svdex-products";
 import registerDiscoveryTabs from "./svdex-discovery-tabs.gjs";
 import { isOverviewDirectory } from "../lib/svdex-sector-navigation";
 import DiscoveryTopicHeader from "../components/svdex-discovery-topic-header.gjs";
@@ -19,7 +20,7 @@ export default function registerDiscoveryNavigation(api, { settings, router, sit
   registerDiscoveryTabs(api);
   api.registerValueTransformer("topic-list-columns", ({ value: columns, context }) => {
     if (context.listContext === "discovery" &&
-      (isOfferingCategory(context.category?.id, settings) || isPresaleCategory(context.category?.id, settings) ||
+      (isOfferingCategory(context.category?.id, settings) || isPresaleCategory(context.category?.id, settings) || isProductCategory(context.category?.id, settings) ||
         Number(context.category?.id) > 0 && Number(context.category.id) === Number(settings.svdex_events_category_id))) {
       columns.replace("topic", { header: DiscoveryTopicHeader });
     }
@@ -27,9 +28,20 @@ export default function registerDiscoveryNavigation(api, { settings, router, sit
   });
   api.renderInOutlet("top-notices", EventsNavigation);
   api.registerValueTransformer("create-topic-icon", () => "plus");
-  api.registerValueTransformer("can-create-topic-button", ({ value }) =>
-    isOverviewDirectory(router.currentRouteName) ? false : value
-  );
+  api.registerValueTransformer("can-create-topic-button", ({ value, context }) => {
+    if (isOverviewDirectory(router.currentRouteName) || router.currentRouteName?.startsWith("chat")) return false;
+    if (api.getCurrentUser()) return value;
+    const category = context.category;
+    const publicSubmission = isOfferingCategory(category?.id, settings) || isPresaleCategory(category?.id, settings) ||
+      isProductCategory(category?.id, settings) || category?.slug === "discussion" ||
+      Number(category?.id) > 0 && Number(category.id) === Number(settings.svdex_events_category_id);
+    const home = !category && /^discovery\.(latest|top)$/.test(router.currentRouteName || "");
+    return publicSubmission || home || value;
+  });
+  api.registerBehaviorTransformer("create-topic-button-click", ({ next }) => {
+    if (!api.getCurrentUser()) return DiscourseURL.routeTo("/login");
+    return next();
+  });
   // Suppress only this toolbar's split menu; native create/resume and the
   // current user's actual draft count stay intact elsewhere.
   const singleCreateAction = Base => class extends Base {

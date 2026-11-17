@@ -144,6 +144,8 @@ after_initialize do
   DiscourseSvdex::TopicDiscovery.install!(self)
   require_relative "lib/discourse_svdex/presales"
   DiscourseSvdex::Presales.install!(self)
+  require_relative "lib/discourse_svdex/products"
+  DiscourseSvdex::Products.install!(self)
 
   DiscourseSvdex::FIELDS.each do |name, length|
     register_topic_custom_field_type(name, name == DiscourseSvdex::VALUATION_FIELD ? :integer : :string, max_length: length)

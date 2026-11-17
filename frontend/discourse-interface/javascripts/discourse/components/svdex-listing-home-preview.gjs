@@ -5,7 +5,7 @@ import { homeOfferFigures } from "../lib/svdex-home-offer-figures";
 export default class ListingHomePreview extends Component {
   @service site;
   get topic() { return this.args.outletArgs.topic; }
-  get data() { return this.topic.svdex_listing || this.topic.svdex_presale; }
+  get data() { return this.topic.svdex_listing || this.topic.svdex_presale || this.topic.svdex_product; }
   get visible() { return Boolean(this.data); }
   get summary() {
     // Pinned topics can already have core's excerpt; do not print it twice.
@@ -14,7 +14,7 @@ export default class ListingHomePreview extends Component {
   get details() {
     // Desktop already shows the key figures in its financial column. Mobile
     // has no such column, so repeat only those same key figures as plain text.
-    if (!this.site.mobileView || !this.data) return "";
+    if (!this.site.mobileView || !this.data || this.topic.svdex_product) return "";
     return homeOfferFigures(this.data).map(({ label, value }) => `${label}: ${value}`).join(", ");
   }
 

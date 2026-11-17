@@ -17,6 +17,9 @@ en:
       people:
         person: "Person"
       new_presale: "New pre-sale"
+      new_product: "New product"
+      add_product: "Add product"
+      add_offering: "Add offering"
       new_offering: "New offering"
       company:
         buy_interest: "Buy interest"

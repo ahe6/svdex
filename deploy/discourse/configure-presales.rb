@@ -8,7 +8,8 @@ actor = local ? User.find_by!(username: "svdex") : User.find_by_email(ENV.fetch(
 raise "Active administrator required" unless actor&.admin? && actor.active?
 Category.transaction do
   category = Category.find_by(id: SiteSetting.svdex_presales_category_id) || Category.find_by(slug: "pre-sales") || Category.new(user: actor)
-  raise "Unexpected Pre-sales category" if category.persisted? && (category.slug != "pre-sales" || category.parent_category_id.present?)
+  allowed_parent = category.parent_category_id.nil? || category.parent_category_id == SiteSetting.svdex_products_category_id.to_i
+  raise "Unexpected Pre-sales category" if category.persisted? && (category.slug != "pre-sales" || !allowed_parent)
   category.assign_attributes(name: "Pre-sales", slug: "pre-sales", color: "D9A441", text_color: "FFFFFF")
   category.set_permissions("everyone" => :full)
   category.save!

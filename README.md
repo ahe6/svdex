@@ -1,6 +1,6 @@
 # SVDEX
 
-SVDEX is a company/fund directory and offering/discussion interface built on
+SVDEX is a company/fund/product directory and offering/discussion interface built on
 Discourse. This repository contains the native themes, server plugin, local
 Docker tooling and self-hosted deployment scripts. Company/fund profiles use
 native accounts; offerings and updates use native topics. Individual interest
