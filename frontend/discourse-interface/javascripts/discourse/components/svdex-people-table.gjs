@@ -21,6 +21,7 @@ class NetWorthDetails extends Component {
 }
 class PersonRow extends Component {
   @service modal;
+  @service site;
   get person() { return this.args.item.user.svdex_person || {}; }
   get affiliations() {
     const organizations = this.person.organizations || [];
@@ -29,8 +30,14 @@ class PersonRow extends Component {
     }));
   }
   get facts() {
+    const currentRoles = this.site.mobileView
+      ? (this.affiliations.length ? this.affiliations.flatMap(organization => [
+          { label: "Organization", organization },
+          { label: "Current title", value: organization.role },
+        ]) : [{ label: "Current title", value: this.person.role }])
+      : [{ label: "Current roles", organizations: this.affiliations, value: this.person.role }];
     return [
-      { label: "Current roles", organizations: this.affiliations, value: this.person.role },
+      ...currentRoles,
       { label: "Location", value: this.person.location },
       { label: "Est. net worth", estimate: this.person.net_worth },
     ];
@@ -47,7 +54,9 @@ class PersonRow extends Component {
         <div class="directory-table__cell--user-field" role="cell">
           <span class="directory-table__label"><span>{{fact.label}}</span></span>
           <span class="directory-table__value--user-field">
-            {{#if fact.organizations}}
+            {{#if fact.organization}}
+              <a class="svdex-person-organization" href={{fact.organization.url}}>{{fact.organization.name}}</a>
+            {{else if fact.organizations}}
               {{#each fact.organizations as |organization|}}
                 <span class="svdex-person-affiliation">
                   <a class="svdex-person-organization" href={{organization.url}}>{{organization.name}}</a>

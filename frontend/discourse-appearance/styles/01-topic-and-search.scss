@@ -117,3 +117,6 @@
   .category-list { margin-bottom: 0; }
   .more-topics { margin-top: 1em; }
 }
+
+// A pre-sale has two paired product details after its full-width summary.
+.svdex-composer-fields.svdex-presale-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }

@@ -22,6 +22,12 @@ test("code-only upgrades contain no installation credentials or environment rese
     assert.match(app.params.version, /^[0-9a-f]{40}$/);
     assert.ok(app.hooks.after_code[0].file.contents.length > 0);
     assert.equal(JSON.parse(readFileSync(join(output, "manifest.json"))).release_kind, "upgrade");
+    const configure = readFileSync(join(output, "configure-upgrade-production.rb"), "utf8");
+    const installer = readFileSync(join(output, "aws/upgrade-release.sh"), "utf8");
+    for (const [, helper] of configure.matchAll(/require_relative "(configure-[a-z-]+)"/g)) {
+      assert.ok(readFileSync(join(output, `${helper}.rb`), "utf8").length, `Missing packaged configuration dependency ${helper}`);
+      assert.ok(installer.includes(`${helper}.rb`), `Upgrade does not install configuration dependency ${helper}`);
+    }
     assert.doesNotMatch(JSON.stringify(app), /SMTP|PASSWORD|LOGIN_REQUIRED|ALLOW_NEW_REGISTRATIONS|DEVELOPER_EMAIL/);
   } finally { rmSync(temp, { recursive: true, force: true }); }
 });

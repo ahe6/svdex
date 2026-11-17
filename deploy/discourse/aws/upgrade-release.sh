@@ -79,6 +79,10 @@ docker exec -u discourse app bash -lc 'cd /var/www/discourse && bundle exec rail
   puts "Native sidebar and toolbar updated."
 '\'''
 install -m 644 "$release_dir/native-defaults.rb" "$shared/native-defaults.rb"
+# Configuration entry points require their code-only catalog helpers beside them.
+for helper in configure-people.rb configure-presales.rb configure-discoveries.rb; do
+  install -m 644 "$release_dir/$helper" "$shared/$helper"
+done
 install -m 644 "$release_dir/configure-upgrade-production.rb" "$shared/configure-upgrade-production.rb"
 docker exec -u discourse -e SVDEX_CONFIGURE_UPGRADE=1 app bash -lc 'cd /var/www/discourse && bundle exec rails runner /shared/svdex-release/configure-upgrade-production.rb'
 install -m 644 "$release_dir/configure-marketplace.rb" "$shared/configure-marketplace.rb"

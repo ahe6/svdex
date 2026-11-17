@@ -119,6 +119,9 @@
   .more-topics { margin-top: 1em; }
 }
 
+// A pre-sale has two paired product details after its full-width summary.
+.svdex-composer-fields.svdex-presale-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
 // Discussion uses its tags for context. Offerings retain the native category
 // label in mixed feeds; dedicated category pages still use core hideCategory.
 .svdex-home-discussion {
@@ -516,6 +519,12 @@
   overflow: hidden;
   white-space: normal;
   color: var(--primary-medium);
+}
+
+// Core's small user detail text compounds with our secondary line on phones.
+// Inherit the surrounding profile body size once, then apply its secondary size.
+.mobile-view :is(.svdex-discoveries-summary, .svdex-affiliations-summary) {
+  .user-info, .user-detail { font-size: inherit; }
 }
 
 // Mobile offerings share a directory-style identity and compact financial text.

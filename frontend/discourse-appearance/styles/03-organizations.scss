@@ -317,3 +317,9 @@
   white-space: normal;
   color: var(--primary-medium);
 }
+
+// Core's small user detail text compounds with our secondary line on phones.
+// Inherit the surrounding profile body size once, then apply its secondary size.
+.mobile-view :is(.svdex-discoveries-summary, .svdex-affiliations-summary) {
+  .user-info, .user-detail { font-size: inherit; }
+}
