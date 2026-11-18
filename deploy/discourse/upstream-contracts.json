@@ -105,6 +105,11 @@
       "path": "frontend/discourse/app/templates/user/summary.gjs",
       "sha256": "6a9f2e4bf73e651c59fdb31ae12720fafb436b812a12d19f9f17a3c61b67b6ce",
       "integration": "Native below-user-summary-stats outlet for discovery preview"
+    },
+    {
+      "path": "frontend/discourse/app/ui-kit/helpers/d-category-link.js",
+      "sha256": "5806cc7f1dafc097b9d44a8731a48a4dffc52343ba991dd8199b890d27ced07a",
+      "integration": "Single native category renderer composes onboarding URLs and compact metadata labels"
     }
   ]
 }

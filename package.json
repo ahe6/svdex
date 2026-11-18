@@ -20,7 +20,11 @@
     "sync:styles": "bash scripts/discourse-local.sh appearance",
     "sync:plugin": "bash scripts/discourse-local.sh listings",
     "build:styles": "node scripts/build-styles.js",
-    "package:source": "node scripts/package-source.js"
+    "package:source": "node scripts/package-source.js",
+    "check:browser": "playwright test"
   },
-  "license": "GPL-2.0-or-later"
+  "license": "GPL-2.0-or-later",
+  "devDependencies": {
+    "@playwright/test": "1.65.1"
+  }
 }

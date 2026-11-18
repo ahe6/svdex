@@ -74,21 +74,22 @@ with open(os.environ['AWS_CALL_LOG'],'a') as log: log.write(json.dumps(args)+'\\
 if args[:2]==['ssm','send-command']:
     assert args[args.index('--document-name')+1]=='SVDEX-DeployReviewedRelease'
 elif args[:2]==['s3','cp'] and args[2].startswith('s3://'):
-    Path(args[3]).write_text(json.dumps({'source_commit':os.environ['GITHUB_SHA'],'run_id':'123-1','status':os.environ['RECEIPT_STATUS'],'phase':'verify'}))
+    Path(args[3]).write_text(json.dumps({'source_commit':os.environ.get('SVDEX_RELEASE_SHA') or os.environ['GITHUB_SHA'],'run_id':'123-1','status':os.environ['RECEIPT_STATUS'],'phase':'verify'}))
 elif args[:2]==['s3','cp']:
     assert args[args.index('--sse')+1]=='AES256'
 else: raise RuntimeError('Unexpected permission needed')
 `);
     chmodSync(aws, 0o755);
-    for (const status of ["success", "failed"]) {
-      const log = join(temp, `calls-${status}`);
+    for (const [status, releaseSha] of [["success", ""], ["failed", ""], ["success", "b".repeat(40)]]) {
+      const log = join(temp, `calls-${status}-${releaseSha}`);
       const result = spawnSync("python3", [resolve("scripts/deploy-from-github.py")], { cwd: temp, encoding: "utf8", env: { ...process.env,
         PATH: `${join(temp, "bin")}:${process.env.PATH}`, AWS_CALL_LOG: log, RECEIPT_STATUS: status,
-        GITHUB_SHA: "a".repeat(40), GITHUB_RUN_ID: "123", GITHUB_RUN_ATTEMPT: "1",
+        GITHUB_SHA: "a".repeat(40), SVDEX_RELEASE_SHA: releaseSha, GITHUB_RUN_ID: "123", GITHUB_RUN_ATTEMPT: "1",
         SVDEX_ARTIFACT_BUCKET: "svdex-discourse-123456789012-us-east-1", SVDEX_INSTANCE_ID: "i-123abc" } });
       assert.equal(result.status === 0, status === "success", result.stderr);
       const calls = readFileSync(log, "utf8").trim().split("\n").map(JSON.parse);
       assert.equal(calls.length, 3);
+      assert.equal(JSON.parse(calls[1][calls[1].indexOf("--parameters") + 1]).ReleaseSha[0], releaseSha || "a".repeat(40));
       assert.ok(!JSON.stringify(calls).includes("get-command-invocation"));
     }
   } finally { rmSync(temp, { recursive: true, force: true }); }

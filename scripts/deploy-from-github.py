@@ -17,7 +17,7 @@ def main():
     if target not in ("production", "staging"): raise ValueError("Invalid deployment environment")
     prefix = "svdex-staging" if target == "staging" else "svdex-discourse"
     document = "SVDEX-DeployStagingRelease" if target == "staging" else "SVDEX-DeployReviewedRelease"
-    sha = os.environ["GITHUB_SHA"]
+    sha = os.environ.get("SVDEX_RELEASE_SHA") or os.environ["GITHUB_SHA"]
     run = f'{os.environ["GITHUB_RUN_ID"]}-{os.environ["GITHUB_RUN_ATTEMPT"]}'
     bucket = os.environ["SVDEX_ARTIFACT_BUCKET"]
     instance = os.environ["SVDEX_INSTANCE_ID"]

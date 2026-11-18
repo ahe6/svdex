@@ -1,17 +1,14 @@
 import { trustHTML } from "@ember/template";
-import { categoryBadgeHTML, defaultCategoryLinkRenderer } from "discourse/ui-kit/helpers/d-category-link";
-import { publicPrivateCategory } from "../lib/svdex-public-private-category";
+import { categoryBadgeHTML } from "discourse/ui-kit/helpers/d-category-link";
+import { publicPrivateCategory, PRIVATE_ACCESS_ID } from "../lib/svdex-public-private-category";
 import { tracked } from "@glimmer/tracking";
 import { privateAccessNoticePage, organizationDirectoryPage } from "../lib/svdex-private-access-pages";
-import PublicPrivateCategoryRow, { PRIVATE_ACCESS_ID } from "../components/svdex-public-private-category-row.gjs";
+import PublicPrivateCategoryRow from "../components/svdex-public-private-category-row.gjs";
 import { action } from "@ember/object";
 import { service } from "@ember/service";
 import DiscourseURL from "discourse/lib/url";
 
 export default function registerPrivateAccess(api, { settings, router, site }) {
-  api.replaceCategoryLinkRenderer((category, options) => defaultCategoryLinkRenderer(category,
-    category?.id === PRIVATE_ACCESS_ID ? { ...options, url: "/private-offerings" } : options));
-
   // Render the public access link as a native subcategory, not a second
   // top-level offering directory. Never add it to Discourse's category store.
   api.modifyClass("component:parent-category-row", Base => class extends Base {

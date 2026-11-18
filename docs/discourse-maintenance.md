@@ -194,3 +194,22 @@ changes, with the current source/native checks and targeted visual comparisons.
 The November 15 review above records the rationale; these items supersede its
 first refactor suggestions. Permission-aware large-catalog performance work stays
 measurement-driven. No new database schema or frontend framework was introduced.
+
+## Integration and remote-review cleanup — 17 November 2026
+
+The category badge renderer has one registration in the metadata integration.
+It composes public onboarding URLs and compact category labels; independent
+registrations used to overwrite one another. The native renderer source is now
+an explicit upstream contract. Browser checks reproduce that link regression.
+
+Repeated tablet Offering toolbar rules are consolidated into one final container
+rule. The design and hidden native directory sizing reference are retained;
+replacing that measurement strategy is deferred rather than changing column
+geometry during cleanup.
+
+CI runs read-only guest browser checks after native checks, with screenshots at
+desktop, tablet and narrow mobile widths. Screenshots require visual review and
+are not pixel-diff baselines. The staging workflow can preview an explicitly
+reviewed PR head without repository writes; see [cloud development](cloud-development.md).
+The production full-build and backup gates remain unchanged until a separately
+validated theme-only/artifact-reuse path is available.

@@ -3,6 +3,11 @@ on:
   push:
     branches: [staging]
   workflow_dispatch:
+    inputs:
+      reviewed_pr:
+        description: Reviewed PR number to preview (leave empty for staging branch)
+        type: string
+        required: false
 permissions:
   contents: read
 concurrency:
@@ -16,15 +21,38 @@ jobs:
     environment: staging
     permissions:
       contents: read
+      pull-requests: read
+      checks: read
+      statuses: read
       id-token: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
+      - name: Resolve reviewed pull request
+        id: preview
+        if: inputs.reviewed_pr != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PREVIEW_PR: ${{ inputs.reviewed_pr }}
+        run: python3 scripts/resolve-preview-pr.py
+      - name: Check out reviewed source
+        if: inputs.reviewed_pr != ''
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          ref: ${{ steps.preview.outputs.sha }}
       - name: Refuse stale releases
         env:
           GH_TOKEN: ${{ github.token }}
-        run: test "$(gh api repos/ahe6/svdex/git/ref/heads/staging --jq .object.sha)" = "$GITHUB_SHA"
+          PREVIEW_PR: ${{ inputs.reviewed_pr }}
+          PREVIEW_SHA: ${{ steps.preview.outputs.sha || github.sha }}
+        run: |
+          if test -n "$PREVIEW_PR"; then
+            test "$(gh api "repos/ahe6/svdex/pulls/$PREVIEW_PR" --jq .head.sha)" = "$PREVIEW_SHA"
+          else
+            test "$(gh api repos/ahe6/svdex/git/ref/heads/staging --jq .object.sha)" = "$GITHUB_SHA"
+          fi
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: '24'
@@ -37,6 +65,13 @@ jobs:
         run: |
           ruby scripts/prepare-discourse-production.rb --staging artifacts/release
           tar -czf artifacts/release.tar.gz -C artifacts/release .
+      - name: Refuse a changed PR before deployment
+        if: inputs.reviewed_pr != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PREVIEW_PR: ${{ inputs.reviewed_pr }}
+          PREVIEW_SHA: ${{ steps.preview.outputs.sha }}
+        run: test "$(gh api "repos/ahe6/svdex/pulls/$PREVIEW_PR" --jq .head.sha)" = "$PREVIEW_SHA"
       - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
         with:
           role-to-assume: ${{ vars.SVDEX_DEPLOY_ROLE_ARN }}
@@ -48,4 +83,5 @@ jobs:
           SVDEX_DEPLOY_ENVIRONMENT: staging
           SVDEX_ARTIFACT_BUCKET: ${{ vars.SVDEX_ARTIFACT_BUCKET }}
           SVDEX_INSTANCE_ID: ${{ vars.SVDEX_INSTANCE_ID }}
+          SVDEX_RELEASE_SHA: ${{ steps.preview.outputs.sha || github.sha }}
         run: python3 scripts/deploy-from-github.py
