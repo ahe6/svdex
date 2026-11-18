@@ -1,16 +1,29 @@
 {
-  "version": "2026-11-14-v1",
+  "version": "2026-11-18-v2",
   "provider": "Tally",
   "form_url": "https://tally.so/r/xVM7or",
   "title": "SVDEX private deals access",
   "required": [
     "Full name",
     "SVDEX account email",
-    "Applying as: Individual or Entity",
-    "Country of residence or entity formation",
-    "Stated accredited-investor qualification categories, including Not sure / none",
-    "Private investment experience",
-    "Previous private investments",
+    "Country of residence",
+    "Are you investing as an individual or on behalf of an institution?",
+    "Please confirm your accredited investor status.",
+    "How are you investing?",
+    "Qualified purchaser status (not required to apply)",
+    "My maximum investment horizon is:",
+    "My willingness to accept risk is:",
+    "My relevant investment experience is:",
+    "My immediate liquid worth (cash, marketable securities, etc.) is:",
+    "Which investment structures interest you?",
+    "How much do you plan to invest in private companies in the next 12 months?",
+    "How would you describe your understanding of private-market investing?",
+    "What is your liquid net worth (cash, marketable securities, etc.)?",
+    "What is your target size for each private-market investment?",
+    "Do you currently use a financial adviser?",
+    "Which asset classes have you invested in through an online platform?",
+    "Institution name and accreditation basis (Institutions only)",
+    "Qualifying credential (credential accreditation basis only)",
     "Relationship source",
     "Approximate relationship start",
     "Prior dealings and frequency",
@@ -19,11 +32,228 @@
     "Independent review acknowledgement"
   ],
   "optional": [
-    "Broad sectors or investment types of interest",
+    "Postal code",
+    "Phone",
+    "LinkedIn or professional profile",
     "Other review context"
   ],
   "uploads": false,
   "automatic_approval": false,
   "automated_integrations": false,
-  "archive": "Reviewer exports the original response and attaches it to a staff-only native Discourse case with version, timestamps, reviewer, decision, relationship notes and separate access authorization. No application data is stored in this source file."
+  "archive": "Reviewer exports the original response and attaches it to a staff-only native Discourse case with version, timestamps, reviewer, decision, relationship notes and separate access authorization. No application data is stored in this source file.",
+  "status": "published",
+  "structure_source": "Legacy SVDEX suitability questionnaire, based on the user-supplied EquityZen capture; not independently verified against the current EquityZen service.",
+  "sections": [
+    "Personal details",
+    "Accreditation & suitability",
+    "Investment profile",
+    "Relationship & review"
+  ],
+  "choice_questions": [
+    {
+      "key": "investorType",
+      "label": "Are you investing as an individual or on behalf of an institution?",
+      "type": "single_choice",
+      "required": true,
+      "choices": [
+        "Individual",
+        "Institution"
+      ]
+    },
+    {
+      "key": "accreditationBasis",
+      "label": "Please confirm your accredited investor status.",
+      "type": "single_choice",
+      "required": true,
+      "choices": [
+        "Net worth, alone or with my spouse or spousal equivalent, exceeds $1 million, excluding my primary residence.",
+        "I am a family client of a qualifying family office.",
+        "Individual income exceeded $200,000 in each of the past two years, and I expect the same this year.",
+        "I hold a qualifying SEC-approved credential in good standing.",
+        "Joint income with my spouse or spousal equivalent exceeded $300,000 in each of the past two years, and I expect the same this year.",
+        "None of the above"
+      ]
+    },
+    {
+      "key": "investmentVehicle",
+      "label": "How are you investing?",
+      "type": "single_choice",
+      "required": true,
+      "choices": [
+        "Individual",
+        "Personal investment vehicle (e.g. LLC)",
+        "Self-directed IRA",
+        "401(k) plan",
+        "Revocable or living trust",
+        "Irrevocable trust",
+        "Other"
+      ]
+    },
+    {
+      "key": "qualifiedPurchaser",
+      "label": "Qualified purchaser status (not required to apply)",
+      "type": "single_choice",
+      "required": true,
+      "choices": [
+        "I own at least $5 million in investments, alone or with my spouse if investing jointly.",
+        "None of the above / not a qualified purchaser"
+      ]
+    },
+    {
+      "key": "investmentHorizon",
+      "label": "My maximum investment horizon is:",
+      "type": "single_choice",
+      "required": true,
+      "choices": [
+        "Less than 2 years",
+        "Between 2 and 5 years",
+        "Between 5 and 7 years",
+        "Greater than 7 years"
+      ]
+    },
+    {
+      "key": "riskTolerance",
+      "label": "My willingness to accept risk is:",
+      "type": "single_choice",
+      "required": true,
+      "choices": [
+        "Conservative",
+        "Moderate",
+        "Significant risk",
+        "Aggressive"
+      ]
+    },
+    {
+      "key": "investmentExperience",
+      "label": "My relevant investment experience is:",
+      "type": "single_choice",
+      "required": true,
+      "choices": [
+        "Less than 2 years",
+        "Between 2 and 5 years",
+        "Between 5 and 10 years",
+        "Greater than 10 years"
+      ]
+    },
+    {
+      "key": "liquidWorth",
+      "label": "My immediate liquid worth (cash, marketable securities, etc.) is:",
+      "type": "single_choice",
+      "required": true,
+      "choices": [
+        "Less than $150,000",
+        "Between $150,000 and $250,000",
+        "Between $250,000 and $500,000",
+        "Greater than $500,000"
+      ]
+    },
+    {
+      "key": "solutions",
+      "label": "Which investment structures interest you?",
+      "type": "multiple_choice",
+      "required": true,
+      "choices": [
+        "Direct company investments",
+        "Single-company funds / SPVs",
+        "Multi-company funds",
+        "Not sure"
+      ]
+    },
+    {
+      "key": "annualBudget",
+      "label": "How much do you plan to invest in private companies in the next 12 months?",
+      "type": "single_choice",
+      "required": true,
+      "choices": [
+        "Less than $20,000",
+        "$20,000 to $100,000",
+        "Over $100,000",
+        "Not sure, I\u2019m just browsing"
+      ]
+    },
+    {
+      "key": "knowledge",
+      "label": "How would you describe your understanding of private-market investing?",
+      "type": "single_choice",
+      "required": true,
+      "choices": [
+        "Strong understanding; I actively participate",
+        "General understanding; I need more clarity on the process",
+        "New to private markets; limited understanding"
+      ]
+    },
+    {
+      "key": "liquidNetWorth",
+      "label": "What is your liquid net worth (cash, marketable securities, etc.)?",
+      "type": "single_choice",
+      "required": true,
+      "choices": [
+        "Less than $1,000,000",
+        "$1,000,000 to $2,500,000",
+        "$2,500,000 to $5,000,000",
+        "$5,000,000 to $10,000,000",
+        "$10,000,000 to $20,000,000",
+        "Greater than $20,000,000"
+      ]
+    },
+    {
+      "key": "ticketSize",
+      "label": "What is your target size for each private-market investment?",
+      "type": "single_choice",
+      "required": true,
+      "choices": [
+        "Less than $20,000",
+        "$20,000 to $50,000",
+        "$50,000 to $100,000",
+        "$100,000 to $250,000",
+        "Over $250,000"
+      ]
+    },
+    {
+      "key": "financialAdvisor",
+      "label": "Do you currently use a financial adviser?",
+      "type": "single_choice",
+      "required": true,
+      "choices": [
+        "Yes",
+        "No",
+        "Prefer not to say"
+      ]
+    },
+    {
+      "key": "assetClasses",
+      "label": "Which asset classes have you invested in through an online platform?",
+      "type": "multiple_choice",
+      "required": true,
+      "choices": [
+        "Late-stage / pre-IPO companies",
+        "Early-stage companies",
+        "Venture funds",
+        "Hedge funds",
+        "Real estate",
+        "Debt",
+        "Art",
+        "Other",
+        "None yet"
+      ]
+    }
+  ],
+  "branching": {
+    "individual": [
+      "accreditationBasis",
+      "qualifiedPurchaser"
+    ],
+    "institution": [
+      "entityName",
+      "institutionBasis"
+    ],
+    "credential": [
+      "professionalLicense: Series 7 / Series 65 / Series 82"
+    ]
+  },
+  "provider_differences": [
+    "Legacy risk/confidentiality document acknowledgements are not copied because their documents are retired; current SVDEX policy links and review confirmations remain.",
+    "Tally checkbox questions include instructions to choose Not sure / None yet alone; native legacy exclusive-choice validation is not reproduced."
+  ],
+  "verified_at": "2026-11-18"
 }

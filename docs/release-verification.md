@@ -1,16 +1,49 @@
-# Release verification — 14 November 2026
+# Release verification — 18 November 2026
 
-## Deployed release
+## Current release and launch walkthrough
 
-Production received source revision `5acdb2039c2f182b49b06a7bca06467261da61e4`.
-A preserving paired plugin/theme upgrade completed, with runtime source hashes
-and 73 database theme source files checked against the release. Follow-up
-commits repair fresh contributor setup and refresh the verifier copied by future
-upgrades; they do not change the deployed product interface or financial logic.
+[PR #8](https://github.com/ahe6/svdex/pull/8) was squash-merged as
+`e051b1db967cb58cdf3e074a3ff55aaa204f4155` and deployed successfully in
+[production run 44213560463](https://github.com/ahe6/svdex/actions/runs/44213560463).
+Source, native and responsive browser checks passed before deployment. Production
+reported the same deployed revision.
 
-The approved Privacy/Terms text was published through native policy topics with
-Miscdex Inc, Delaware, United States as operator. Nonbinding indication intake,
-consented public aggregates and private offering bids were enabled explicitly.
+A real fresh account completed the native email-code registration flow and
+reached signed-in Home. Ordinary-member checks opened company/fund applications,
+a People suggestion through native staff messaging, and the public offering
+composer. These were cancelled without sending applications, messages or posts.
+My Bids loaded its private empty state. The private offering category denied
+access to the new member, while the access information page opened the external
+questionnaire. Registration did not grant private access or accreditation.
+
+The launch walkthrough found that the external questionnaire had replaced rather
+than reproduced the legacy suitability questions. Version `2026-11-18-v2`
+restores the legacy choice questions and financial ranges, with individual,
+institution and credential branches, and keeps relationship review separate.
+Four-page draft preview checks verified those branches and that optional contact
+fields do not block navigation. The published responder page reports the new
+version. See `deploy/discourse/investor-questionnaire.json` for exact legacy
+choices and documented differences. No real or invented response was submitted.
+
+A new uploads-inclusive native backup was copied to encrypted private storage,
+downloaded and independently checksum-verified. Native restore succeeded in a
+network-isolated disposable target with no published ports. Source/restored
+fingerprints matched for account security/identity data, policies, category
+permissions, theme fields and all four custom data tables. All nine archived
+upload files matched byte checksums. Restored public pages returned successfully,
+and private-category access checks passed for guest/admin roles. The test target,
+its three dedicated volumes and local downloaded archive were removed; the
+verified encrypted backup remains. Production data was not restored or replaced.
+
+Private receipts, backup names and account details are excluded from the source
+repository. The snapshot predates the fresh walkthrough account.
+
+## Previous release checks (14 November)
+
+The previous production revision was
+`5acdb2039c2f182b49b06a7bca06467261da61e4`. Approved native policy topics name
+Miscdex Inc, Delaware, United States as operator. Nonbinding indications,
+consented public aggregates and private offering bids were explicitly enabled.
 Temporary smoke-test records were rolled back; local fictional financial facts
 were not imported.
 
@@ -48,10 +81,12 @@ configuration are intentionally excluded from this repository.
 
 ## Verification limits
 
-Existing-account Google login and native workflow tests do not establish a real
-new person's complete signup experience. A fresh-person browser signup and an
-external questionnaire submission were not performed in this release check.
-No investor identity, accreditation or eligibility decision was simulated.
+Fresh native email-code registration was exercised on 18 November. Fresh-person
+Google signup, redeeming a password reset, and external questionnaire submission
+were not exercised in this walkthrough. Existing-account Google login and reset
+email delivery were checked in the previous release. No investor identity,
+accreditation or eligibility decision was simulated. Application/composer entry
+checks did not send real financial submissions or publish test content.
 
 ## Repeating the recovery exercise
 
@@ -73,5 +108,6 @@ Require the native `[SUCCESS]` result, then boot the application to validate
 accounts, policy content, theme records, plugin tables and restricted-category
 permissions. Compare restored upload bytes against the archive, not only file
 counts. Preserve a private result receipt, then delete only the named disposable
-container/volumes/image. Recovery on a self-hosted target does not establish
+container/volumes. Remove an image only if it was created exclusively for the
+exercise and is not shared with development. Recovery on a self-hosted target does not establish
 compatibility or acceptance by an official managed Discourse host.
