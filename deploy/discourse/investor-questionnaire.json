@@ -1,5 +1,5 @@
 {
-  "version": "2026-11-18-v2",
+  "version": "2026-11-18-v3",
   "provider": "Tally",
   "form_url": "https://tally.so/r/xVM7or",
   "title": "SVDEX private deals access",
@@ -24,30 +24,23 @@
     "Which asset classes have you invested in through an online platform?",
     "Institution name and accreditation basis (Institutions only)",
     "Qualifying credential (credential accreditation basis only)",
-    "Relationship source",
-    "Approximate relationship start",
-    "Prior dealings and frequency",
-    "Understanding of illiquidity and potential total loss",
-    "Accuracy confirmation",
-    "Independent review acknowledgement"
+    "Accuracy confirmation"
   ],
   "optional": [
     "Postal code",
     "Phone",
-    "LinkedIn or professional profile",
-    "Other review context"
+    "LinkedIn or professional profile"
   ],
   "uploads": false,
   "automatic_approval": false,
   "automated_integrations": false,
-  "archive": "Reviewer exports the original response and attaches it to a staff-only native Discourse case with version, timestamps, reviewer, decision, relationship notes and separate access authorization. No application data is stored in this source file.",
+  "archive": "Reviewer exports the original response and attaches it to a staff-only native Discourse case with version, timestamps, reviewer, decision and separate access authorization. No application data is stored in this source file.",
   "status": "published",
   "structure_source": "Legacy SVDEX suitability questionnaire, based on the user-supplied EquityZen capture; not independently verified against the current EquityZen service.",
   "sections": [
     "Personal details",
     "Accreditation & suitability",
-    "Investment profile",
-    "Relationship & review"
+    "Investment profile"
   ],
   "choice_questions": [
     {
@@ -252,7 +245,8 @@
     ]
   },
   "provider_differences": [
-    "Legacy risk/confidentiality document acknowledgements are not copied because their documents are retired; current SVDEX policy links and review confirmations remain.",
+    "Adviser referral questions are omitted at the owner\u2019s request.",
+    "Legacy risk/confidentiality document acknowledgements are not copied because their documents are retired; current SVDEX policy links remain.",
     "Tally checkbox questions include instructions to choose Not sure / None yet alone; native legacy exclusive-choice validation is not reproduced."
   ],
   "verified_at": "2026-11-18"

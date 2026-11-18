@@ -6,6 +6,11 @@ Docker tooling and self-hosted deployment scripts. Company/fund profiles use
 native accounts; offerings and updates use native topics. Individual interest
 and bids remain private financial records.
 
+For downloadable public content and a local SQLite research loader, see the
+[SVDEX public dataset](https://github.com/ahe6/svdex-data). It refreshes daily
+without production credentials. These public exports are separate from private
+Discourse recovery backups; see [dataset operations](docs/public-dataset.md).
+
 ## Develop locally
 
 Install Git, Docker (Docker Desktop on macOS) and Node.js 24 or later. Ruby,

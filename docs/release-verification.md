@@ -19,8 +19,11 @@ questionnaire. Registration did not grant private access or accreditation.
 The launch walkthrough found that the external questionnaire had replaced rather
 than reproduced the legacy suitability questions. Version `2026-11-18-v2`
 restores the legacy choice questions and financial ranges, with individual,
-institution and credential branches, and keeps relationship review separate.
-Four-page draft preview checks verified those branches and that optional contact
+institution and credential branches. The later owner-requested version
+`2026-11-18-v3` removes the added relationship,
+illiquidity-question and independent-review questions, leaving three question
+pages and the legacy accuracy confirmation. Adviser referrals remain omitted.
+Draft preview checks verified those branches and that optional contact
 fields do not block navigation. The published responder page reports the new
 version. See `deploy/discourse/investor-questionnaire.json` for exact legacy
 choices and documented differences. No real or invented response was submitted.
