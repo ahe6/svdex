@@ -104,7 +104,6 @@ export default <template>
               <DirectoryTable
                 @controller={{@controller}}
                 @identityKey={{@controller.identityKey}}
-                @referenceColumns={{@controller.columns}}
                 @asc={{@controller.asc}}
                 @items={{@controller.model.content}}
                 @order={{@controller.order}}

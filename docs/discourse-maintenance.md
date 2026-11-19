@@ -213,3 +213,42 @@ are not pixel-diff baselines. The staging workflow can preview an explicitly
 reviewed PR head without repository writes; see [cloud development](cloud-development.md).
 The production full-build and backup gates remain unchanged until a separately
 validated theme-only/artifact-reuse path is available.
+
+## Directory foundations — 19 November 2026
+
+The Companies/Funds table now declares its identity track directly:
+`minmax(24em, 4fr)`, followed by one track per directory fact. The identity width
+keeps the native username-plus-one-statistic allocation (about 380px at the
+reviewed desktop width); the table no longer mounts an invisible Users table,
+removes duplicate IDs or observes its layout. Native `DResponsiveTable` still
+owns the responsive breakpoint and stacked mobile rows. Financial tracks retain
+their intrinsic header widths and existing horizontal overflow behavior.
+
+`svdex-filter-trigger` is a small presentation component for directory and modal
+filter buttons. Pages still own their filter state, available choices, dialogs
+and focus restoration. Do not turn this into a generic toolbar framework or move
+permission decisions into it. Native SelectKit filter dropdowns remain native.
+
+`formatUsdAmount` formats typed, nonnegative integer-dollar facts and explicit
+integer-cent totals; missing/invalid values stay undisclosed instead of becoming
+zero. The same directory facts feed profile summaries. Authored offering terms
+remain free-form: qualified amounts, currencies and ranges must not be silently
+converted to exact numeric facts. This change does not migrate stored data or
+change bid/interest validation, consent, aggregation or visibility.
+
+### Release and data-model decisions
+
+Keep the current release gates: native checks, the matching staging source tree,
+then production. Repeated source checks cost seconds; full Discourse rebuilds
+cost most of the time. Skipping checks would not meaningfully improve ordinary
+UI iteration, which now uses the local warm theme watcher. A theme-only release
+path would need an explicit plugin/core/theme compatibility manifest, atomic
+paired updates and rollback tests. Defer that additional deployment mode until
+release timings justify maintaining it; do not infer safety from changed paths.
+
+Keep account-backed organization profiles and native custom fields. Financial
+submissions already have typed cents, foreign keys and server-side checks. A
+migration of authored offering text needs a separate schema and authoring
+workflow decision, rather than guessing numeric values during this cleanup.
+Profile visibility-aware directory queries with representative data before adding
+caches or denormalized tables; no large-directory throughput claim is established.

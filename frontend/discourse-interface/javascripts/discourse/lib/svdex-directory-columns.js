@@ -1,5 +1,5 @@
-import { formatFinancialAmount } from "./svdex-financial-format";
-import { sectorLabel } from "./svdex-company-filters";
+import { formatUsdAmount } from "./svdex-financial-format.js";
+import { sectorLabel } from "./svdex-company-filters.js";
 export function fundLife(company) {
   const start = Number(company.vintage_year);
   const term = company.fund_life?.trim();
@@ -29,18 +29,17 @@ export function directoryColumns(kind, includeInterest = true) {
   return columns;
 }
 export function directoryFacts(company = {}, kind) {
-  const amount = value => value == null ? "—" : formatFinancialAmount(`$${value}`);
+  const values = {
+    buy_interest: formatUsdAmount(company.interest_totals?.buy, { cents: true }),
+    sell_interest: formatUsdAmount(company.interest_totals?.sell, { cents: true }),
+    sector: company.sector ? sectorLabel(company.sector.name) : "—",
+    valuation: formatUsdAmount(company.last_valuation_usd), funding: formatUsdAmount(company.total_funding_usd),
+    location: company.headquarters_country || "—", strategy: company.strategy_focus || "—",
+    aum: formatUsdAmount(company.aum_usd),
+    fund_life: fundLife(company),
+    open: company.open_offerings ?? 0,
+  };
   return directoryColumns(kind || company.kind).map(column => {
-    const values = {
-      buy_interest: amount(company.interest_totals?.buy == null ? null : company.interest_totals.buy / 100),
-      sell_interest: amount(company.interest_totals?.sell == null ? null : company.interest_totals.sell / 100),
-      sector: company.sector ? sectorLabel(company.sector.name) : "—",
-      valuation: amount(company.last_valuation_usd), funding: amount(company.total_funding_usd),
-      location: company.headquarters_country || "—", strategy: company.strategy_focus || "—",
-      aum: amount(company.aum_usd),
-      fund_life: fundLife(company),
-      open: company.open_offerings ?? 0,
-    };
     return { ...column, value: values[column.key], people: column.key === "people",
       url: column.key === "sector" ? company.sector?.url : column.key === "open" && company.open_offerings > 0 ? company.open_offerings_url : null };
   });

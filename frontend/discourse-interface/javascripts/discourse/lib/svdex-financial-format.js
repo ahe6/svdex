@@ -25,3 +25,18 @@ export function formatValuation(value, compact = false) {
   const full = `USD ${fullNumberFormat.format(amount)}`;
   return compact ? formatFinancialAmount(full) : full;
 }
+
+// Organization facts are integer USD; interest totals are integer cents. Keep
+// their units explicit, and do not turn blank/invalid facts into a measured zero.
+// Build cents text with integer arithmetic before display-only compaction.
+export function formatUsdAmount(value, { cents = false } = {}) {
+  if (typeof value !== "number" && !(typeof value === "string" && /^(0|[1-9]\d*)$/.test(value))) return "—";
+  const amount = Number(value);
+  if (!Number.isSafeInteger(amount) || amount < 0) return "—";
+  let text = String(amount);
+  if (cents) {
+    const fraction = String(amount % 100).padStart(2, "0").replace(/0+$/, "");
+    text = `${Math.floor(amount / 100)}${fraction ? `.${fraction}` : ""}`;
+  }
+  return formatFinancialAmount(`$${text}`);
+}

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { formatFinancialAmount, formatValuation } from '../frontend/discourse-interface/javascripts/discourse/lib/svdex-financial-format.js';
+import { formatFinancialAmount, formatValuation, formatUsdAmount } from '../frontend/discourse-interface/javascripts/discourse/lib/svdex-financial-format.js';
 
 test('listing amounts compact thousands, millions and billions without losing currency', () => {
   for (const [input, expected] of [
@@ -18,4 +18,18 @@ test('listing formatting preserves qualified or ambiguous text and leaves missin
   assert.equal(formatFinancialAmount(''), '—');
   assert.equal(formatFinancialAmount(null), '—');
   for (const input of ['', null, 'not disclosed', '-50', '9007199254740992']) assert.equal(formatValuation(input, true), '—');
+});
+
+test('typed USD facts distinguish units, missing values, zero and invalid amounts', () => {
+  for (const [input, expected] of [[0, '$0'], ['0', '$0'], [2000000, '$2M'], ['12500000', '$12.5M']]) {
+    assert.equal(formatUsdAmount(input), expected);
+  }
+  for (const input of [null, undefined, '', ' ', false, true, NaN, Infinity, -1, 1.5, '1.5', 'USD 2M', '1e6', Number.MAX_SAFE_INTEGER + 1]) {
+    assert.equal(formatUsdAmount(input), '—');
+  }
+  for (const [input, expected] of [[0, '$0'], [1, '$0.01'], [10, '$0.1'], [101, '$1.01'], [99999, '$999.99'], [12500000, '$125K']]) {
+    assert.equal(formatUsdAmount(input, { cents: true }), expected);
+  }
+  assert.equal(formatUsdAmount(100), '$100');
+  assert.equal(formatUsdAmount(100, { cents: true }), '$1');
 });

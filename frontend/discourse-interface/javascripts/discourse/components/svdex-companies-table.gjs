@@ -2,8 +2,6 @@ import InterestButton from "./svdex-interest.gjs";
 import { modifier } from "ember-modifier";
 import { service } from "@ember/service";
 import Component from "@glimmer/component";
-import NativeDirectoryTable from "discourse/components/directory-table";
-import companyGrid from "../modifiers/svdex-company-grid";
 import CompanyColumnMenu from "./svdex-company-column-menu.gjs";
 import OrganizationReferences from "./svdex-organization-references.gjs";
 import { directoryColumns, directoryFacts } from "../lib/svdex-directory-columns";
@@ -50,14 +48,18 @@ class CompanyRow extends Component {
 export default class CompaniesTable extends Component {
   @service currentUser;
   @service siteSettings;
-  get referenceOrder() { return this.args.referenceColumns?.[0]?.name || "likes_received"; }
+  // The identity/summary occupies the native username slot plus one statistic.
+  // Explicit tracks avoid mounting a hidden Users table and measuring its labels.
+  get gridStyle() {
+    return `grid-template-columns: minmax(24em, 4fr) repeat(${this.columns.length}, minmax(min-content, 1fr));`;
+  }
   get columns() {
     const canSortInterest = this.siteSettings.svdex_interest_enabled && (this.siteSettings.svdex_interest_public_totals || (this.currentUser?.staff && this.siteSettings.svdex_interest_staff_preview));
     return directoryColumns(this.args.controller.kind).map(column => ({ ...column, sort: canSortInterest ? column.sort : null, filter: column.sort && !canSortInterest ? null : column.filter }));
   }
   <template>
-    <div class="svdex-companies-grid" data-financial-columns={{this.columns.length}} {{companyGrid}}>
-      <DResponsiveTable @ariaLabel={{if @controller.isFund "Funds" "Companies"}} @className="svdex-companies-table" @style="grid-template-columns: minmax(15em, 3fr) repeat(7, minmax(min-content, 1fr));">
+    <div class="svdex-companies-grid">
+      <DResponsiveTable @ariaLabel={{if @controller.isFund "Funds" "Companies"}} @className="svdex-companies-table" @style={{this.gridStyle}}>
         <:header>
           <DTableHeaderToggle @automatic={{true}} @field="username" @labelKey={{@identityKey}} @order={{@order}} @asc={{@asc}} @onToggle={{@updateOrderAndAsc}} />
           {{#each this.columns as |column|}}
@@ -67,7 +69,6 @@ export default class CompaniesTable extends Component {
         </:header>
         <:body>{{#each @items as |item|}}<CompanyRow @item={{item}} @kind={{@controller.kind}} @refreshInterest={{@controller.refreshInterest}} />{{/each}}</:body>
       </DResponsiveTable>
-      <div class="svdex-company-grid-reference" aria-hidden="true" inert><NativeDirectoryTable @columns={{@referenceColumns}} @order={{this.referenceOrder}} /></div>
     </div>
   </template>
 }
