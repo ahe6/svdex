@@ -157,7 +157,7 @@ missing logos use Discourse's standard fallback. Local setup copies the existing
 logos and public key-person/related-entity associations once, without overwriting
 later company edits. The directory uses the same native global interest notice.
 
-Companies and Funds have a secondary Indicate interest action next to Add company/
+Companies and Funds have a secondary Buy / Sell action next to Add company/
 Add fund. Native SelectKit searches the corresponding authorized directory, then
 Buy/Sell selection opens the existing indication modal. Amount shortcuts remain.
 On mobile the action shares the existing count row to preserve the heading/search/

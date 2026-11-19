@@ -59,6 +59,6 @@ export default class DirectoryInterestAction extends Component {
     this.modal.show(DirectoryInterestChooser, { model: { controller: this.args.controller } });
   }
   <template>
-    {{#if this.siteSettings.svdex_interest_enabled}}<DButton @icon="dollar-sign" @translatedLabel="Indicate interest" @action={{this.open}} class="btn-default svdex-directory-interest-action" />{{/if}}
+    {{#if this.siteSettings.svdex_interest_enabled}}<DButton @translatedLabel="Buy / Sell" @translatedTitle="Indicate buy or sell interest" @action={{this.open}} class="btn-default svdex-directory-interest-action" />{{/if}}
   </template>
 }
