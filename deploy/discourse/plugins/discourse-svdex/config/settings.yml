@@ -22,6 +22,8 @@ plugins:
   svdex_interest_public_totals:
     default: false
     client: true
+  svdex_interest_document_uploads_enabled:
+    default: false
   svdex_lounge_channel_url:
     default: ""
     client: true

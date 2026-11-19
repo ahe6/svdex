@@ -19,6 +19,8 @@ def capacity_session(user = nil, password = nil)
   [app, headers]
 end
 before = [SiteSetting.svdex_interest_enabled, SiteSetting.svdex_interest_public_totals, SiteSetting.svdex_interest_staff_preview, SiteSetting.svdex_private_access_contact]
+verification_model = DiscourseSvdex::InterestVerification
+original_upload_requirements = verification_model.method(:document_upload_requirements)
 begin
   SiteSetting.svdex_interest_enabled = SiteSetting.svdex_interest_public_totals = true
   SiteSetting.svdex_interest_staff_preview = false
@@ -54,10 +56,22 @@ begin
     request_path = "/listings/interest-verifications/requests/#{row.id}.json"
     outsider.post request_path, headers: other_headers
     capacity_assert!(outsider.response.status == 404, "another member cannot request review of someone else's indication")
+    # Policy test only: no real object store is configured or claimed as tested.
+    # Never enable S3 or invite real financial uploads in the local fixture setup.
+    ready_requirements = { enabled: true, s3: true, secure: true, private_email: true, pdf: true }
+    ready_requirements.each_key do |missing|
+      verification_model.define_singleton_method(:document_upload_requirements) { ready_requirements.merge(missing => false) }
+      account.post request_path, headers: headers
+      capacity_assert!(account.response.status == 400 && !Topic.exists?(title: "Interest verification: #{org.name}", user_id: member.id), "document intake stays closed without #{missing}")
+    end
+    # These denied attempts exercise policy, not per-account request throttling.
+    RateLimiter.new(member, "svdex-capacity-request", 5, 1.day).clear!
+    verification_model.define_singleton_method(:document_upload_requirements) { ready_requirements }
     account.post request_path, headers: headers
     capacity_assert!(account.response.status == 200, "a new member can request staff verification through native private intake")
     request_topic = Topic.find_by!(title: "Interest verification: #{org.name}", user_id: member.id)
     capacity_assert!(request_topic.archetype == Archetype.private_message && request_topic.topic_allowed_users.pluck(:user_id).sort == [member.id, staff.id].sort, "verification requests are private to the submitter and staff reviewer")
+    capacity_assert!(request_topic.first_post.raw.include?("attachment button") && request_topic.first_post.raw.include?("bank or brokerage statement") && request_topic.first_post.raw.include?("Redact account numbers"), "native buying-capacity conversation explains attachments and redaction")
     admin.post endpoint, params: { verification: review }, headers: staff_headers
     capacity_assert!(admin.response.status == 200, "staff can record an exact private buying-capacity amount")
     first_review = DiscourseSvdex::InterestVerification.where(user: member, side: "buy", superseded_at: nil).first!
@@ -79,6 +93,10 @@ begin
     end
     seller = review.merge(side: "sell", amount: "50000.00", target_type: "account", target_id: fund.id, holding_details: "Fund interest and authority reviewed privately")
     account.put "#{path}/sell.json", params: { interest: body[:interest].merge(amount: "50000.00", market: "secondary") }, headers: headers
+    sell_row = DiscourseSvdex::InterestIndication.find_by!(user: member, organization: org, side: "sell")
+    account.post "/listings/interest-verifications/requests/#{sell_row.id}.json", headers: headers
+    sell_request = Topic.where(title: "Interest verification: #{org.name}", user_id: member.id).order(id: :desc).first!
+    capacity_assert!(account.response.status == 200 && sell_request.first_post.raw.include?("ownership statement") && sell_request.first_post.raw.include?("authority to sell"), "seller verification requests ask for holding and authority evidence")
     capacity_assert!(totals.call["sell"].nil?, "buying capacity never verifies a sell holding")
     admin.post endpoint, params: { verification: seller }, headers: staff_headers
     capacity_assert!(admin.response.status == 200 && totals.call["sell"].nil?, "sell verification for one fund cannot substantiate another company's holding")
@@ -112,6 +130,7 @@ begin
     raise ActiveRecord::Rollback
   end
 ensure
+  verification_model.define_singleton_method(:document_upload_requirements, original_upload_requirements)
   SiteSetting.svdex_interest_enabled, SiteSetting.svdex_interest_public_totals, SiteSetting.svdex_interest_staff_preview, SiteSetting.svdex_private_access_contact = before
 end
 puts "Interest verification checks complete; financial reviews and request messages rolled back."

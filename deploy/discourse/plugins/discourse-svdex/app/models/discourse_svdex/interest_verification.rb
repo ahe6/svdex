@@ -100,6 +100,18 @@ module DiscourseSvdex
           AND (v.side = 'buy' OR (#{matching})))
       SQL
     end
+    def self.document_upload_requirements
+      {
+        enabled: SiteSetting.svdex_interest_document_uploads_enabled,
+        s3: SiteSetting.Upload.enable_s3_uploads,
+        secure: SiteSetting.secure_uploads,
+        private_email: !SiteSetting.secure_uploads_allow_embed_images_in_emails,
+        pdf: SiteSetting.authorized_extensions.split("|").include?("pdf"),
+      }
+    end
+    def self.document_uploads_ready?
+      document_upload_requirements.values.all?
+    end
     def self.request_review!(row, user)
       raise Discourse::InvalidAccess unless user&.active? && !user.staged? && !user.suspended? && row.user_id == user.id
       raise Discourse::InvalidParameters.new(:interest) unless FinancialSubmissions.state(row) == "current"
@@ -109,10 +121,14 @@ module DiscourseSvdex
       if row.topic_id && !FinancialSubmissions.visible_offering?(row.topic, Guardian.new(user))
         raise Discourse::NotFound
       end
+      unless document_uploads_ready?
+        raise Discourse::InvalidParameters.new("Secure document verification is not available yet. Your interest remains saved privately.")
+      end
       recipient = User.find_by_username(SiteSetting.svdex_private_access_contact)
       raise Discourse::InvalidParameters.new(:reviewer) unless recipient&.active? && recipient.staff?
       amount = ActiveSupport::NumberHelper.number_to_currency(BigDecimal(row.amount_cents.to_s) / 100, precision: 2)
-      raw = "Please review my #{row.side == 'buy' ? 'buying capacity' : 'holding and authority to sell'} for my saved **#{amount} USD #{row.side} interest** in **#{target[:name].gsub(/[\[\]*`]/, '')}**.\n\nPlease arrange verification with me privately. This is a nonbinding indication, not an order or investment commitment."
+      evidence = row.side == "buy" ? "a recent bank or brokerage statement showing your name, statement date and available cash or liquid investments" : "a recent ownership statement or other document identifying you, the company or fund, your holding and your authority to sell"
+      raw = "Please review my #{row.side == 'buy' ? 'buying capacity' : 'holding and authority to sell'} for my saved **#{amount} USD #{row.side} interest** in **#{target[:name].gsub(/[\[\]*`]/, '')}**.\n\n**Supporting documents**\n\nReply here using the attachment button to upload #{evidence}. PDF, JPG or PNG is preferred. Redact account numbers, unrelated transactions and other unnecessary details. Never send passwords or account access credentials.\n\nSVDEX staff will review the evidence and follow up in this private conversation. Uploading a document does not automatically verify the amount. This is a nonbinding indication, not an order or investment commitment."
       # Same fixed-recipient intake pattern as native membership requests.
       PostCreator.create!(user, title: "Interest verification: #{target[:name]}", raw: raw, archetype: Archetype.private_message,
         target_usernames: recipient.username, skip_validations: true).topic

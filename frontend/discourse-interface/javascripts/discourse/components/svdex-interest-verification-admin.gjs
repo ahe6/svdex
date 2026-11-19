@@ -23,6 +23,7 @@ export default class InterestVerificationAdmin extends Component {
   @tracked saving = false;
   @tracked loaded = false;
   @tracked failed = false;
+  @tracked documentsReady = false;
   get userId() { return this.args.outletArgs.model?.id; }
   get endpoint() { return `/listings/interest-verifications/users/${this.userId}.json`; }
   get sell() { return this.values.side === "sell"; }
@@ -32,7 +33,7 @@ export default class InterestVerificationAdmin extends Component {
   @action async load() {
     const endpoint = this.endpoint;
     this.loaded = false; this.failed = false;
-    try { const data = await ajax(endpoint); if (!this.isDestroying && endpoint === this.endpoint) { this.records = data.records; this.loaded = true; } }
+    try { const data = await ajax(endpoint); if (!this.isDestroying && endpoint === this.endpoint) { this.records = data.records; this.documentsReady = Object.values(data.document_upload_requirements || {}).length > 0 && Object.values(data.document_upload_requirements).every(Boolean); this.loaded = true; } }
     catch { this.failed = true; }
   }
   @action changeSide(side) { this.values = { ...this.values, side }; this.target = null; }
@@ -61,6 +62,7 @@ export default class InterestVerificationAdmin extends Component {
         <p>Capacity checks are private and separate from accreditation. Keep statement contents outside this form; record a private evidence reference.</p>
         {{#if this.failed}}<p class="alert alert-error">Could not load capacity reviews.</p><DButton @translatedLabel="Retry" @action={{this.load}} />{{/if}}
         {{#if this.loaded}}
+          {{#unless this.documentsReady}}<p>Document intake is closed until S3 Secure Uploads is configured and tested. You can still record evidence reviewed through another private channel.</p>{{/unless}}
           <form {{on "submit" this.save}}>
             <div class="display-row"><label class="field" for="capacity-side">Review</label><div class="value"><ComboBox @id="capacity-side" @content={{this.sides}} @value={{this.values.side}} @onChange={{this.changeSide}} /></div></div>
             {{#if this.sell}}

@@ -8,7 +8,7 @@ module DiscourseSvdex
 
     def index
       user = User.find(params[:user_id])
-      render_json_dump(records: serialize_reviews(user))
+      render_json_dump(records: serialize_reviews(user), document_upload_requirements: InterestVerification.document_upload_requirements)
     end
     def create
       RateLimiter.new(current_user, "svdex-capacity-review", 30, 1.minute).performed!

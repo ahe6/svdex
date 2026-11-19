@@ -14,6 +14,7 @@ module DiscourseSvdex
       response = { interest: mine.map { |row| payload(row) }, records: rows.map { |row| payload(row, staff: InterestIndication.preview?(guardian)) }, totals: target_totals(organization) }
       type, id = verification_target(organization)
       response[:capacity] = %w[buy sell].to_h { |side| [side, InterestVerification.qualification_for(current_user.id, side, type, id)] }
+      response[:verification_documents_ready] = InterestVerification.document_uploads_ready?
       if params[:topic_id].present?
         topic = offering!(organization, params[:topic_id])
         response[:offering_totals] = InterestIndication.offering_totals(organization.id, topic, guardian)

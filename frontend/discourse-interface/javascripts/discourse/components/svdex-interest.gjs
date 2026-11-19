@@ -19,6 +19,7 @@ export class InterestModal extends Component {
   @tracked own = [];
   @tracked capacity = {};
   @tracked savedPending = false;
+  @tracked documentsReady = false;
   @tracked side = "buy";
   @tracked market = "either";
   @tracked amount = "";
@@ -56,7 +57,7 @@ export class InterestModal extends Component {
     this.loading = true;
     this.loaded = false;
     this.error = "";
-    try { const data = await ajax(`${this.endpoint}.json`, { data: { topic_id: this.args.model.topicId } }); this.own = data.interest; this.capacity = data.capacity || {}; this.selectSide(); this.loaded = true; return data; }
+    try { const data = await ajax(`${this.endpoint}.json`, { data: { topic_id: this.args.model.topicId } }); this.own = data.interest; this.capacity = data.capacity || {}; this.documentsReady = data.verification_documents_ready === true; this.selectSide(); this.loaded = true; return data; }
     catch { this.error = "Your interest could not be loaded. Please try again."; }
     finally { this.loading = false; }
   }
@@ -102,7 +103,7 @@ export class InterestModal extends Component {
       <:body>
         <div {{didInsert this.load}}>
           <p class="svdex-interest-context"><strong>{{if @model.topicTitle @model.topicTitle @model.organizationName}}</strong></p>
-          {{#if this.savedPending}}<p role="status">Saved privately. Request verification to include this amount in public totals.</p>{{/if}}
+          {{#if this.savedPending}}<p role="status">{{if this.documentsReady "Saved privately. Request verification to include this amount in public totals." "Saved privately. Document verification is not available yet."}}</p>{{/if}}
           <p class="svdex-interest-description">{{if @model.topicTitle "Nonbinding interest in this offering, valid for 30 days." "General interest, independent of an offering. Valid for 30 days."}}</p>
           <div class="control-group">
             <label for="svdex-interest-amount">Amount (USD)</label>
@@ -116,7 +117,7 @@ export class InterestModal extends Component {
             </div>
           {{/if}}
           {{#if this.siteSettings.svdex_interest_public_totals}}<p class="svdex-interest-hint">{{this.capacityNote}}</p>{{/if}}
-          {{#if this.needsReview}}{{#unless this.savedPending}}<DButton class="btn-link" @translatedLabel="Request verification" @action={{this.requestReview}} @disabled={{this.loading}} />{{/unless}}{{/if}}
+          {{#if this.documentsReady}}{{#if this.needsReview}}{{#unless this.savedPending}}<DButton class="btn-link" @translatedLabel="Request verification" @action={{this.requestReview}} @disabled={{this.loading}} />{{/unless}}{{/if}}{{/if}}
           <label class="checkbox-label svdex-interest-consent">
             <input type="checkbox" name="confirmation" checked={{this.confirmation}} disabled={{this.loading}} {{on "change" this.update}} />
             <span>{{if this.siteSettings.svdex_interest_public_totals "This is my current nonbinding interest, and I agree to include this amount in public aggregate totals after staff capacity verification. It is not an order or investment commitment." "This is my current nonbinding interest, not an order or investment commitment."}}</span>
@@ -127,7 +128,7 @@ export class InterestModal extends Component {
         </div>
       </:body>
       <:footer>
-        {{#if this.savedPending}}<DButton class="btn-primary" @translatedLabel="Request verification" @action={{this.requestReview}} @disabled={{this.loading}} /><DButton class="btn-flat" @translatedLabel="Done" @action={{@closeModal}} />
+        {{#if this.savedPending}}{{#if this.documentsReady}}<DButton class="btn-primary" @translatedLabel="Request verification" @action={{this.requestReview}} @disabled={{this.loading}} />{{/if}}<DButton class="btn-flat" @translatedLabel="Done" @action={{@closeModal}} />
         {{else}}
         <DButton class="btn-primary" @translatedLabel={{this.saveLabel}} @action={{this.save}} @disabled={{this.saveDisabled}} />
         <DButton class="btn-flat" @translatedLabel="Cancel" @action={{@closeModal}} />
