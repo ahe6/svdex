@@ -1,4 +1,4 @@
-import { usdCentsInput } from "../lib/svdex-financial-format";
+import { usdCentsInput, formatUsdCents } from "../lib/svdex-financial-format";
 import { getOwner } from "@ember/owner";
 import Component from "@glimmer/component";
 import { tracked } from "@glimmer/tracking";
@@ -10,12 +10,15 @@ import ComboBox from "discourse/select-kit/components/combo-box";
 import didInsert from "@ember/render-modifiers/modifiers/did-insert";
 import { ajax } from "discourse/lib/ajax";
 import { popupAjaxError } from "discourse/lib/ajax-error";
+import DiscourseURL from "discourse/lib/url";
 import DButton from "discourse/ui-kit/d-button";
 import DModal from "discourse/ui-kit/d-modal";
 
 export class InterestModal extends Component {
   @service siteSettings;
   @tracked own = [];
+  @tracked capacity = {};
+  @tracked savedPending = false;
   @tracked side = "buy";
   @tracked market = "either";
   @tracked amount = "";
@@ -28,12 +31,20 @@ export class InterestModal extends Component {
     this.side = this.args.model.side === "sell" ? "sell" : "buy";
   }
   markets = [{id: "either", name: "Primary or secondary"}, {id: "primary", name: "Primary financing"}, {id: "secondary", name: "Secondary purchase"}];
-  @action changeMarket(value) { this.market = value; }
+  @action changeMarket(value) { this.market = value; this.savedPending = false; }
   get endpoint() { return this.args.model.interestEndpoint || `/listings/interests/${this.args.model.organizationId}`; }
   get isBuy() { return this.side === "buy"; }
   get title() { return this.isBuy ? "Buy interest" : "Sell interest"; }
   get saveLabel() { return this.isBuy ? "Save buy interest" : "Save sell interest"; }
   get saveDisabled() { return this.loading || !this.loaded || !this.confirmation || !(Number(this.amount) > 0); }
+  get needsReview() { return this.existing?.active && this.existing?.verification?.state !== "verified"; }
+  get capacityNote() {
+    const review = this.capacity[this.side];
+    if (review?.state === "verified") return `Capacity reviewed up to ${formatUsdCents(review.amount_cents)} through ${review.expires_on}. Larger indications need another review.`;
+    if (review?.state === "expired") return "Your capacity review expired. A new review is needed for public totals.";
+    if (review?.state === "revoked") return "Your previous capacity review is no longer active.";
+    return this.side === "buy" ? "Public totals include only amounts covered by a current buying-capacity review." : "Public totals include only amounts covered by a current review of your holding in this company or fund.";
+  }
   get existing() { return this.own.find(row => row.side === this.side); }
   get editHint() {
     if (!this.existing) return "";
@@ -45,7 +56,7 @@ export class InterestModal extends Component {
     this.loading = true;
     this.loaded = false;
     this.error = "";
-    try { const data = await ajax(`${this.endpoint}.json`, { data: { topic_id: this.args.model.topicId } }); this.own = data.interest; this.selectSide(); this.loaded = true; return data; }
+    try { const data = await ajax(`${this.endpoint}.json`, { data: { topic_id: this.args.model.topicId } }); this.own = data.interest; this.capacity = data.capacity || {}; this.selectSide(); this.loaded = true; return data; }
     catch { this.error = "Your interest could not be loaded. Please try again."; }
     finally { this.loading = false; }
   }
@@ -56,6 +67,7 @@ export class InterestModal extends Component {
     this.confirmation = false;
   }
   @action update(event) {
+    this.savedPending = false;
     const { name, value, checked } = event.target;
     if (["amount", "confirmation"].includes(name)) this[name] = name === "confirmation" ? checked : value;
   }
@@ -68,8 +80,20 @@ export class InterestModal extends Component {
       const data = await this.load();
       if (data) {
         await this.args.model.onChange?.((this.args.model.topicId ? data.offering_totals : data.totals) || {});
-        this.args.closeModal();
+        if (this.siteSettings.svdex_interest_public_totals && this.needsReview) this.savedPending = true;
+        else this.args.closeModal();
       }
+    } catch (error) { popupAjaxError(error); }
+    finally { this.loading = false; }
+  }
+  @action async requestReview() {
+    if (!this.existing) return;
+    if (this.amount !== usdCentsInput(this.existing.amount_cents)) { this.error = "Save your amount before requesting verification."; return; }
+    this.loading = true;
+    try {
+      const result = await ajax(`/listings/interest-verifications/requests/${this.existing.id}.json`, { type: "POST" });
+      this.args.closeModal();
+      DiscourseURL.routeTo(result.url);
     } catch (error) { popupAjaxError(error); }
     finally { this.loading = false; }
   }
@@ -78,6 +102,7 @@ export class InterestModal extends Component {
       <:body>
         <div {{didInsert this.load}}>
           <p class="svdex-interest-context"><strong>{{if @model.topicTitle @model.topicTitle @model.organizationName}}</strong></p>
+          {{#if this.savedPending}}<p role="status">Saved privately. Request verification to include this amount in public totals.</p>{{/if}}
           <p class="svdex-interest-description">{{if @model.topicTitle "Nonbinding interest in this offering, valid for 30 days." "General interest, independent of an offering. Valid for 30 days."}}</p>
           <div class="control-group">
             <label for="svdex-interest-amount">Amount (USD)</label>
@@ -90,9 +115,11 @@ export class InterestModal extends Component {
               <ComboBox @id="svdex-interest-market" @value={{this.market}} @content={{this.markets}} @onChange={{this.changeMarket}} @options={{hash translatedName="Market" disabled=this.loading}} />
             </div>
           {{/if}}
+          {{#if this.siteSettings.svdex_interest_public_totals}}<p class="svdex-interest-hint">{{this.capacityNote}}</p>{{/if}}
+          {{#if this.needsReview}}{{#unless this.savedPending}}<DButton class="btn-link" @translatedLabel="Request verification" @action={{this.requestReview}} @disabled={{this.loading}} />{{/unless}}{{/if}}
           <label class="checkbox-label svdex-interest-consent">
             <input type="checkbox" name="confirmation" checked={{this.confirmation}} disabled={{this.loading}} {{on "change" this.update}} />
-            <span>{{if this.siteSettings.svdex_interest_public_totals "This is my current nonbinding interest, and I agree to include this amount in public aggregate totals. It is not an order or investment commitment." "This is my current nonbinding interest, not an order or investment commitment."}}</span>
+            <span>{{if this.siteSettings.svdex_interest_public_totals "This is my current nonbinding interest, and I agree to include this amount in public aggregate totals after staff capacity verification. It is not an order or investment commitment." "This is my current nonbinding interest, not an order or investment commitment."}}</span>
           </label>
           <p class="svdex-interest-hint">Private to you and SVDEX staff. Manage or withdraw in <a href="/my/activity/interest">My Bids</a>.</p>
           {{#if this.error}}<p class="alert alert-error" role="alert">{{this.error}}</p>{{/if}}
@@ -100,8 +127,11 @@ export class InterestModal extends Component {
         </div>
       </:body>
       <:footer>
+        {{#if this.savedPending}}<DButton class="btn-primary" @translatedLabel="Request verification" @action={{this.requestReview}} @disabled={{this.loading}} /><DButton class="btn-flat" @translatedLabel="Done" @action={{@closeModal}} />
+        {{else}}
         <DButton class="btn-primary" @translatedLabel={{this.saveLabel}} @action={{this.save}} @disabled={{this.saveDisabled}} />
         <DButton class="btn-flat" @translatedLabel="Cancel" @action={{@closeModal}} />
+        {{/if}}
       </:footer>
     </DModal>
   </template>

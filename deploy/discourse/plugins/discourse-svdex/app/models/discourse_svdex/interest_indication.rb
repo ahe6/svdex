@@ -35,8 +35,8 @@ module DiscourseSvdex
     def self.aggregate_scope(guardian)
       return disclosed_to(guardian) unless public_totals?
       public_topics = CompanyDirectory.offering_scope(Guardian.new).select(:id)
-      where.not(aggregate_consent_at: nil).where(source_was_restricted: false)
-        .where("topic_id IS NULL OR topic_id IN (?)", public_topics)
+      InterestVerification.covered(where.not(aggregate_consent_at: nil).where(source_was_restricted: false)
+        .where("topic_id IS NULL OR topic_id IN (?)", public_topics))
     end
 
     def self.totals(organization_ids, guardian)

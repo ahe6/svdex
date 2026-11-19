@@ -58,6 +58,7 @@ module DiscourseSvdex
       {
         id: row.id, kind: kind, status: state, amount_cents: row.amount_cents, currency: row.currency,
         updated_at: row.updated_at, expires_at: row.expires_at, withdrawn_at: row.withdrawn_at,
+        verification: kind == "interest" ? InterestVerification.qualification(row) : nil,
         side: kind == "interest" ? row.side : nil, market: kind == "interest" ? row.market : nil,
         organization: accessible ? { id: organization.id, name: organization.name.presence || organization.username, url: "/u/#{organization.username_lower}/summary" } : nil,
         topic: accessible && topic_visible ? { id: topic.id, title: topic.title, url: topic.url } : nil,

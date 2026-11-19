@@ -114,6 +114,8 @@ after_initialize do
   require_relative "app/models/discourse_svdex/offering_bid"
   require_relative "app/controllers/discourse_svdex/offering_bids_controller"
   require_relative "app/models/discourse_svdex/interest_indication"
+  require_relative "app/models/discourse_svdex/interest_verification"
+  require_relative "app/controllers/discourse_svdex/interest_verifications_controller"
   require_relative "app/controllers/discourse_svdex/interests_controller"
   require_relative "app/controllers/discourse_svdex/my_interest_controller"
   if defined?(DiscourseSvdex::Prototypes::CompanyProfiles)

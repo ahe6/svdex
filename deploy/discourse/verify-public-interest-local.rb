@@ -32,6 +32,12 @@ begin
     # Isolate totals from persistent local visual-review submissions. This
     # deletion rolls back with the surrounding scenario transaction.
     DiscourseSvdex::InterestIndication.where(organization_id: [company.id, other.id, fund.id]).delete_all
+    people.each do |investor|
+      DiscourseSvdex::InterestVerification.record!(investor, actor: people[4], side: "buy", amount: "90071992547409.91", checked_on: Date.current.to_s, expires_on: (Date.current + 30).to_s, evidence_reference: "Transactional verification fixture")
+      [company, other, fund].each do |target|
+        DiscourseSvdex::InterestVerification.record!(investor, actor: people[4], side: "sell", amount: "90071992547409.91", checked_on: Date.current.to_s, expires_on: (Date.current + 30).to_s, evidence_reference: "Transactional holding fixture", target_type: "account", target_id: target.id, holding_details: "Holding reviewed for this isolated scenario")
+      end
+    end
     indication = ->(user, organization, side, amount, consent = true, **attrs) {
       DiscourseSvdex::InterestIndication.create!({ user: user, organization: organization, side: side,
         market: side == "sell" ? "secondary" : "either", currency: "USD", amount_cents: amount,

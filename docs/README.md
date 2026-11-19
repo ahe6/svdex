@@ -9,6 +9,7 @@
 - [Refactoring map and batch order](refactoring-plan.md)
 - [Independent company profile: local experiment](independent-company-prototype.md)
 - [Reviewed company files and site corrections](company-catalog.md)
+- [Private capacity reviews and public interest totals](interest-verification.md)
 - [Source boundaries, checks and upstream upgrades](discourse-maintenance.md)
 - [Local and remote development operations](operations.md)
 - [Cloud editing, browser reports and PR previews](cloud-development.md)

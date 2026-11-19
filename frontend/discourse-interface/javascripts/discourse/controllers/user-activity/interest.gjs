@@ -26,7 +26,7 @@ export default class InterestController extends Controller {
     return this.records.map(row => ({ ...row,
       title: row.topic?.title || row.organization?.name || (row.kind === "bid" ? "Unavailable offering" : "Unavailable company or fund"),
       url: row.topic?.url || row.organization?.url,
-      label: submissionLabel(row),
+      label: submissionLabel(row) + (row.kind === "interest" && row.status === "current" && row.verification && row.verification.state !== "verified" ? " · Unverified" : ""),
       amount: formatUsdCents(row.amount_cents),
       state: row.status.charAt(0).toUpperCase() + row.status.slice(1),
       editLabel: row.status === "current" ? "Edit" : "Resubmit",

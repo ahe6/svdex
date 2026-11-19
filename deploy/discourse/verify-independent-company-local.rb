@@ -66,6 +66,7 @@ User.transaction do
   begin
     SiteSetting.svdex_interest_enabled = true
     SiteSetting.svdex_interest_public_totals = true
+    DiscourseSvdex::InterestVerification.record!(member, actor: staff, side: "buy", amount: "1250.25", checked_on: Date.current.to_s, expires_on: (Date.current + 30).to_s, evidence_reference: "Transactional independent-profile fixture")
     endpoint = "/company-profile-interests/#{record.id}"
     input = { interest: { amount: "1250.25", currency: "USD", market: "either", confirmation: "nonbinding-public-v1" } }
     guest.put "#{endpoint}/buy.json", params: input

@@ -108,6 +108,9 @@ module DiscourseSvdex
         raise Discourse::NotFound unless CompanyRelationships.visible?(record, guardian)
         record
       end
+      def verification_target(record)
+        ["company", record.id]
+      end
       def target_scope(record)
         InterestIndication.where(company_profile_id: record.id)
       end
@@ -127,7 +130,7 @@ module DiscourseSvdex
         record = row.company_profile
         accessible = CompanyRelationships.visible?(record, guardian)
         { id: row.id, kind: kind, status: FinancialSubmissions.state(row), amount_cents: row.amount_cents, currency: row.currency,
-          updated_at: row.updated_at, expires_at: row.expires_at, withdrawn_at: row.withdrawn_at, side: row.side, market: row.market,
+          updated_at: row.updated_at, expires_at: row.expires_at, withdrawn_at: row.withdrawn_at, side: row.side, market: row.market, verification: InterestVerification.qualification(row),
           organization: accessible ? { id: record.id, name: record.name, url: "/company/#{record.slug}", interest_endpoint: "/company-profile-interests/#{record.id}" } : nil,
           topic: nil, proposed_terms: nil, can_edit: !!(accessible && SiteSetting.svdex_interest_enabled) }
       end
