@@ -476,3 +476,18 @@ organizations (including funds whose directory membership is restricted).
 Company/fund Summary keeps the native section headings, smaller fact typography,
 equal native text-button Buy/Sell interest actions immediately beside the details heading, and discovery
 attribution below its main content. Submission and consent behavior is unchanged.
+
+
+### Personal messages and local independent companies (2026-11-19)
+
+Messages in the main sidebar opens Discourse Chat's full-page Direct messages inbox
+(`/chat/direct-messages`). It no longer reflects private-topic unread counts. Native
+private messages remain enabled for staff applications, person suggestions and
+system workflows; they have not been deleted or converted into chats.
+
+On localhost:4080 only, Companies opens `/company-directory`, backed by separate
+company records with optional official accounts. The original `/companies` remains
+available for comparison. Company-wide interest, My Bids management and reviewed
+discovery credit work without a company login. Funds, People and offering issuers
+remain account-backed. See `independent-company-prototype.md` for the migration
+boundaries; this experiment is not a production rollout.

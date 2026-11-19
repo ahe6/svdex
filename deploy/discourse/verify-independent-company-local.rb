@@ -58,6 +58,76 @@ User.transaction do
   editor.put path, params: { profile: { official_username: "" } }, headers: headers
   profile_assert!(editor.response.status == 200 && record.reload.official_account_id.nil? && User.exists?(account.id), "unlinking an account preserves both the company profile and the account")
   profile_assert!(User.count == count, "profile maintenance creates no login identities")
+  original_enabled, original_public = SiteSetting.svdex_interest_enabled, SiteSetting.svdex_interest_public_totals
+  begin
+    SiteSetting.svdex_interest_enabled = true
+    SiteSetting.svdex_interest_public_totals = true
+    endpoint = "/company-profile-interests/#{record.id}"
+    input = { interest: { amount: "1250.25", currency: "USD", market: "either", confirmation: "nonbinding-public-v1" } }
+    guest.put "#{endpoint}/buy.json", params: input
+    profile_assert!(guest.response.status == 403, "independent company interest requires login")
+    signed_in.put "#{endpoint}/buy.json", params: input, headers: member_headers
+    profile_assert!(signed_in.response.status == 200, "a member can indicate interest with no official company account")
+    row = DiscourseSvdex::InterestIndication.find_by!(company_profile_id: record.id, user: member, side: "buy")
+    profile_assert!(row.organization_id.nil? && row.amount_cents == 125025 && row.aggregate_consent_at, "interest uses a company reference and exact cents with explicit aggregate consent")
+    other = DiscourseSvdex::Prototypes::CompanyProfileRecord.create!(slug: "other-#{SecureRandom.hex(4)}", name: "Other Company", summary: "Independent infrastructure company.", listed: true)
+    signed_in.put "/company-profile-interests/#{other.id}/buy.json", params: input, headers: member_headers
+    profile_assert!(signed_in.response.status == 200, "one investor can record interest in two account-free companies without ID collisions")
+    guest.get path
+    profile_assert!(guest.response.parsed_body.dig("company", "interest_totals", "buy") == 125025, "consented current interest totals are visible to guests")
+    signed_in.put "#{endpoint}/buy.json", params: { interest: input[:interest].merge(amount: "42.10", confirmation: "nonbinding") }, headers: member_headers
+    profile_assert!(signed_in.response.status == 200 && row.reload.amount_cents == 4210 && row.aggregate_consent_at.nil?, "editing replaces one indication and can remove aggregate consent")
+    guest.get path
+    profile_assert!(guest.response.parsed_body.dig("company", "interest_totals", "buy").nil?, "non-consented amounts never enter public totals")
+    signed_in.get "/listings/my-interest.json", headers: member_headers
+    history = signed_in.response.parsed_body.fetch("records").find { |item| item["id"] == row.id && item["kind"] == "interest" }
+    profile_assert!(history.dig("organization", "url") == "/company/#{record.slug}" && history.dig("organization", "interest_endpoint") == endpoint && history["can_edit"], "My Bids links and edits the independent company rather than an account with the same numeric ID")
+    editor.get "#{endpoint}.json", headers: headers
+    profile_assert!(editor.response.parsed_body.fetch("interest").empty?, "another account never receives the investor's own records as its own")
+    signed_in.put "#{endpoint}/sell.json", params: input, headers: member_headers
+    profile_assert!(signed_in.response.status == 400, "sell interest still requires secondary-market terms")
+    signed_in.put "#{endpoint}/buy.json", params: { interest: input[:interest].merge(topic_id: 1) }, headers: member_headers
+    profile_assert!(signed_in.response.status == 400, "company-wide interest cannot silently claim an offering reference")
+    record.update!(listed: false)
+    signed_in.get "#{endpoint}.json", headers: member_headers
+    profile_assert!(signed_in.response.status == 404, "unpublished company interest endpoints are unavailable to ordinary members")
+    signed_in.get "/listings/my-interest.json", headers: member_headers
+    hidden = signed_in.response.parsed_body.fetch("records").find { |item| item["id"] == row.id && item["kind"] == "interest" }
+    profile_assert!(hidden["organization"].nil? && !hidden["can_edit"], "owner history redacts an unpublished company but preserves the investor's amount")
+    signed_in.delete "/listings/my-interest/interest/#{row.id}.json", headers: member_headers
+    profile_assert!(signed_in.response.status == 200 && row.reload.withdrawn_at, "withdrawal still works after independent company publication is removed")
+    record.update!(listed: true)
+    directory = "/company-profiles.json"
+    guest.get directory, params: { name: record.name }
+    profile_assert!(guest.response.status == 200 && guest.response.parsed_body.fetch("profiles").map { |item| item.dig("profile", "id") } == [record.id], "directory search returns independently published profiles")
+    guest.get directory, params: { name: record.name, svdex_funding: "1m_10m", order: "svdex_last_valuation" }
+    profile_assert!(guest.response.status == 200 && guest.response.parsed_body["total"] == 1, "directory monetary filters use the independent facts")
+    guest.get directory, params: { svdex_funding: "bad" }
+    profile_assert!(guest.response.status == 400, "directory rejects unknown ranges")
+    review = { discovery: { provenance: "discovered", contributor: member.username, listed_at: Time.current.iso8601(6), reason: "Reviewed company background and original source." } }
+    credit_path = "/company-profiles/#{record.slug}/discovery.json"
+    signed_in.put credit_path, params: review, headers: member_headers
+    profile_assert!(signed_in.response.status == 403, "members cannot award themselves discovery credit")
+    editor.put credit_path, params: review, headers: headers
+    profile_assert!(editor.response.status == 200, "staff can review account-independent discovery credit")
+    discovery = DiscourseSvdex::Discovery.find_by!(company_profile_id: record.id)
+    profile_assert!(discovery.entity_user_id.nil? && discovery.original_entity_user_id.nil? && discovery.original_company_profile_id == record.id && DiscourseSvdex::DiscoveryEvent.exists?(discovery_id: discovery.id), "discovery attribution and audit snapshots reference the independent company")
+    guest.get path
+    profile_assert!(guest.response.parsed_body.dig("discovery", "contributor", "username") == member.username, "the company publicly credits its visible contributor")
+    data = DiscourseSvdex::Discoveries.history(member, Guardian.new, limit: 1)
+    profile_assert!(data[:count] == 1 && data[:records].first[:url] == "/company/#{record.slug}", "native contributor discovery history includes independent company profiles")
+    editor.put credit_path, params: { discovery: review[:discovery].merge(listed_at: 1.day.ago.iso8601) }, headers: headers
+    profile_assert!(editor.response.status == 400, "review cannot rewrite the original discovery timestamp")
+    record.update!(listed: false)
+    profile_assert!(DiscourseSvdex::Discoveries.history(member, Guardian.new)[:count] == 0, "unpublished independent profiles do not leak through discovery totals")
+    guest.get directory, params: { name: record.name }
+    profile_assert!(guest.response.parsed_body["total"] == 0, "unpublished profiles do not leak through directory totals")
+    record.update!(listed: true)
+  ensure
+    SiteSetting.svdex_interest_enabled = original_enabled
+    SiteSetting.svdex_interest_public_totals = original_public
+  end
+
   temporary = User.create!(username: "plink_#{SecureRandom.hex(4)}", email: "#{SecureRandom.hex(8)}@example.invalid", password: password, active: true, approved: true)
   record.update!(official_account: temporary)
   temporary.destroy!

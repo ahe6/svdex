@@ -75,6 +75,12 @@ after_initialize do
   if GlobalSetting.hostname == "localhost" && SiteSetting.port.to_s == "4080"
     require_relative "lib/discourse_svdex/prototypes/company_profiles"
     Discourse::Application.routes.append do
+      get "/company-directory", to: "discourse_svdex/prototypes/company_profiles#directory", constraints: { format: "html" }
+      get "/company-profiles", to: "discourse_svdex/prototypes/company_profiles#index", defaults: { format: :json }
+      get "/company-profiles/:slug/discovery", to: "discourse_svdex/prototypes/company_profiles#discovery", defaults: { format: :json }
+      put "/company-profiles/:slug/discovery", to: "discourse_svdex/prototypes/company_profiles#update_discovery", defaults: { format: :json }
+      get "/company-profile-interests/:organization_id", to: "discourse_svdex/prototypes/company_interests#index", defaults: { format: :json }
+      put "/company-profile-interests/:organization_id/:side", to: "discourse_svdex/prototypes/company_interests#update", defaults: { format: :json }
       get "/company/:slug", to: "discourse_svdex/prototypes/company_profiles#page", constraints: { format: "html" }
       get "/company-profiles/:slug", to: "discourse_svdex/prototypes/company_profiles#show", defaults: { format: :json }
       put "/company-profiles/:slug", to: "discourse_svdex/prototypes/company_profiles#update", defaults: { format: :json }
@@ -109,6 +115,11 @@ after_initialize do
   require_relative "app/models/discourse_svdex/interest_indication"
   require_relative "app/controllers/discourse_svdex/interests_controller"
   require_relative "app/controllers/discourse_svdex/my_interest_controller"
+  if defined?(DiscourseSvdex::Prototypes::CompanyProfiles)
+    require_relative "lib/discourse_svdex/prototypes/company_relationships"
+    require_relative "lib/discourse_svdex/prototypes/company_profile_directory"
+    DiscourseSvdex::Prototypes::CompanyRelationships.install!
+  end
   require_relative "app/controllers/discourse_svdex/company_details_controller"
   require_relative "app/controllers/discourse_svdex/company_directory_controller"
   require_relative "app/controllers/discourse_svdex/people_directory_controller"

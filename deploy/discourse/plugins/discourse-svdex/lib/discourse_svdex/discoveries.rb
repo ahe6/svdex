@@ -107,7 +107,14 @@ module DiscourseSvdex
       # Visibility is applied before counts and pagination. Private/removed
       # entities never contribute even a public count or a dangling title.
       rows = rows.select { |r| kind(r.entity) == r.entity_kind && visible?(r.entity, guardian) }
-      { count: rows.length, records: rows.slice(page * limit, limit).to_a.map { |r| serialize(r, guardian) }, has_more: rows.length > (page + 1) * limit }
+      entries = rows.map { |row| serialize(row, guardian) } + additional_history(user, guardian, type: type)
+      entries.sort_by! { |entry| [entry[:listed_at], entry[:id]] }
+      entries.reverse! unless order == "oldest"
+      { count: entries.length, records: entries.slice(page * limit, limit).to_a, has_more: entries.length > (page + 1) * limit }
+    end
+    # Local entity experiments can contribute entries before shared pagination.
+    def self.additional_history(user, guardian, type: nil)
+      []
     end
     def self.serialize(row, guardian)
       { id: row.id, entity: BasicUserSerializer.new(row.entity, scope: guardian, root: false).as_json, kind: row.entity_kind,

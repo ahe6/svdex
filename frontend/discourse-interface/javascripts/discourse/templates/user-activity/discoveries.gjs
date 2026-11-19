@@ -14,7 +14,7 @@ export default <template>
           {{#each @controller.model.records as |row|}}
             <tr class="topic-list-item">
               <td class="main-link topic-list-data"><div class="user-info small">
-                <div class="user-image"><a href={{row.url}} aria-hidden="true">{{dAvatar row.entity imageSize="large"}}</a></div>
+                {{#if row.entity.avatar_template}}<div class="user-image"><a href={{row.url}} aria-hidden="true">{{dAvatar row.entity imageSize="large"}}</a></div>{{/if}}
                 <div class="user-detail"><div class="name-line"><a class="name" href={{row.url}}>{{row.entity.name}}</a></div>{{#if row.background}}<span class="svdex-discovery-background">{{row.background}}</span>{{/if}}{{#if (eq row.provenance "self_listed")}}<span class="svdex-discovery-self">Self-listed</span>{{/if}}</div>
               </div></td>
               <td class="topic-list-data svdex-discovery-kind">{{#if (eq row.kind "companies")}}Company{{else if (eq row.kind "funds")}}Fund{{else}}Person{{/if}}</td>

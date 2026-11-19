@@ -29,7 +29,7 @@ export class InterestModal extends Component {
   }
   markets = [{id: "either", name: "Primary or secondary"}, {id: "primary", name: "Primary financing"}, {id: "secondary", name: "Secondary purchase"}];
   @action changeMarket(value) { this.market = value; }
-  get endpoint() { return `/listings/interests/${this.args.model.organizationId}`; }
+  get endpoint() { return this.args.model.interestEndpoint || `/listings/interests/${this.args.model.organizationId}`; }
   get isBuy() { return this.side === "buy"; }
   get title() { return this.isBuy ? "Buy interest" : "Sell interest"; }
   get saveLabel() { return this.isBuy ? "Save buy interest" : "Save sell interest"; }
@@ -112,6 +112,6 @@ export default class InterestButton extends Component {
   @service siteSettings;
   @action open() {
     if (!this.currentUser) return getOwner(this).lookup("route:application").send("showLogin");
-    this.modal.show(InterestModal, { model: { organizationId: this.args.organizationId, organizationName: this.args.organizationName, side: this.args.side, topicId: this.args.topicId, topicTitle: this.args.topicTitle, onChange: this.args.onChange } }); }
+    this.modal.show(InterestModal, { model: { interestEndpoint: this.args.interestEndpoint, organizationId: this.args.organizationId, organizationName: this.args.organizationName, side: this.args.side, topicId: this.args.topicId, topicTitle: this.args.topicTitle, onChange: this.args.onChange } }); }
   <template>{{#if this.siteSettings.svdex_interest_enabled}}<DButton @translatedLabel={{if @label @label "Indicate interest"}} @translatedTitle={{@title}} @translatedAriaLabel={{@title}} @action={{this.open}} class={{if @buttonClass @buttonClass "btn-primary"}} />{{/if}}</template>
 }

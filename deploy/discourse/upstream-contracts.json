@@ -130,6 +130,11 @@
       "path": "app/models/concerns/has_custom_fields.rb",
       "sha256": "f8971a2d398a3f079a0a1c3418035381c35ffe4ec5982cf5f36de176bbee0347",
       "integration": "Native typed bulk custom-field reader for directory facts and associations"
+    },
+    {
+      "path": "plugins/chat/assets/javascripts/discourse/routes/chat/direct-messages.js",
+      "sha256": "e286ab849a2e3a4e3500172f30e89cdcd8f2ec1411682c92aadaee6be4fda5fc",
+      "integration": "Keep native DM list on desktop instead of redirecting to last channel; preserve anonymous guard"
     }
   ]
 }

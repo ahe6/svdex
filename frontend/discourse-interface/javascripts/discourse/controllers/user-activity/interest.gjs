@@ -54,7 +54,7 @@ export default class InterestController extends Controller {
   }
   @action edit(row) {
     if (!row.can_edit) return;
-    const model = { organizationId: row.organization.id, organizationName: row.organization.name, side: row.side,
+    const model = { interestEndpoint: row.organization.interest_endpoint, organizationId: row.organization.id, organizationName: row.organization.name, side: row.side,
       topicId: row.topic?.id, topicTitle: row.topic?.title, onChange: this.reload };
     this.modal.show(row.kind === "bid" ? OfferingBidModal : InterestModal, { model });
   }

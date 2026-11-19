@@ -63,9 +63,9 @@ export default class CompanyProfileSummary extends Component {
           <div class="top-section stats-section">
             <div class="svdex-company-details-header">
             <h3 class="stats-title">{{this.heading}}{{#if this.isSpv}} · SPV{{/if}}</h3>
-            {{#if @user.id}}<div class="svdex-company-summary-actions">
-              <InterestButton @organizationId={{@user.id}} @organizationName={{@user.name}} @side="buy" @label="Buy interest" @title="Indicate buy interest" @buttonClass="btn-link" @onChange={{this.refresh}} />
-              <InterestButton @organizationId={{@user.id}} @organizationName={{@user.name}} @side="sell" @label="Sell interest" @title="Indicate sell interest" @buttonClass="btn-link" @onChange={{this.refresh}} />
+            {{#if (or @user.id @data.profile.id)}}<div class="svdex-company-summary-actions">
+              <InterestButton @interestEndpoint={{@data.interest_endpoint}} @organizationId={{or @data.profile.id @user.id}} @organizationName={{or @data.profile.name @user.name}} @side="buy" @label="Buy interest" @title="Indicate buy interest" @buttonClass="btn-link" @onChange={{this.refresh}} />
+              <InterestButton @interestEndpoint={{@data.interest_endpoint}} @organizationId={{or @data.profile.id @user.id}} @organizationName={{or @data.profile.name @user.name}} @side="sell" @label="Sell interest" @title="Indicate sell interest" @buttonClass="btn-link" @onChange={{this.refresh}} />
             </div>{{/if}}
             </div>
             {{#if this.profile.company.manager_name}}<p>Manager: {{#if this.profile.company.manager_url}}<a href={{this.profile.company.manager_url}}>{{this.profile.company.manager_name}}</a>{{else}}{{this.profile.company.manager_name}}{{/if}}</p>{{/if}}
@@ -113,7 +113,7 @@ export default class CompanyProfileSummary extends Component {
               </div>
             </div>
           {{/if}}
-          {{#unless @independent}}<DiscoveriesSummary @user={{@user}} />{{/unless}}
+          <DiscoveriesSummary @user={{@user}} @credit={{@data.discovery}} />
         {{/if}}
       </DConditionalLoadingSpinner>
     </div>

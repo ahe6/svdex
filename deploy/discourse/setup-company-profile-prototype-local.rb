@@ -9,3 +9,15 @@ if record.new_record?
   record.save!
 end
 puts "Independent company: http://localhost:4080/company/#{record.slug}"
+
+# A second independent entry makes directory search, ordering and filtering useful.
+northstar = User.find_by(username: "northstar")
+if northstar
+  company = DiscourseSvdex::Prototypes::CompanyProfileRecord.find_or_initialize_by(slug: "northstar-instruments")
+  if company.new_record?
+    company.assign_attributes(name: northstar.name, summary: ActionView::Base.full_sanitizer.sanitize(northstar.user_profile.bio_excerpt.to_s), listed: true,
+      facts: DiscourseSvdex::Prototypes::CompanyProfiles::FACTS.to_h { |key| [key, northstar.custom_fields[DiscourseSvdex::CompanyDirectory::FIELDS.fetch(key)]] })
+    company.save!
+  end
+end
+puts "Independent directory: http://localhost:4080/company-directory"

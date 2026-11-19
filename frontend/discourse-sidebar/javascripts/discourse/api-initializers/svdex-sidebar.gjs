@@ -7,7 +7,6 @@ import BadgesSectionLink from "discourse/lib/sidebar/common/community-section/ba
 import GroupsSectionLink from "discourse/lib/sidebar/common/community-section/groups-section-link";
 import UsersSectionLink from "discourse/lib/sidebar/common/community-section/users-section-link";
 import MyPostsSectionLink from "discourse/lib/sidebar/user/community-section/my-posts-section-link";
-import MyMessagesSectionLink from "discourse/lib/sidebar/user/community-section/my-messages-section-link";
 import ReviewSectionLink from "discourse/lib/sidebar/user/community-section/review-section-link";
 import AdminSectionLink from "discourse/lib/sidebar/user/community-section/admin-section-link";
 import InviteSectionLink from "discourse/lib/sidebar/user/community-section/invite-section-link";
@@ -41,10 +40,11 @@ export default apiInitializer((api) => {
       get name() { return `svdex-${kind}`; }
       get text() { return text; }
       get title() { return text; }
-      get route() { return "companies"; }
+      get independent() { return kind === "companies" && window.location.hostname === "localhost" && window.location.port === "4080"; }
+      get route() { return this.independent ? "independent-companies" : "companies"; }
       get query() { return { kind, order: kind === "funds" ? "svdex_aum" : "svdex_total_funding", asc: null, name: null, svdex_sector: null, svdex_funding: null, svdex_valuation: null, svdex_stage: null, svdex_location: null, svdex_open: null, svdex_type: null, svdex_aum: null, svdex_buy_interest: null, svdex_sell_interest: null }; }
       get prefixValue() { return icon; }
-      get currentWhen() { return this.router.currentRouteName === "companies" && (this.router.currentRoute.queryParams.kind || "companies") === kind; }
+      get currentWhen() { if (this.independent) return this.router.currentRouteName === "independent-companies"; return this.router.currentRouteName === "companies" && (this.router.currentRoute.queryParams.kind || "companies") === kind; }
     });
   }
 
@@ -161,9 +161,15 @@ export default apiInitializer((api) => {
     get shouldDisplay() { return this.siteSettings.discourse_events_enabled && this.siteSettings.discourse_post_event_enabled; }
   });
 
-  api.addCommunitySectionLink(() => class extends MyMessagesSectionLink {
-    constructor(owner, options) { super(owner, { ...options, overriddenName: "Messages" }); }
+  // Personal conversations use native Chat. Staff applications retain private topics.
+  api.addCommunitySectionLink(BaseLink => class extends BaseLink {
+    get name() { return "my-messages"; }
+    get text() { return "Messages"; }
+    get title() { return "Direct messages"; }
+    get route() { return "chat.direct-messages"; }
     get prefixValue() { return "envelope"; }
+    get currentWhen() { return "chat.direct-messages"; }
+    get shouldDisplay() { return Boolean(this.currentUser?.has_chat_enabled) && this.siteSettings.chat_enabled; }
   });
   api.addCommunitySectionLink(() => class extends MyPostsSectionLink {
     constructor(owner, options) { super(owner, { ...options, overriddenName: "My posts" }); }

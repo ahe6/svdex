@@ -16,8 +16,8 @@ export default class DiscoveryAdmin extends Component {
   @tracked error = false;
   @tracked saving = false;
   @tracked saved = false;
-  get visible() { return this.args.outletArgs.model?.svdex_discovery_entity; }
-  get endpoint() { return `/listings/discovery-credit/${this.args.outletArgs.model.id}.json`; }
+  get visible() { return this.args.endpoint || this.args.outletArgs?.model?.svdex_discovery_entity; }
+  get endpoint() { return this.args.endpoint || `/listings/discovery-credit/${this.args.outletArgs.model.id}.json`; }
   provenances = [{id:"discovered",name:"Discovered by a contributor"},{id:"self_listed",name:"Self-listed"},{id:"staff_added",name:"Added by SVDEX"},{id:"imported",name:"Imported"}];
   statuses = [{id:"accepted",name:"Accepted"},{id:"withdrawn",name:"Withdrawn"},{id:"disputed",name:"Disputed — hide credit pending review"}];
   get needsContributor() { return ["discovered", "self_listed"].includes(this.values.provenance); }
@@ -36,7 +36,7 @@ export default class DiscoveryAdmin extends Component {
     const endpoint = this.endpoint;
     try {
       const data = await ajax(endpoint,{type:"PUT",contentType:"application/json",data:JSON.stringify({discovery:{...this.values,reason:this.reason}})});
-      if (!this.isDestroying && endpoint === this.endpoint) { this.data = data; this.values = data.discovery; this.reason = ""; this.saved = true; }
+      if (!this.isDestroying && endpoint === this.endpoint) { this.data = data; this.values = data.discovery; this.reason = ""; this.saved = true; await this.args.onSave?.(); }
     } catch (error) { if (!this.isDestroying) popupAjaxError(error); }
     finally { if (!this.isDestroying) this.saving = false; }
   }

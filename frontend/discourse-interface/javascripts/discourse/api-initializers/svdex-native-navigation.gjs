@@ -8,10 +8,18 @@ export default apiInitializer(api => {
   document.addEventListener("click", (event) => {
     const loungeUrl = api.container.lookup("service:site-settings")?.svdex_lounge_channel_url;
     const link = event.target.closest?.("a");
-    if (event.target.closest?.('.chat-header-icon a, .nav-pills a[href="/chat/browse/open"]') || (loungeUrl && link?.getAttribute("href") === loungeUrl)) {
+    if (event.target.closest?.('.chat-header-icon a, a[href="/chat/direct-messages"], .nav-pills a[href="/chat/browse/open"]') || (loungeUrl && link?.getAttribute("href") === loungeUrl)) {
       api.container.lookup("service:chat-state-manager")?.prefersFullPage();
     }
   }, true);
+  // Native desktop redirects this inbox to the last channel. Keep its native
+  // list component visible on both viewports when Messages is opened.
+  api.modifyClass("route:chat.direct-messages", {
+    pluginId: "svdex-dm-inbox",
+    beforeModel() {
+      if (!this.currentUser) return this.router.replaceWith("chat.channels");
+    },
+  });
   api.modifyClass("component:tag-drop", {
     pluginId: "svdex-sidebar",
     modifyNoSelection() {

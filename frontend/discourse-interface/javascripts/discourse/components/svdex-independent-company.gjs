@@ -9,6 +9,7 @@ import { ajax } from "discourse/lib/ajax";
 import { popupAjaxError } from "discourse/lib/ajax-error";
 import DButton from "discourse/ui-kit/d-button";
 import DModal from "discourse/ui-kit/d-modal";
+import DiscoveryAdmin from "./svdex-discovery-admin.gjs";
 import CompanyProfileSummary from "./svdex-company-profile-summary.gjs";
 
 class CompanyEditor extends Component {
@@ -48,6 +49,7 @@ export default class IndependentCompany extends Component {
   get data() { return this.updated || this.args.model; }
   @action saved(data) { this.updated = data; }
   @action async refresh() { this.updated = await ajax(`/company-profiles/${encodeURIComponent(this.data.profile.slug)}.json`); }
+  get discoveryEndpoint() { return `/company-profiles/${encodeURIComponent(this.data.profile.slug)}/discovery.json`; }
   @action edit() { this.modal.show(CompanyEditor, { model: { data: this.data, saved: this.saved } }); }
   <template>
     <div class="user-main user-summary-page">
@@ -58,7 +60,7 @@ export default class IndependentCompany extends Component {
           {{#if this.data.editor}}<DButton @action={{this.edit}} @icon="pencil" @translatedLabel="Edit company" />{{/if}}
         </div>
       </div>
-      <div class="user-content"><CompanyProfileSummary @data={{this.data}} @user={{this.data.interest_account}} @independent={{true}} @onRefresh={{this.refresh}} /></div>
+      <div class="user-content"><CompanyProfileSummary @data={{this.data}}  @independent={{true}} @onRefresh={{this.refresh}} />{{#if this.data.editor}}<details><summary>Manage discovery credit</summary><DiscoveryAdmin @endpoint={{this.discoveryEndpoint}} @onSave={{this.refresh}} /></details>{{/if}}</div>
     </div>
   </template>
 }

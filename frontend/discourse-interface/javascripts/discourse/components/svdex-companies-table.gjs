@@ -19,23 +19,23 @@ const companyProfileLinks = modifier((element, [url]) => {
 });
 class CompanyRow extends Component {
   @service siteSettings;
-  get company() { return this.args.item.user.svdex_company || {}; }
+  get company() { return this.args.item.company || this.args.item.user?.svdex_company || {}; }
   get facts() { return directoryFacts(this.company, this.args.kind).map(fact => ({...fact,
     missingInterest: fact.value === "—",
     interestSide: fact.key === "buy_interest" ? "buy" : fact.key === "sell_interest" ? "sell" : null,
-    interestTitle: `Indicate ${fact.key === "buy_interest" ? "buy" : "sell"} interest in ${this.args.item.user.name || this.args.item.user.username}`,
+    interestTitle: `Indicate ${fact.key === "buy_interest" ? "buy" : "sell"} interest in ${this.organizationName}`,
   })); }
-  get organizationName() { return this.args.item.user.name || this.args.item.user.username; }
-  get profileUrl() { return `/u/${encodeURIComponent(this.args.item.user.username)}/summary`; }
+  get organizationName() { return this.args.item.profile?.name || this.args.item.user.name || this.args.item.user.username; }
+  get profileUrl() { return this.args.item.profile?.url || `/u/${encodeURIComponent(this.args.item.user.username)}/summary`; }
   <template>
     <div class="directory-table__row" role="row">
-      <div class="directory-table__cell" role="rowheader" {{companyProfileLinks this.profileUrl}}><DUserInfo @headingLevel={{3}} @user={{@item.user}} class={{if @item.user.name "svdex-company-named"}} /></div>
+      <div class="directory-table__cell" role="rowheader" {{companyProfileLinks this.profileUrl}}>{{#if @item.profile}}<div class="user-info svdex-company-named"><div class="user-detail"><div class="name-line"><span class="name-wrapper"><a class="name" href={{this.profileUrl}}>{{@item.profile.name}}</a></span></div><span class="svdex-company-summary">{{@item.profile.summary}}</span></div></div>{{else}}<DUserInfo @headingLevel={{3}} @user={{@item.user}} class={{if @item.user.name "svdex-company-named"}} />{{/if}}</div>
       {{#each this.facts as |fact|}}
         <div class="directory-table__cell--user-field" role="cell">
           <span class="directory-table__label"><span>{{fact.label}}</span></span>
           <span class="directory-table__value--user-field">
             {{#if fact.interestSide}}{{#if this.siteSettings.svdex_interest_enabled}}
-              <InterestButton @organizationId={{@item.user.id}} @organizationName={{this.organizationName}} @side={{fact.interestSide}} @label={{fact.value}} @title={{fact.interestTitle}} @buttonClass={{if fact.missingInterest "btn-link svdex-directory-interest svdex-directory-interest--unknown" "btn-link svdex-directory-interest"}} @onChange={{@refreshInterest}} />
+              <InterestButton @interestEndpoint={{@item.interestEndpoint}} @organizationId={{or @item.profile.id @item.user.id}} @organizationName={{this.organizationName}} @side={{fact.interestSide}} @label={{fact.value}} @title={{fact.interestTitle}} @buttonClass={{if fact.missingInterest "btn-link svdex-directory-interest svdex-directory-interest--unknown" "btn-link svdex-directory-interest"}} @onChange={{@refreshInterest}} />
               {{else}}{{fact.value}}{{/if}}
             {{else if fact.people}}<OrganizationReferences @entries={{this.company.key_people}} @showRoles={{false}} @limit={{2}} @profileUrl={{this.profileUrl}} />
             {{else if fact.url}}<a href={{fact.url}}>{{fact.value}}</a>{{else}}{{fact.value}}{{/if}}

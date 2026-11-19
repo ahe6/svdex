@@ -18,18 +18,20 @@ module DiscourseSvdex
       def self.setup!
         ensure_local!
         connection = ActiveRecord::Base.connection
-        return if connection.data_source_exists?(CompanyProfileRecord.table_name)
-        connection.create_table(CompanyProfileRecord.table_name) do |t|
-          t.string :slug, null: false
-          t.string :name, null: false
-          t.text :summary
-          t.boolean :listed, default: false, null: false
-          t.bigint :official_account_id
-          t.jsonb :facts, default: {}, null: false
-          t.timestamps null: false
+        unless connection.data_source_exists?(CompanyProfileRecord.table_name)
+          connection.create_table(CompanyProfileRecord.table_name) do |t|
+            t.string :slug, null: false
+            t.string :name, null: false
+            t.text :summary
+            t.boolean :listed, default: false, null: false
+            t.bigint :official_account_id
+            t.jsonb :facts, default: {}, null: false
+            t.timestamps null: false
+          end
+          connection.add_index(CompanyProfileRecord.table_name, :slug, unique: true)
+          connection.add_foreign_key(CompanyProfileRecord.table_name, :users, column: :official_account_id, on_delete: :nullify)
         end
-        connection.add_index(CompanyProfileRecord.table_name, :slug, unique: true)
-        connection.add_foreign_key(CompanyProfileRecord.table_name, :users, column: :official_account_id, on_delete: :nullify)
+        CompanyRelationships.setup!
         CompanyProfileRecord.reset_column_information
       end
     end
@@ -38,16 +40,31 @@ module DiscourseSvdex
       requires_plugin PLUGIN_NAME
       before_action do
         CompanyProfiles.ensure_local!
+        response.headers["Cache-Control"] = "private, no-store" if guardian.is_staff?
         raise Discourse::NotFound unless ActiveRecord::Base.connection.data_source_exists?(CompanyProfileRecord.table_name)
       end
-      before_action :ensure_staff, only: :update
-      skip_before_action :check_xhr, only: :page
+      before_action :ensure_staff, only: %i[update discovery update_discovery]
+      skip_before_action :check_xhr, only: %i[page directory]
       def page
         profile!
         render "default/empty"
       end
       def show
         render_json_dump(payload(profile!))
+      end
+      def index
+        render_json_dump(CompanyProfileDirectory.new(guardian, params).payload)
+      end
+      def directory
+        render "default/empty"
+      end
+      def discovery
+        render_json_dump(CompanyRelationships.discovery_payload(profile!))
+      end
+      def update_discovery
+        record = profile!
+        CompanyRelationships.record_discovery!(record, current_user, params.require(:discovery).permit(:provenance, :status, :contributor, :listed_at, :reason).to_h)
+        render_json_dump(CompanyRelationships.discovery_payload(record))
       end
       def update
         record = profile!
@@ -72,13 +89,17 @@ module DiscourseSvdex
         end
         render_json_dump(payload(record))
       end
-      private
       def profile!
         record = CompanyProfileRecord.find_by!(slug: params[:slug])
         raise Discourse::NotFound unless record.listed || guardian.is_staff?
         record
       end
       def payload(record)
+        CompanyProfiles.payload(record, guardian)
+      end
+    end
+    module CompanyProfiles
+      def self.payload(record, guardian)
         account = record.official_account
         visible_account = account && account.active? && !account.staged? && guardian.public_can_see_profiles? && guardian.can_see_profile?(account)
         tag = CompanyDirectory.tag_options("Companies", guardian).find { |item| item[:id] == record.facts["company_tag_id"] }
@@ -90,15 +111,13 @@ module DiscourseSvdex
         summary = ->(topic) { { id: topic.id, title: topic.title, fancyTitle: topic.fancy_title, url: topic.url, created_at: topic.created_at, like_count: topic.like_count } }
         company = record.facts.except("sector_tag_id", "company_tag_id").symbolize_keys.merge(kind: "companies", entity_type: "company", sector: sector, key_people: [], related_entities: [],
           open_offerings: offerings.where(closed: false, archived: false).count, offerings_url: base, open_offerings_url: base && "#{base}?svdex_active=1")
-        result = { profile: record.slice(:slug, :name, :summary), company: company,
+        company[:interest_totals] = CompanyRelationships.totals([record.id], guardian)[record.id] if InterestIndication.totals_visible?(guardian)
+        result = { profile: record.slice(:id, :slug, :name, :summary).merge(url: "/company/#{record.slug}"), company: company,
+          discovery: CompanyRelationships.credit(record, guardian), interest_endpoint: "/company-profile-interests/#{record.id}",
           offerings: offerings.order(created_at: :desc).limit(6).map(&summary), updates: updates.order(created_at: :desc).limit(6).map(&summary),
           updates_url: tag && updates_category && guardian.can_see?(updates_category) ? "/tags#{updates_category.url}/#{tag[:slug]}/#{tag[:id]}" : nil }
         if visible_account
           result[:account] = { id: account.id, username: account.username, name: account.name, activity_url: "/u/#{account.username_lower}/activity" }
-          if FinancialSubmissions.visible_organization?(account, guardian)
-            result[:interest_account] = result[:account]
-            result[:company][:interest_totals] = InterestIndication.totals([account.id], guardian)[account.id] if InterestIndication.totals_visible?(guardian)
-          end
         end
         result[:editor] = { facts: record.facts, official_username: account&.username } if guardian.is_staff?
         result
