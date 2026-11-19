@@ -6,6 +6,20 @@ upstream_ref=1309ec425ab697996a33b931e309df95c1fbd981
 config=miscdex-forum
 command_name="${1:-status}"
 
+copy_theme_sources() {
+  for component in sidebar interface; do
+    docker exec "$config" rm -rf "/tmp/miscdex-$component"
+    docker cp "$repo_dir/frontend/discourse-$component" "$config:/tmp/miscdex-$component"
+  done
+  docker cp "$repo_dir/deploy/discourse/install-sidebar.rb" "$config:/tmp/miscdex-install-sidebar.rb"
+  docker cp "$repo_dir/deploy/discourse/install-interface.rb" "$config:/tmp/svdex-install-interface.rb"
+}
+
+case "$command_name" in
+  status|logs|start) ;;
+  *) node "$repo_dir/scripts/dev-ui.js" --assert-stopped ;;
+esac
+
 case "$command_name" in
   setup)
     docker info >/dev/null
@@ -117,17 +131,9 @@ PYTHON
     "$0" theme
     ;;
   theme)
-    docker exec "$config" rm -rf /tmp/miscdex-sidebar
-    docker cp "$repo_dir/frontend/discourse-sidebar" "$config:/tmp/miscdex-sidebar"
-    docker cp "$repo_dir/deploy/discourse/install-sidebar.rb" "$config:/tmp/miscdex-install-sidebar.rb"
-    docker exec -u discourse "$config" bash -lc \
-      'cd /var/www/discourse && bundle exec rails runner /tmp/miscdex-install-sidebar.rb'
-    docker exec "$config" rm -rf /tmp/miscdex-interface
-    docker exec "$config" mkdir -p /tmp/miscdex-interface
-    docker cp "$repo_dir/frontend/discourse-interface/." "$config:/tmp/miscdex-interface/"
-    docker cp "$repo_dir/deploy/discourse/install-interface.rb" "$config:/tmp/svdex-install-interface.rb"
+    copy_theme_sources
     exec docker exec -u discourse "$config" bash -lc \
-      'cd /var/www/discourse && bundle exec rails runner /tmp/svdex-install-interface.rb'
+      'cd /var/www/discourse && bundle exec rails runner '\''load "/tmp/miscdex-install-sidebar.rb"; load "/tmp/svdex-install-interface.rb"'\'''
     ;;
   community)
     docker cp "$repo_dir/deploy/discourse/consolidate-community-categories.rb" "$config:/tmp/svdex-consolidate-categories.rb"
@@ -197,13 +203,13 @@ PYTHON
     ;;
   appearance)
     node "$repo_dir/scripts/build-styles.js"
-    "$0" theme
+    copy_theme_sources
     docker exec "$config" mkdir -p /tmp/miscdex-appearance
     docker cp "$repo_dir/frontend/discourse-appearance/." "$config:/tmp/miscdex-appearance/"
     docker cp "$repo_dir/assets/brand/svdex-wordmark.svg" "$config:/tmp/miscdex-appearance/wordmark.svg"
     docker cp "$repo_dir/deploy/discourse/install-appearance.rb" "$config:/tmp/miscdex-install-appearance.rb"
     exec docker exec -u discourse "$config" bash -lc \
-      'cd /var/www/discourse && bundle exec rails runner /tmp/miscdex-install-appearance.rb'
+      'cd /var/www/discourse && bundle exec rails runner '\''load "/tmp/miscdex-install-sidebar.rb"; load "/tmp/svdex-install-interface.rb"; load "/tmp/miscdex-install-appearance.rb"'\'''
     ;;
   listings)
     "$repo_dir/deploy/discourse/install-listings-local.sh"

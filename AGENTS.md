@@ -13,3 +13,9 @@ behavior. This visual preference does not authorize deploying the local work.
 Develop and review SVDEX changes locally by default. Batch production releases
 periodically rather than deploying every UI tweak. Local fixture accounts and
 invented financial figures must never be imported into production automatically.
+
+For CSS, templates and theme JavaScript, use `npm run dev` for local save-to-preview
+updates. Do not rebuild the app, resync the plugin or run the full native/browser
+suite between ordinary visual tweaks. Review the affected screens while iterating,
+then run relevant checks after a batch. Stop the watcher with `npm run dev:stop`
+before native checks or other theme import commands. Full PR/release checks remain.

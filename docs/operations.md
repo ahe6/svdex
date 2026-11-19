@@ -22,6 +22,36 @@ configuration commands are local-only, not production release operations.
 
 ## Updating code
 
+For the normal UI loop, start `npm run dev` after the local site is running. The
+watcher keeps one guarded Rails importer warm, checks theme source hashes every
+500ms, coalesces updates, rebuilds generated styles when needed, and requests the
+existing native live-development refresh. It also handles added/removed theme
+modules. It has no remote target, API key, extra listener or dependency. Only the
+fixed `miscdex-forum` container with actual `localhost:4080` settings is accepted.
+
+The first startup takes a backend boot; subsequent saves avoid that startup and
+import only the affected component(s). No tests, fixture/configuration resets,
+plugin migration, app rebuild or deployment run on save. If compilation fails,
+correct the source and save again; errors are printed and the watcher stays alive.
+The worker temporarily sets native local polling intervals to one second and
+restores their previous values on graceful stop. Reload an already-open preview
+once after starting the watcher so it receives those settings. The browser may
+delay messages while its tab is inactive; bring it to the foreground
+before judging update latency. This is native theme compilation plus page refresh,
+not in-memory component replacement.
+
+Keep `npm run dev` running in a terminal. Ctrl-C or `npm run dev:stop` stops its
+worker gracefully; `npm run dev:status` reports ownership. The private process lock
+lives under `.data/ui-dev/`. A second watcher/import from the same command refuses
+an active owner. Stop it before native theme/flag tests or full configuration
+imports, and restart after plugin updates. A dead owner's lock is recovered on
+startup; inspect an incomplete lock before removing it. One checkout per Docker
+host remains required.
+
+`npm run ui:sync` uses the same content-only importer once. Full manual commands
+below retain their configuration/branding behavior but group their theme imports
+into a single Rails startup.
+
 | Change | Local command or procedure |
 | --- | --- |
 | Interface/Sidebar | `scripts/discourse-local.sh theme` |
