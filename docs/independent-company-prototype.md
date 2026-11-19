@@ -146,3 +146,27 @@ companies, public-interest, my-interest, discoveries, native-workflows, member-f
 interface-theme, and marketplace-flows). Desktop/mobile browser review verified no page overflow at
 375px; the test indication was withdrawn after exercising My Bids. The full 35-group
 release suite was not rerun for this local-only extension.
+
+
+### Directory design parity and interest entry point
+
+Independent identities retain the original native `user-info small`, 48px image,
+name-line and two-line summary structure. Logos are native Upload records with
+company-owned UploadReferences, independent of the optional participation account;
+missing logos use Discourse's standard fallback. Local setup copies the existing
+logos and public key-person/related-entity associations once, without overwriting
+later company edits. The directory uses the same native global interest notice.
+
+Companies and Funds have a secondary Indicate interest action next to Add company/
+Add fund. Native SelectKit searches the corresponding authorized directory, then
+Buy/Sell selection opens the existing indication modal. Amount shortcuts remain.
+On mobile the action shares the existing count row to preserve the heading/search/
+filter/plus row. This change does not submit an indication until the existing
+confirmation and save step is completed.
+
+The design restoration passed the 54 source/package checks and focused native
+independent-company/interface-theme checks. Native upload references and public
+logo payloads are covered. Browser review compared the original row markup, verified
+both logos loaded at 48px, exercised searchable Company/Sell and Fund/Buy selection,
+and checked the toolbar at 320px and 375px without document overflow. No new
+financial indication was submitted during this visual/entry-point check.

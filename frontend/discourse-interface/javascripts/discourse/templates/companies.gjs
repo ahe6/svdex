@@ -7,6 +7,7 @@ import Component from "@glimmer/component";
 import { Input } from "@ember/component";
 import { hash } from "@ember/helper";
 import { on } from "@ember/modifier";
+import DirectoryInterestAction from "../components/svdex-directory-interest-action.gjs";
 import DirectoryTable from "../components/svdex-companies-table.gjs";
 import PluginOutlet from "discourse/components/plugin-outlet";
 import bodyClass from "discourse/helpers/body-class";
@@ -95,6 +96,7 @@ export default <template>
                 @outletArgs={{lazyHash model=@controller.model}}
               />
             </div>
+            <DirectoryInterestAction @controller={{@controller}} />
             <CompanyApplicationLink @kind={{if @controller.isFund "funds" "companies"}} />
             </div>
           </div>

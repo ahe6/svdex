@@ -5,12 +5,18 @@ module DiscourseSvdex
     class CompanyProfileRecord < ActiveRecord::Base
       self.table_name = "svdex_company_profile_records"
       belongs_to :official_account, class_name: "User", optional: true
+      belongs_to :logo_upload, class_name: "Upload", optional: true
+      has_many :upload_references, as: :target, dependent: :destroy
+      after_save do
+        UploadReference.ensure_exist!(upload_ids: [logo_upload_id], target: self) if saved_change_to_logo_upload_id?
+      end
       validates :name, presence: true, length: { maximum: 120 }
       validates :summary, length: { maximum: 180 }
       validates :slug, presence: true, uniqueness: true, format: { with: /\A[a-z0-9]+(?:-[a-z0-9]+)*\z/ }
     end
 
     module CompanyProfiles
+      REFERENCE_FACTS = %w[key_people related_entities].freeze
       FACTS = %w[total_funding_usd last_valuation_usd sector_tag_id company_tag_id stage headquarters_country].freeze
       def self.ensure_local!
         raise Discourse::NotFound unless GlobalSetting.hostname == "localhost" && SiteSetting.port.to_s == "4080"
@@ -30,6 +36,10 @@ module DiscourseSvdex
           end
           connection.add_index(CompanyProfileRecord.table_name, :slug, unique: true)
           connection.add_foreign_key(CompanyProfileRecord.table_name, :users, column: :official_account_id, on_delete: :nullify)
+        end
+        unless connection.column_exists?(CompanyProfileRecord.table_name, :logo_upload_id)
+          connection.add_column CompanyProfileRecord.table_name, :logo_upload_id, :bigint
+          connection.add_foreign_key CompanyProfileRecord.table_name, :uploads, column: :logo_upload_id, on_delete: :nullify
         end
         CompanyRelationships.setup!
         CompanyProfileRecord.reset_column_information
@@ -109,10 +119,10 @@ module DiscourseSvdex
         updates = tag && updates_category && guardian.can_see?(updates_category) ? Topic.visible.secured(guardian).listable_topics.where(category_id: updates_category.id, archetype: Archetype.default).where.not(id: updates_category.topic_id).joins(:tags).where(tags: { id: tag[:id] }) : Topic.none
         base = tag ? "/tags#{Category.find(SiteSetting.svdex_listings_category_id).url}/#{tag[:slug]}/#{tag[:id]}" : nil
         summary = ->(topic) { { id: topic.id, title: topic.title, fancyTitle: topic.fancy_title, url: topic.url, created_at: topic.created_at, like_count: topic.like_count } }
-        company = record.facts.except("sector_tag_id", "company_tag_id").symbolize_keys.merge(kind: "companies", entity_type: "company", sector: sector, key_people: [], related_entities: [],
+        company = record.facts.except("sector_tag_id", "company_tag_id", *REFERENCE_FACTS).symbolize_keys.merge(kind: "companies", entity_type: "company", sector: sector, key_people: CompanyDirectory.public_references(record.facts["key_people"], guardian), related_entities: CompanyDirectory.public_references(record.facts["related_entities"], guardian),
           open_offerings: offerings.where(closed: false, archived: false).count, offerings_url: base, open_offerings_url: base && "#{base}?svdex_active=1")
         company[:interest_totals] = CompanyRelationships.totals([record.id], guardian)[record.id] if InterestIndication.totals_visible?(guardian)
-        result = { profile: record.slice(:id, :slug, :name, :summary).merge(url: "/company/#{record.slug}"), company: company,
+        result = { profile: record.slice(:id, :slug, :name, :summary).merge(url: "/company/#{record.slug}", logo_template: record.logo_upload&.url || User.default_template(record.slug)), company: company,
           discovery: CompanyRelationships.credit(record, guardian), interest_endpoint: "/company-profile-interests/#{record.id}",
           offerings: offerings.order(created_at: :desc).limit(6).map(&summary), updates: updates.order(created_at: :desc).limit(6).map(&summary),
           updates_url: tag && updates_category && guardian.can_see?(updates_category) ? "/tags#{updates_category.url}/#{tag[:slug]}/#{tag[:id]}" : nil }

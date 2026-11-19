@@ -29,9 +29,13 @@ User.transaction do
   path = "/company-profiles/#{record.slug}.json"
   guest.get path
   profile_assert!(guest.response.status == 404, "unlisted company profiles remain unavailable to guests")
+  source_logo = User.find_by!(username: "svdex-company").uploaded_avatar_id || Upload.first!.id
+  record.update!(logo_upload_id: source_logo)
+  profile_assert!(UploadReference.exists?(target: record, upload_id: source_logo), "company logos retain their own native upload reference without an official account")
   record.update!(listed: true)
   guest.get path
   profile_assert!(guest.response.status == 200 && guest.response.parsed_body.dig("company", "total_funding_usd") == 2_000_000 && !guest.response.parsed_body.key?("account") && !guest.response.parsed_body.key?("editor") && (guest.response.parsed_body.fetch("company").keys & %w[sector_tag_id company_tag_id]).empty?, "published independent facts are public without a fabricated user")
+  profile_assert!(guest.response.parsed_body.dig("profile", "logo_template") == Upload.find(source_logo).url, "independent profile payload preserves the original uploaded company logo")
   guest.put path, params: { profile: { name: "Changed" } }
   profile_assert!(guest.response.status == 403 && record.reload.name == "Harbor Research", "guests cannot edit independent facts")
   signed_in, member_headers = profile_session(member, password)

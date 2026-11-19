@@ -14,7 +14,7 @@ test('private access notice is restricted to Home and authorized offering catego
 });
 
 test('organization directories use their interest tip, without replacing notices on profiles or topic pages', () => {
-  for (const path of ['/companies', '/companies/', '/companies?kind=funds&order=svdex_aum']) {
+  for (const path of ['/companies', '/companies/', '/companies?kind=funds&order=svdex_aum', '/company-directory', '/company-directory/?name=svdex']) {
     assert.equal(organizationDirectoryPage(path), true);
     assert.equal(privateAccessNoticePage(path, categories, settings), false);
   }

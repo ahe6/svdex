@@ -71,7 +71,7 @@ export default function registerPrivateAccess(api, { settings, router, site }) {
   const privateAccessNotice = new PrivateAccessNoticeState();
   const directoryInterestNotice = new PrivateAccessNoticeState();
   api.addGlobalNotice(
-    '<span class="svdex-directory-interest-notice"><span class="svdex-notice-desktop">To indicate interest, click an amount or dash under <strong>Buy interest</strong> or <strong>Sell interest</strong>.</span><span class="svdex-notice-mobile">Tap <strong>Buy interest</strong> or <strong>Sell interest</strong> to indicate interest.</span></span>',
+    '<span class="svdex-directory-interest-notice"><span class="svdex-notice-desktop">Use <strong>Indicate interest</strong>, or click an amount under <strong>Buy interest</strong> or <strong>Sell interest</strong>.</span><span class="svdex-notice-mobile">Use <strong>Indicate interest</strong>, or tap a buy or sell amount.</span></span>',
     "svdex-directory-interest",
     {
       dismissable: true,

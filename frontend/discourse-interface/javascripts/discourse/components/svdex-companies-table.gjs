@@ -1,3 +1,5 @@
+import { trustHTML } from "@ember/template";
+import { avatarImg } from "discourse/lib/avatar-utils";
 import InterestButton from "./svdex-interest.gjs";
 import { modifier } from "ember-modifier";
 import { service } from "@ember/service";
@@ -17,6 +19,10 @@ const companyProfileLinks = modifier((element, [url]) => {
     link.href = url;
   });
 });
+// Use the native avatar renderer without inventing an account identity.
+function companyLogo(profile) {
+  return trustHTML(avatarImg({ size: "large", avatarTemplate: profile.logo_template, alt: "", title: profile.name }));
+}
 class CompanyRow extends Component {
   @service siteSettings;
   get company() { return this.args.item.company || this.args.item.user?.svdex_company || {}; }
@@ -29,7 +35,7 @@ class CompanyRow extends Component {
   get profileUrl() { return this.args.item.profile?.url || `/u/${encodeURIComponent(this.args.item.user.username)}/summary`; }
   <template>
     <div class="directory-table__row" role="row">
-      <div class="directory-table__cell" role="rowheader" {{companyProfileLinks this.profileUrl}}>{{#if @item.profile}}<div class="user-info svdex-company-named"><div class="user-detail"><div class="name-line"><span class="name-wrapper"><a class="name" href={{this.profileUrl}}>{{@item.profile.name}}</a></span></div><span class="svdex-company-summary">{{@item.profile.summary}}</span></div></div>{{else}}<DUserInfo @headingLevel={{3}} @user={{@item.user}} class={{if @item.user.name "svdex-company-named"}} />{{/if}}</div>
+      <div class="directory-table__cell" role="rowheader" {{companyProfileLinks this.profileUrl}}>{{#if @item.profile}}<div class="user-info small svdex-company-named"><div class="user-image"><div class="user-image-inner"><a aria-hidden="true" href={{this.profileUrl}}>{{companyLogo @item.profile}}</a></div></div><div class="user-detail"><div class="name-line"><span class="name-wrapper"><a href={{this.profileUrl}} aria-level="3" role="heading"><span class="name">{{@item.profile.name}}</span></a></span><span class="svdex-company-summary" title={{@item.profile.summary}}>{{@item.profile.summary}}</span></div><div class="title"></div></div></div>{{else}}<DUserInfo @headingLevel={{3}} @user={{@item.user}} class={{if @item.user.name "svdex-company-named"}} />{{/if}}</div>
       {{#each this.facts as |fact|}}
         <div class="directory-table__cell--user-field" role="cell">
           <span class="directory-table__label"><span>{{fact.label}}</span></span>

@@ -4,6 +4,7 @@ import { ajax } from "discourse/lib/ajax";
 import CompaniesController from "./companies.gjs";
 export default class IndependentCompaniesController extends CompaniesController {
   request = 0;
+  get independentProfiles() { return true; }
   async loadUsers(params = null) {
     const query = { ...(params || this.params || {}), kind: "companies" };
     this.setProperties({ params: query, nameInput: query.name || "", order: query.order || "svdex_total_funding", isLoading: true });

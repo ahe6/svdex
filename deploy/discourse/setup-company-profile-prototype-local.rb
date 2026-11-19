@@ -21,3 +21,21 @@ if northstar
   end
 end
 puts "Independent directory: http://localhost:4080/company-directory"
+
+# Retain native uploads independently of any participation account or its avatar.
+{"svdex" => account, "northstar-instruments" => northstar}.each do |slug, source|
+  next unless source&.uploaded_avatar_id
+  profile = DiscourseSvdex::Prototypes::CompanyProfileRecord.find_by(slug: slug)
+  profile.update!(logo_upload_id: source.uploaded_avatar_id) if profile && profile.logo_upload_id.nil?
+end
+
+# Preserve the existing public associations once, without reading them from the
+# organization account at render time or overwriting later independent edits.
+{"svdex" => account, "northstar-instruments" => northstar}.each do |slug, source|
+  profile = DiscourseSvdex::Prototypes::CompanyProfileRecord.find_by(slug: slug)
+  next unless source && profile
+  additions = DiscourseSvdex::Prototypes::CompanyProfiles::REFERENCE_FACTS.reject { |key| profile.facts.key?(key) }.to_h do |key|
+    [key, source.custom_fields[DiscourseSvdex::CompanyDirectory::FIELDS.fetch(key)]]
+  end
+  profile.update!(facts: profile.facts.merge(additions)) if additions.any?
+end
