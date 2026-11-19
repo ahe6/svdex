@@ -16,8 +16,9 @@ def interest_session(user = nil, password = nil)
   raise "Login failed" unless app.response.status == 200
   [app, headers]
 end
-settings_before = [SiteSetting.svdex_interest_enabled, SiteSetting.svdex_interest_public_totals, SiteSetting.svdex_interest_staff_preview]
+settings_before = [SiteSetting.svdex_interest_enabled, SiteSetting.svdex_interest_public_totals, SiteSetting.svdex_interest_staff_preview, SiteSetting.cache_control_bfcache_compatibility]
 begin
+  SiteSetting.cache_control_bfcache_compatibility = true
   SiteSetting.svdex_interest_enabled = true
   SiteSetting.svdex_interest_public_totals = true
   SiteSetting.svdex_interest_staff_preview = true
@@ -118,6 +119,7 @@ begin
     member.put path, params: body, headers: headers
     assert_public_interest!(member.response.status == 404, "legacy interest cannot be refreshed against a hidden offering")
     member.get "/listings/interests/#{company.id}.json"
+    assert_public_interest!(member.response.headers["Cache-Control"].include?("no-store"), "private financial responses prevent storage even with native browser-back caching enabled")
     assert_public_interest!(member.response.parsed_body.fetch("interest").find { |r| r["side"] == "buy" }["topic_id"].nil?, "hidden legacy offering identities are redacted from owner records")
     second_topic.first_post.update!(hidden: false)
     second_topic.update!(deleted_at: Time.current)
@@ -140,6 +142,6 @@ begin
     raise ActiveRecord::Rollback
   end
 ensure
-  SiteSetting.svdex_interest_enabled, SiteSetting.svdex_interest_public_totals, SiteSetting.svdex_interest_staff_preview = settings_before
+  SiteSetting.svdex_interest_enabled, SiteSetting.svdex_interest_public_totals, SiteSetting.svdex_interest_staff_preview, SiteSetting.cache_control_bfcache_compatibility = settings_before
 end
 puts "Public aggregate checks complete; all test records rolled back."

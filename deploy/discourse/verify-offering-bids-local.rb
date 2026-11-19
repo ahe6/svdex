@@ -18,8 +18,9 @@ def bid_session(user = nil, password = nil)
   raise "Login failed" unless app.response.status == 200
   [app, headers]
 end
-before = [SiteSetting.svdex_bids_enabled, SiteSetting.svdex_bids_staff_preview]
+before = [SiteSetting.svdex_bids_enabled, SiteSetting.svdex_bids_staff_preview, SiteSetting.cache_control_bfcache_compatibility]
 begin
+  SiteSetting.cache_control_bfcache_compatibility = true
   SiteSetting.svdex_bids_enabled = true
   SiteSetting.svdex_bids_staff_preview = true
   User.transaction do
@@ -81,6 +82,7 @@ begin
     check_bid!(row.reload.active? && row.withdrawn_at.nil?, "resubmission explicitly reconfirms a withdrawn bid")
     row.update!(expires_at: 1.day.ago)
     member.get path, headers: headers
+    check_bid!(member.response.headers["Cache-Control"].include?("no-store"), "private financial responses prevent storage even with native browser-back caching enabled")
     check_bid!(member.response.parsed_body.dig("bid", "active") == false, "expired bids no longer appear current")
     topic.first_post.update!(hidden: true)
     member.put path, params: body, headers: headers
@@ -104,6 +106,6 @@ begin
     raise ActiveRecord::Rollback
   end
 ensure
-  SiteSetting.svdex_bids_enabled, SiteSetting.svdex_bids_staff_preview = before
+  SiteSetting.svdex_bids_enabled, SiteSetting.svdex_bids_staff_preview, SiteSetting.cache_control_bfcache_compatibility = before
 end
 puts "Offering bid checks complete; all test records rolled back."

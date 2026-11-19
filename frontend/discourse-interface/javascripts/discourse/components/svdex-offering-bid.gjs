@@ -7,7 +7,7 @@ import { ajax } from "discourse/lib/ajax";
 import { popupAjaxError } from "discourse/lib/ajax-error";
 import DButton from "discourse/ui-kit/d-button";
 import DModal from "discourse/ui-kit/d-modal";
-import { formatFinancialAmount } from "../lib/svdex-financial-format";
+import { formatUsdAmount, usdCentsInput } from "../lib/svdex-financial-format";
 
 export default class OfferingBidModal extends Component {
   @tracked bid;
@@ -23,7 +23,7 @@ export default class OfferingBidModal extends Component {
   get canWithdraw() { return this.bid && !this.bid.withdrawn_at; }
   get saveDisabled() { return this.loading || !this.loaded || this.args.model.closed || !this.confirmation || !(Number(this.amount) > 0) || !this.terms.trim(); }
   get state() { return this.bid?.withdrawn_at ? "Withdrawn" : this.bid?.active ? "Current" : "Expired"; }
-  get rows() { return this.records.map(row => ({...row, amount: formatFinancialAmount(`$${row.amount_cents / 100}`), state: row.withdrawn_at ? "Withdrawn" : row.active ? "Current" : "Expired" })); }
+  get rows() { return this.records.map(row => ({...row, amount: formatUsdAmount(row.amount_cents, { cents: true }), state: row.withdrawn_at ? "Withdrawn" : row.active ? "Current" : "Expired" })); }
   @action async load() {
     this.loading = true;
     this.loaded = false;
@@ -32,7 +32,7 @@ export default class OfferingBidModal extends Component {
       const data = await ajax(this.endpoint);
       this.bid = data.bid;
       this.records = data.records;
-      this.amount = this.bid ? String(this.bid.amount_cents / 100) : "";
+      this.amount = usdCentsInput(this.bid?.amount_cents);
       this.terms = this.bid?.proposed_terms || "";
       this.confirmation = false;
       this.loaded = true;

@@ -3,6 +3,7 @@ module DiscourseSvdex
   class OfferingBidsController < ::ApplicationController
     requires_plugin PLUGIN_NAME
     requires_login
+    before_action { response.headers["Cache-Control"] = "private, no-store" }
     before_action { raise Discourse::NotFound unless SiteSetting.svdex_bids_enabled || action_name == "destroy" }
 
     def index

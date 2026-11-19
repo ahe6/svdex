@@ -34,7 +34,7 @@ the button does not automatically publish a profile or grant account ownership.
 
 Home Latest/Top includes viewer-visible offerings, approved Pre-sales and Updates.
 Ordinary products, discussions, Feedback and community Events are outside that allowlist.
-Its native Sector dropdown narrows the existing feed; it does not silently
+Its native sector dropdown, labeled Filter, narrows the existing feed; it does not silently
 broaden into the global tag feed. Latest/Top retains the tag selection. Standalone
 tag pages remain broader and respect native topic security.
 
@@ -45,7 +45,7 @@ side is a general company/sector/topic navigation directory. These are ordinary
 native secured category/tag links, not separate content stores.
 
 Discussions keeps independent Latest/Top, Overview and Chat. Category navigation
-lives in Overview; the toolbar exposes Sector without a category selector. Chat opens Lounge while
+lives in Overview; the toolbar exposes Filter (sector selection) without a category selector. Chat opens Lounge while
 retaining Discussions navigation and the visible native composer. The native
 channel directory remains available elsewhere when needed. Events has its own
 sidebar destination, native topic view and Calendar alternative. Offerings and Events
@@ -146,7 +146,7 @@ an offering defaults to the public child and requires native review. Replies kee
 ordinary native behavior. Approved figures survive queued-post review and edits.
 
 Desktop Offerings keeps native Latest/Top tabs at the left, with the result count,
-Search offering, its permission-aware matching count, Filter and New offering actions at the right. There is no
+Search offering, its permission-aware matching count, Filter and Add offering actions at the right. There is no
 separate offerings-category selector.
 
 Home and Discussions expose a native sector dropdown labeled Filter
@@ -292,7 +292,7 @@ It uses the existing metadata create/edit/draft/review/serialization pipeline an
 requires no separate table. Existing untyped offerings retain their current display;
 the composer infers a suitable starting selection from their title/terms.
 
-New offering's category chooser includes only the viewer-authorized Public and
+The Add offering category chooser includes only the viewer-authorized Public and
 Private offerings children. A new composer opened from Home or Discussions excludes all three
 offering category IDs and retains the other native authorized categories. Scope
 stays with that composer when its selected category changes. The composer header

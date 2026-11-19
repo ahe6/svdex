@@ -22,7 +22,11 @@ Two custom tables store investor submissions:
 - `svdex_offering_bids`: canonical per investor/offering, with USD amount,
   proposed terms, nonbinding confirmation, expiry and withdrawal.
 
-Migrations and ordinary native backups include both tables. A submission is not
+Two additional tables, `svdex_discoveries` and `svdex_discovery_events`, track
+staff-reviewed attribution and its append-only review history. Four plugin-owned
+tables exist in total; these are separate from native users/topics/custom fields.
+
+Migrations and ordinary native backups include all four tables. A submission is not
 an accepted order or executed investment. Updating replaces the saved record;
 there is no immutable ledger of every earlier edit.
 
@@ -52,8 +56,9 @@ Legacy offering-linked indications retain explicit organization-tag validation.
 Only staff edit company financial facts. Individual indications/bids remain
 self-only or accessible to authorized staff through explicitly gated review.
 Company representatives receive no implicit investor-record access. The owner
-history API always scopes to the signed-in member, including for staff, and
-returns `private, no-store`. It redacts inaccessible source names/links/terms,
+history API always scopes to the signed-in member, including for staff. History,
+individual indication and bid responses explicitly return `private, no-store`,
+independent of native browser-back cache preferences. It redacts inaccessible source names/links/terms,
 while retaining owner-scoped withdrawal after lost access or disabled intake.
 
 Public aggregates require explicit publication consent and exclude expired,

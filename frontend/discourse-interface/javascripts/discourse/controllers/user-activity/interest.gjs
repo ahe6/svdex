@@ -1,3 +1,5 @@
+import { submissionLabel, withdrawalMessage } from "../../lib/svdex-submissions";
+import { formatUsdCents } from "../../lib/svdex-financial-format";
 import Controller from "@ember/controller";
 import { tracked } from "@glimmer/tracking";
 import { service } from "@ember/service";
@@ -24,8 +26,8 @@ export default class InterestController extends Controller {
     return this.records.map(row => ({ ...row,
       title: row.topic?.title || row.organization?.name || (row.kind === "bid" ? "Unavailable offering" : "Unavailable company or fund"),
       url: row.topic?.url || row.organization?.url,
-      label: row.kind === "bid" ? "Bid" : row.side === "sell" ? "Sell interest" : "Buy interest",
-      amount: new Intl.NumberFormat(undefined, { style: "currency", currency: row.currency, minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(row.amount_cents / 100),
+      label: submissionLabel(row),
+      amount: formatUsdCents(row.amount_cents),
       state: row.status.charAt(0).toUpperCase() + row.status.slice(1),
       editLabel: row.status === "current" ? "Edit" : "Resubmit",
       canWithdraw: row.status !== "withdrawn",
@@ -57,7 +59,7 @@ export default class InterestController extends Controller {
     this.modal.show(row.kind === "bid" ? OfferingBidModal : InterestModal, { model });
   }
   @action withdraw(row) {
-    this.dialog.confirm({ message: `Withdraw your ${row.label.toLowerCase()} ${row.kind === "bid" ? "for" : "in"} ${row.kind === "bid" ? row.title : row.organization.name}?`, didConfirm: async () => {
+    this.dialog.confirm({ message: withdrawalMessage(row), didConfirm: async () => {
       try { await ajax(`/listings/my-interest/${row.kind}/${row.id}.json`, { type: "DELETE" }); await this.reload(); }
       catch (error) { popupAjaxError(error); }
     } });
