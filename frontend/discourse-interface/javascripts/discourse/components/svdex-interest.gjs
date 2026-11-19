@@ -1,3 +1,4 @@
+import { usdCentsInput } from "../lib/svdex-financial-format";
 import { getOwner } from "@ember/owner";
 import Component from "@glimmer/component";
 import { tracked } from "@glimmer/tracking";
@@ -50,7 +51,7 @@ export class InterestModal extends Component {
   }
   @action selectSide() {
     const row = this.own.find(record => record.side === this.side);
-    this.amount = row?.amount_cents ? String(row.amount_cents / 100) : "";
+    this.amount = usdCentsInput(row?.amount_cents);
     this.market = this.side === "sell" ? "secondary" : row?.market || "either";
     this.confirmation = false;
   }

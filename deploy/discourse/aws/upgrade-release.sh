@@ -15,8 +15,9 @@ fi
 tar -xzf "$release_dir/release.tar.gz" -C "$release_dir"
 # The reduced plugin and native interface must be released together.
 test -f "$release_dir/svdex-interface.tar.gz"
-# No site-initialization script runs during upgrades. In particular, no content,
-# taxonomy, account, badge or signup settings are created/reset here.
+# Never run the fresh installer or import local fixtures. The reviewed upgrade
+# configuration helpers below do reapply owned catalog/navigation/moderation
+# settings; this is not a promise that every administrative UI setting survives.
 previous_image=$(docker inspect --format="{{.Image}}" app)
 # The host only needs Docker/Python/AWS CLI. Use Ruby from the pinned app image,
 # without starting services or attaching the database/upload volumes.

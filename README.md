@@ -68,6 +68,8 @@ and [operations](docs/operations.md). Local commands never deploy the live site.
 
 Start with [contributing](CONTRIBUTING.md) for a first change, or the
 [documentation index](docs/README.md) for product, engineering and deployment.
+The [engineering findings log](docs/engineering-review-2026-11-19.md) tracks
+confirmed problems, completed fixes and the remaining review work.
 [Report sensitive security problems privately](SECURITY.md).
 
 GitHub runs lightweight source checks plus a fresh native Discourse build for

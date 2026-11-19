@@ -5,6 +5,7 @@
 - [Project setup](../README.md) and [contributing](../CONTRIBUTING.md)
 - [Your first contribution: setup, edit, test and troubleshoot](first-contribution.md)
 - [Current product behavior](product.md)
+- [Engineering review and active findings — November 19](engineering-review-2026-11-19.md)
 - [Source boundaries, checks and upstream upgrades](discourse-maintenance.md)
 - [Local and remote development operations](operations.md)
 - [Cloud editing, browser reports and PR previews](cloud-development.md)

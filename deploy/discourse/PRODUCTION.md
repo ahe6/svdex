@@ -68,10 +68,25 @@ Run the appropriate production workflow/smoke checks separately. The prior image
 configuration and theme exports remain available for rollback.
 
 The upgrade runs `configure-upgrade-production.rb` and then
-`configure-marketplace.rb`. These preserve native IDs and permissions, configure
+`configure-marketplace.rb`. These preserve existing account/topic IDs and enforce
+the secured private-offering boundary, but reapply reviewed configuration. They configure
 Public/Private offerings, Updates, People and Pre-sales, and synchronize approved
 visibility labels. Exemption tags remain staff-assigned. They do not import local
 companies/funds, offering fixtures, monetary records or investor memberships.
+
+Some settings are currently owned by release code, not solely by the admin UI:
+Updates/Events permissions, review modes, category names/descriptions/colors,
+People/maintained-group policy, navigation/event defaults, badge presentation and
+the questionnaire URL are reapplied by the configuration helpers. An admin UI
+change in these areas can be overwritten on the next deployment. Review changes
+to these helpers as behavior changes, even if the PR also calls itself a refactor.
+Credentials, existing financial records and ordinary user content are not imported
+from local setup, and financial-intake switches are managed separately.
+
+The ordinary production updater also requires the existing Discourse version to
+match the release pin. Changing `discourse_revision` does not make a routine code
+deployment a supported core upgrade. Rehearse a core/database upgrade separately,
+with backup/restore and extension-contract review, before changing the live pin.
 
 Do not run local setup/fixture scripts on production. Do not run
 `configure-production.rb` or `aws/install-release.sh` against the running site;

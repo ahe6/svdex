@@ -1,4 +1,4 @@
-# SVDEX hosting portability — 13 November 2026
+# SVDEX hosting portability
 
 ## Finding
 
@@ -6,15 +6,17 @@ SVDEX uses an upstream Discourse installation with a custom plugin and native
 themes. It is not a core fork, a separate company database or a theme-only site. Gated nonbinding interest
 and offering bids add two plugin-owned PostgreSQL tables, linked to native users and
 topics. Their backend and migrations must accompany a move that retains those features.
-A move to official hosting is feasible in principle, but retaining every current
+Discovery attribution adds two more tables (`svdex_discoveries` and
+`svdex_discovery_events`), for four custom tables in total. A move to official hosting is feasible in principle, but retaining every current
 feature requires the host to accept our plugin. Moving CSS to a theme does not
 remove that backend requirement.
 
-Official pricing reviewed on this date lists custom/community themes on Pro and
-higher, Events on Business and higher, and unofficial/custom plugins as an
-Enterprise option. Custom plugin acceptance, ongoing support and upgrade handling
-must be confirmed with Discourse before committing to a hosted migration. No
-hosting account, paid plan, contract or provider approval was requested here.
+The plan/pricing assessment was made on November 13 and is historical, not a
+current purchasing recommendation. Confirm current plan features, custom plugin
+acceptance, support and upgrade handling directly with Discourse before choosing
+a host. No managed-host plugin approval has been obtained. The technical boundary
+below reflects the current source; theme export alone cannot preserve server
+validation or private financial records.
 
 ## Feature boundary
 

@@ -40,3 +40,31 @@ export function formatUsdAmount(value, { cents = false } = {}) {
   }
   return formatFinancialAmount(`$${text}`);
 }
+
+// Editable amounts must round-trip exact cents, even near the API's safe limit.
+// Display compaction and floating-point dollar division are unsuitable here.
+export function usdCentsInput(value) {
+  if (typeof value !== "number" || !Number.isSafeInteger(value) || value < 0) return "";
+  const cents = BigInt(value);
+  const fraction = String(cents % 100n).padStart(2, "0").replace(/0+$/, "");
+  return `${cents / 100n}${fraction ? `.${fraction}` : ""}`;
+}
+
+// Keep native locale/currency presentation without rounding a full amount
+// through a floating-point dollar value. BigInt formats the whole dollars;
+// locale-derived decimal/digit parts carry the exact remaining cents.
+export function formatUsdCents(value, locale) {
+  const text = usdCentsInput(value);
+  if (!text) return "—";
+  const [whole, fraction] = text.split(".");
+  const format = new Intl.NumberFormat(locale, { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 2 });
+  const parts = format.formatToParts(BigInt(whole));
+  if (fraction) {
+    const decimal = format.formatToParts(0.1).find(part => part.type === "decimal").value;
+    const digits = new Intl.NumberFormat(locale, { useGrouping: false, minimumIntegerDigits: fraction.length }).format(Number(fraction));
+    let lastInteger = 0;
+    parts.forEach((part, index) => { if (part.type === "integer") lastInteger = index; });
+    parts.splice(lastInteger + 1, 0, { value: decimal }, { value: digits });
+  }
+  return parts.map(part => part.value).join("");
+}
