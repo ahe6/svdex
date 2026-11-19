@@ -39,7 +39,7 @@ class CompanyApplicationLink extends Component {
       this.modal.show(CompanyApplication, { model: { group, kind: this.args.kind } });
     } catch (error) { popupAjaxError(error); }
   }
-  <template><DButton @action={{this.open}} @icon="plus" @translatedLabel={{this.buttonLabel}} @translatedAriaLabel={{this.applicationLabel}} @translatedTitle={{this.applicationLabel}} class="btn-primary svdex-company-application" /></template>
+  <template><DButton @action={{this.open}} @icon="plus" @translatedLabel={{this.buttonLabel}} @translatedAriaLabel={{this.applicationLabel}} @translatedTitle={{this.applicationLabel}} class="btn-default svdex-company-application" /></template>
 }
 
 export default <template>

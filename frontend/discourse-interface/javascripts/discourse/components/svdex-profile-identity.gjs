@@ -1,7 +1,7 @@
 import Component from "@glimmer/component";
 import { trustHTML } from "@ember/template";
 import { avatarImg } from "discourse/lib/avatar-utils";
-function profileLogo(profile) { return trustHTML(avatarImg({ size: "large", avatarTemplate: profile.logo_template, alt: "", title: profile.name })); }
+export function profileLogo(profile) { return trustHTML(avatarImg({ size: "large", avatarTemplate: profile.logo_template, alt: "", title: profile.name })); }
 export default class ProfileIdentity extends Component {
   <template>
     <div class="user-info small svdex-person-named">

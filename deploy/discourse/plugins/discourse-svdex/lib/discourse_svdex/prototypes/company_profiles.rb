@@ -26,7 +26,7 @@ module DiscourseSvdex
       REFERENCE_FACTS = %w[key_people related_entities].freeze
       FACTS = %w[total_funding_usd last_valuation_usd sector_tag_id company_tag_id stage headquarters_country].freeze
       FUND_FACTS = %w[aum_usd strategy_focus vintage_year fund_life fund_domicile entity_type manager_name].freeze
-      PERSON_FACTS = %w[role focus location net_worth net_worth_source net_worth_date net_worth_basis].freeze
+      PERSON_FACTS = %w[topic_tag_id role focus location net_worth net_worth_source net_worth_date net_worth_basis].freeze
       def self.ensure_local!
         raise Discourse::NotFound unless GlobalSetting.hostname == "localhost" && SiteSetting.port.to_s == "4080"
       end
@@ -106,7 +106,7 @@ module DiscourseSvdex
         allowed = record.kind == "people" ? CompanyProfiles::PERSON_FACTS : CompanyProfiles::FACTS + CompanyProfiles::FUND_FACTS
         data = params.require(:profile).permit(:name, :summary, :official_username, facts: allowed).to_h
         record.with_lock do
-          if CompanyCatalog.managed?(record) && (data.key?("name") || data.key?("summary") || data.fetch("facts", {}).keys.any? { |key| CompanyCatalog::FACTS.include?(key) })
+          if record.catalog_key.present? && (record.kind != "companies" ? data.except("official_username").any? : (data.key?("name") || data.key?("summary") || data.fetch("facts", {}).keys.any? { |key| CompanyCatalog::FACTS.include?(key) }))
             raise Discourse::InvalidParameters.new("Submit a correction for reviewed company facts")
           end
           record.name = data["name"] if data.key?("name")
@@ -117,7 +117,9 @@ module DiscourseSvdex
             record.official_account = account
           end
           facts = (data["facts"] || {}).to_h do |key, value|
-            if record.kind == "people"
+            if record.kind == "people" && key == "topic_tag_id"
+              [key, CompanyDirectory.validate!("company_tag_id", value)]
+            elsif record.kind == "people"
               raise Discourse::InvalidParameters.new(key) unless value.nil? || value.is_a?(String) && value.length <= 1000 && !value.match?(/[\u0000-\u0008]/)
               [key, value.to_s.strip.presence]
             else
@@ -130,7 +132,7 @@ module DiscourseSvdex
               raise Discourse::InvalidParameters.new("Net worth needs a public HTTPS source, date and basis")
             end
           end
-          { "sector_tag_id" => "Sectors", "company_tag_id" => "Companies" }.each do |key, group|
+          { "sector_tag_id" => "Sectors", "company_tag_id" => "Companies", "topic_tag_id" => "People" }.each do |key, group|
             if facts[key] && CompanyDirectory.tag_options(group, guardian).none? { |tag| tag[:id] == facts[key] }
               raise Discourse::InvalidParameters.new(key)
             end
@@ -170,7 +172,7 @@ module DiscourseSvdex
         company = record.facts.except("sector_tag_id", "company_tag_id", *REFERENCE_FACTS, "profile_key_people", "profile_related_entities").symbolize_keys.merge(kind: record.kind, entity_type: record.facts["entity_type"].presence || (record.kind == "funds" ? "fund" : "company"), sector: sector, key_people: references(record, "profile_key_people", guardian), related_entities: references(record, "profile_related_entities", guardian),
           open_offerings: offerings.where(closed: false, archived: false).count, offerings_url: base, open_offerings_url: base && "#{base}?svdex_active=1")
         company[:interest_totals] = CompanyRelationships.totals([record.id], guardian)[record.id] if InterestIndication.totals_visible?(guardian)
-        result = { profile: identity(record), company: company,
+        result = { profile: identity(record), topics_url: related_topics_url(record, guardian), company: company,
           discovery: CompanyRelationships.credit(record, guardian), interest_endpoint: "/company-profile-interests/#{record.id}",
           offerings: offerings.order(created_at: :desc).limit(6).map(&summary), updates: updates.order(created_at: :desc).limit(6).map(&summary),
           updates_url: tag && updates_category && guardian.can_see?(updates_category) ? "/tags#{updates_category.url}/#{tag[:slug]}/#{tag[:id]}" : nil }
@@ -181,9 +183,14 @@ module DiscourseSvdex
         result[:editor] = { facts: record.facts, official_username: account&.username, catalog_document: record.catalog_document, catalog_revision: record.catalog_revision } if guardian.is_staff?
         result
       end
+      def self.related_topics_url(record, guardian)
+        group = record.kind == "people" ? "People" : "Companies"
+        key = record.kind == "people" ? "topic_tag_id" : "company_tag_id"
+        CompanyDirectory.tag_options(group, guardian).find { |tag| tag[:id] == record.facts[key] }&.fetch(:url)
+      end
       def self.identity(record)
         record.slice(:id, :slug, :name, :summary, :kind).merge(url: record.profile_url, api_path: record.api_path,
-          logo_template: record.logo_upload&.url || User.default_template(record.slug), catalog_managed: CompanyCatalog.managed?(record))
+          logo_template: record.logo_upload&.url || User.default_template(record.slug), catalog_managed: CompanyCatalog.managed?(record), content_managed: record.catalog_key.present?, content_edit_url: record.catalog_key.present? ? "https://github.com/ahe6/svdex/edit/main/directory/#{record.kind}/#{record.slug}.json" : nil)
       end
       def self.references(record, key, guardian)
         Array(record.facts[key]).filter_map do |entry|
@@ -206,7 +213,7 @@ module DiscourseSvdex
           { id: organization.id, name: organization.name, url: organization.profile_url, role: entry["role"].presence,
             avatar_template: organization.logo_upload&.url || User.default_template(organization.slug) }
         end
-        data = { profile: identity(record), person: record.facts.slice("role", "focus", "location").symbolize_keys.merge(
+        data = { profile: identity(record), topics_url: related_topics_url(record, guardian), person: record.facts.slice("role", "focus", "location").symbolize_keys.merge(
           background: record.summary, organizations: affiliations, net_worth: PeopleDirectory.estimate(record.facts)),
           discovery: CompanyRelationships.credit(record, guardian) }
         account = record.official_account

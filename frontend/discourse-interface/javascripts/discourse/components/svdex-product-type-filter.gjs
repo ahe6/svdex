@@ -13,20 +13,21 @@ export default class ProductTypeFilter extends Component {
   @service router;
   options = [
     { id: "all", name: "All products" },
-    { id: "products", name: "Products only" },
-    { id: "presales", name: "Pre-sales only" },
+    { id: "products", name: "Launched" },
+    { id: "presales", name: "Pre-sales" },
   ];
   get value() { return productFilterValue(this.args.model.category?.id, this.router.currentURL, this.siteSettings); }
   @action change(value) {
     if (!["all", "products", "presales"].includes(value)) return;
-    const id = value === "presales" ? this.siteSettings.svdex_presales_category_id : this.siteSettings.svdex_products_category_id;
+    const id = this.siteSettings.svdex_products_category_id;
     const category = this.site.categories.find(item => Number(item.id) === Number(id));
     if (!category) return;
     const url = new URL(this.router.currentURL, window.location.origin);
     const mode = /\/l\/top(?:\/|$)/.test(url.pathname) ? "top" : "latest";
-    const path = NavItem.pathFor(mode, { category, tag: this.args.model.tag, noSubcategories: value === "products" });
+    const path = NavItem.pathFor(mode, { category, tag: this.args.model.tag, noSubcategories: false });
     url.searchParams.delete("page");
     url.searchParams.delete("svdex_presales");
+    if (value !== "all") url.searchParams.set("svdex_presales", value === "presales" ? "1" : "0");
     DiscourseURL.routeTo(`${path}${url.search}`);
   }
   <template>

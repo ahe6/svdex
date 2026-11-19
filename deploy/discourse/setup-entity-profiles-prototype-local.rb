@@ -47,3 +47,14 @@ sources.each_value do |record, account|
   record.update!(facts: record.facts.merge(additions)) if additions.any?
 end
 puts "Independent local profiles: #{model.group(:kind).count.inspect}. Existing accounts unchanged; no ongoing synchronization."
+
+# Explicit stable entity tags. Offerings/events use these, not one new tag per post.
+model.find_each do |record|
+  group_name, key = record.kind == "people" ? ["People", "topic_tag_id"] : ["Companies", "company_tag_id"]
+  next if record.facts[key].present?
+  group = TagGroup.find_by_name_insensitive(group_name) || TagGroup.create!(name: group_name)
+  tag = Tag.find_by(name: record.slug) || Tag.create!(name: record.slug)
+  group.tags << tag unless group.tags.exists?(tag.id)
+  record.update!(facts: record.facts.merge(key => tag.id))
+end
+puts "Stable native entity tags ready."

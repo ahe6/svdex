@@ -20,9 +20,15 @@ Topic.transaction do
   feed_assert!(select.call(TopicQuery.new(nil, category: discussion.id, svdex_view: "latest").list_latest, ids) == [fresh.id, old.id], "Latest uses creation date even when an older topic gets activity")
   feed_assert!(select.call(TopicQuery.new(nil, category: discussion.id, svdex_view: "activity").list_latest, ids) == ids, "Activity uses native bumped-at order")
   feed_assert!(select.call(TopicQuery.new(nil, category: discussion.id).list_latest, ids) == ids, "Discussion defaults to Activity")
+  updates = Category.find(SiteSetting.svdex_introductions_category_id)
+  older_update, fresh_update = create.call(updates, "Older company update"), create.call(updates, "Fresh company update")
+  older_update.update_columns(created_at: 3.days.ago, bumped_at: Time.current)
+  fresh_update.update_columns(created_at: 1.day.ago, bumped_at: 1.day.ago)
+  feed_assert!(select.call(TopicQuery.new(nil).list_latest, [older_update.id, fresh_update.id]) == [older_update.id, fresh_update.id], "Home Latest defaults to native recent activity")
   product, campaign = create.call(products, "Research workspace"), create.call(presales, "Research hardware campaign")
   feed_assert!(select.call(TopicQuery.new(nil, category: products.id).list_latest, [product.id, campaign.id]).sort == [product.id, campaign.id].sort, "Products stays mixed by default")
-  feed_assert!(select.call(TopicQuery.new(nil, category: products.id, svdex_presales: "1").list_latest, [product.id, campaign.id]) == [campaign.id], "Pre-sales chip filters by category before pagination")
+  feed_assert!(select.call(TopicQuery.new(nil, category: products.id, svdex_presales: "1").list_latest, [product.id, campaign.id]) == [campaign.id], "Pre-sales availability filters by category before pagination")
+  feed_assert!(select.call(TopicQuery.new(nil, category: products.id, svdex_presales: "0").list_latest, [product.id, campaign.id]) == [product.id], "Launched availability excludes pre-sales before pagination")
   guest = ActionDispatch::Integration::Session.new(Rails.application)
   guest.host! "localhost"
   guest.get "#{products.url}/l/top.json?period=all&svdex_presales=1"

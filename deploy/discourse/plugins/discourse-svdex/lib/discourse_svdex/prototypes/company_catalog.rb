@@ -18,7 +18,7 @@ module DiscourseSvdex
         end
       end
       def self.managed?(record)
-        record.respond_to?(:catalog_key) && record.catalog_key.present?
+        record.kind == "companies" && record.respond_to?(:catalog_key) && record.catalog_key.present?
       end
       def self.target(doc)
         CompanyProfileRecord.find_by(catalog_key: doc.fetch("id"), kind: "companies") || CompanyProfileRecord.find_by(slug: doc.fetch("id"), kind: "companies") || CompanyProfileRecord.new(slug: doc.fetch("id"), kind: "companies")

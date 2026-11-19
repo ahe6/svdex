@@ -15,7 +15,7 @@ import MobileCategoryHeading from "../components/svdex-mobile-category-heading.g
 import ListingMobileFilters from "../components/svdex-mobile-filters.gjs";
 import NavItem, { customNavItemHref } from "discourse/models/nav-item";
 import ListingTagGroupFilters from "../components/svdex-tag-group-filters.gjs";
-import PresalesChip from "../components/svdex-presales-chip.gjs";
+import ProductStatusFilter from "../components/svdex-product-status-filter.gjs";
 import { feedViews, feedViewHref } from "../lib/svdex-feed-views";
 
 export default function registerDiscoveryNavigation(api, { settings, router, site }) {
@@ -28,12 +28,12 @@ export default function registerDiscoveryNavigation(api, { settings, router, sit
       const path = NavItem.pathFor(view === "top" ? "top" : "latest", { category: context.category, tag: context.tag });
       return NavItem.create({ name: `svdex-${view}`, displayName: label, title: label,
         filterType: view === "top" ? "top" : "latest", active: view === config.selected,
-        svdexHref: feedViewHref(path, query, view) });
+        svdexHref: feedViewHref(path, query, view === "latest" && config.nativeActivity ? "activity" : view) });
     });
     return [...tabs, ...items.filter(item => !["latest", "top", "svdex-events-calendar"].includes(item.name))];
   });
-  api.renderInOutlet("extra-nav-item", PresalesChip);
-  api.renderInOutlet("inline-extra-nav-item", PresalesChip);
+  api.renderInOutlet("extra-nav-item", ProductStatusFilter);
+  api.renderInOutlet("inline-extra-nav-item", ProductStatusFilter);
   api.registerValueTransformer("topic-list-columns", ({ value: columns, context }) => {
     if (context.listContext === "discovery" &&
       (isOfferingCategory(context.category?.id, settings) || isPresaleCategory(context.category?.id, settings) || isProductCategory(context.category?.id, settings) ||

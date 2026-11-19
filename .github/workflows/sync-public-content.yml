@@ -1,0 +1,47 @@
+name: Sync reviewed public content
+on:
+  push:
+    branches: [main]
+    paths: ['directory/**/*.json']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: svdex-public-content
+  cancel-in-progress: false
+jobs:
+  sync:
+    if: github.repository == 'ahe6/svdex' && github.ref == 'refs/heads/main' && vars.SVDEX_CONTENT_SYNC_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: content
+    permissions:
+      contents: read
+      pull-requests: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: ruby/setup-ruby@b3aaceaef7e0ee231b499e7b5f49c03fc1d32199 # v1
+        with:
+          ruby-version: '3.3'
+      - name: Validate and build data-only bundle
+        run: |
+          mkdir -p artifacts
+          ruby scripts/build-public-catalog.rb artifacts/public-catalog.json
+      - name: Require current reviewed merge
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/check-catalog-review.py
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.SVDEX_CONTENT_ROLE_ARN }}
+          aws-region: us-east-1
+          role-duration-seconds: 900
+          role-session-name: svdex-content-${{ github.run_id }}
+      - name: Import reviewed content without deploying the application
+        env:
+          SVDEX_ARTIFACT_BUCKET: ${{ vars.SVDEX_CONTENT_BUCKET }}
+          SVDEX_INSTANCE_ID: ${{ vars.SVDEX_CONTENT_INSTANCE_ID }}
+        run: python3 scripts/sync-public-catalog.py

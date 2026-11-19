@@ -101,20 +101,20 @@ test("Offerings navigation separates Latest, Activity and Top", async ({ page, i
   await proof(page, info, "offering-tabs");
 });
 
-test("Products pre-sales checkbox survives sort changes and browser Back", async ({ page, isMobile }, info) => {
+test("Products availability selector survives sort changes and browser Back", async ({ page, isMobile }, info) => {
   await visit(page, categoryPath("products"));
   await ready(page);
-  const chip = page.locator("#navigation-bar").getByRole("checkbox", { name: "Pre-sales only", exact: true });
-  await chip.check();
+  const chip = page.locator(".svdex-product-status:visible").getByRole("button", {name:"Pre-sales",exact:true});
+  await chip.click();
   await expect(page).toHaveURL(/svdex_presales=1/);
   if (isMobile) await page.getByRole("button", { name: "Latest", exact: true }).click();
   await page.getByRole("link", { name: "Activity", exact: true }).click();
   await expect(page).toHaveURL(/svdex_view=activity/);
-  await expect(chip).toBeChecked();
+  await expect(chip).toHaveAttribute("aria-pressed", "true");
   await page.goBack();
-  await expect(chip).toBeChecked();
+  await expect(chip).toHaveAttribute("aria-pressed", "true");
   await fitsScreen(page);
-  await proof(page, info, "products-presales-chip");
+  await proof(page, info, "products-availability");
 });
 
 test("product type filter keeps search and clears back to combined catalog", async ({ page }, info) => {
@@ -123,8 +123,8 @@ test("product type filter keeps search and clears back to combined catalog", asy
   await page.getByRole("button", { name: /^Filters(?: \(.+\))?$/ }).click();
   let modal = page.getByRole("dialog", { name: "Filters", exact: true });
   await modal.getByText("All products", { exact: true }).click();
-  await page.getByRole("menuitemradio", { name: "Pre-sales only", exact: true }).click();
-  await expect(page).toHaveURL(/\/pre-sales\/\d+/);
+  await page.getByRole("menuitemradio", { name: "Pre-sales", exact: true }).click();
+  await expect(page).toHaveURL(/svdex_presales=1/);
   expect(new URL(page.url()).searchParams.get("search")).toBe("research");
   await page.getByRole("button", { name: /^Filters(?: \(.+\))?$/ }).click();
   modal = page.getByRole("dialog", { name: "Filters", exact: true });
@@ -133,4 +133,17 @@ test("product type filter keeps search and clears back to combined catalog", asy
   await expect(page.getByRole("button", { name: "Filters", exact: true })).toBeVisible();
   await fitsScreen(page);
   await proof(page, info, "products-combined");
+});
+
+test("directory interest uses one form for organization, direction and amount", async ({ page }) => {
+  await visit(page, "/company-directory");
+  await ready(page);
+  await page.getByRole("button", {name:"Add interest",exact:true}).click();
+  // Guests use the same login route as other directory actions.
+  if (new URL(page.url()).pathname === "/login") return;
+  const modal = page.getByRole("dialog", {name:"Add interest",exact:true});
+  await expect(modal.getByLabel("Amount (USD)")).toBeVisible();
+  await expect(modal.getByText("Direction", {exact:true})).toBeVisible();
+  await expect(modal.getByRole("button", {name:"Continue",exact:true})).toHaveCount(0);
+  await expect(modal.getByRole("button", {name:"Save buy interest",exact:true})).toBeDisabled();
 });

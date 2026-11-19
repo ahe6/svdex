@@ -160,9 +160,9 @@ missing logos use Discourse's standard fallback. Local setup copies the existing
 logos and public key-person/related-entity associations once, without overwriting
 later company edits. The directory uses the same native global interest notice.
 
-Companies and Funds have a secondary Buy / Sell action next to Add company/
+Companies and Funds have a secondary Add interest action next to Add company/
 Add fund. Native SelectKit searches the corresponding authorized directory, then
-Buy/Sell selection opens the existing indication modal. Amount shortcuts remain.
+Company/fund, direction and amount now share one indication modal. Amount shortcuts remain.
 On mobile the action shares the existing count row to preserve the heading/search/
 filter/plus row. This change does not submit an indication until the existing
 confirmation and save step is completed.
@@ -228,3 +228,33 @@ passed across the entity extension and feed-tab work. Browser review covered bot
 independent directories and profiles, fund Buy / Sell selection, person editing,
 public links and mobile rows, plus the feed controls at desktop/375px/320px.
 No production profile/account conversion or financial-data transfer was performed.
+
+## Related topics and entity tags
+
+Local profiles expose a Related topics button to a native tag page across all
+categories. Company/fund profiles reuse their explicit `company_tag_id`; People
+use `topic_tag_id` in the People tag group. The local setup assigns missing stable
+tags, preserves existing associations and creates no tag per event or offering.
+URLs are emitted only for tags visible to the viewer; native tag feeds continue
+to enforce each topic's category permissions. An entity without an association
+has no misleading fallback search link.
+
+Local product setup groups durable product tags under Products and shares each
+between the product topic and its pre-sale campaign. These are explicit curated
+associations, not title-matching at request time. A future production catalog
+import/create flow should require or assign stable identity tags; these local
+fixtures are not a production backfill. Person tag associations are staff API
+facts, not public editing permissions.
+
+The directory Add interest action uses the native primary button; Add company /
+Add fund use native secondary buttons. This makes indicating interest the leading
+action while retaining a clear separate path to submit a profile.
+
+Individual company/fund summaries now use compact, labeled definition rows under
+native user-summary headings, native topic summaries and a single Add interest
+button. The directory tables are unchanged by this profile redesign. The form's
+organization selection and direction are integrated with its amount/consent fields;
+no Continue step or second modal. Changing organization cancels stale loads and
+resets capacity/consent; changing direction loads that side's existing indication.
+Product availability uses neutral joined native buttons; it does not count as an
+extra Filter selection. Active Filter triggers keep the native neutral style.

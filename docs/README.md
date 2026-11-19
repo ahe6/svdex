@@ -35,3 +35,5 @@ This repository starts with a clean active-source snapshot. It does not include
 production data or credentials, historical research captures, retired applications
 or private operational history. The deployment tooling is source code, not access
 to SVDEX's infrastructure. Contributors can work locally without cloud accounts.
+
+- [Reviewed public content sync](public-content-sync.md): content-only file imports, GitHub review, and hosted activation status.

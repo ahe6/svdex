@@ -13,7 +13,7 @@ export default class FilterTrigger extends Component {
       @translatedTitle={{this.title}}
       @translatedAriaLabel={{this.title}}
       @action={{@action}}
-      class={{if @active "btn-primary svdex-filter-trigger" "btn-default svdex-filter-trigger"}}
+      class="btn-default svdex-filter-trigger {{if @active 'has-active-filters'}}"
     />
   </template>
 }

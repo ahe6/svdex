@@ -8,6 +8,7 @@ checks=(
   verify-companies-local
   verify-independent-company-local
   verify-independent-entities-local
+  verify-public-catalog-local
   verify-company-catalog-local
   verify-directory-query-cost-local
   verify-people-directory-local

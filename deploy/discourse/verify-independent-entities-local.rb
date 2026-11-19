@@ -21,6 +21,14 @@ model.transaction do
   app.post "/session.json", params: { login: member.username, password: password }, headers: headers
   person = model.create!(kind: "people", slug: "researcher-#{SecureRandom.hex(4)}", name: "Alex Rivera", summary: "Previously led robotics research at Harbor Instruments.", listed: true, facts: { "role" => "Partner", "location" => "United States" })
   fund = model.create!(kind: "funds", slug: "research-fund-#{SecureRandom.hex(4)}", name: "Harbor Research Fund", summary: "Early-stage research infrastructure investments.", listed: true, facts: { "aum_usd" => 25_000_000, "strategy_focus" => "VC", "vintage_year" => 2026, "fund_life" => "10-year term", "profile_key_people" => [{ "profile_id" => person.id, "role" => "Partner" }] })
+  group = TagGroup.find_by_name_insensitive("People") || TagGroup.create!(name: "People")
+  person_tag = Tag.create!(name: "researcher-#{SecureRandom.hex(4)}")
+  group.tags << person_tag
+  person.update!(facts: person.facts.merge("topic_tag_id" => person_tag.id))
+  entity_assert!(DiscourseSvdex::Prototypes::CompanyProfiles.payload(person, Guardian.new)[:topics_url] == person_tag.url, "Related topics uses the person's native stable tag page")
+  fund_tag = DiscourseSvdex::CompanyDirectory.tag_options("Companies", Guardian.new).first
+  fund.update!(facts: fund.facts.merge("company_tag_id" => fund_tag[:id]))
+  entity_assert!(DiscourseSvdex::Prototypes::CompanyProfiles.payload(fund, Guardian.new)[:topics_url] == fund_tag[:url], "fund related topics uses native company/entity tags across categories")
   guest.get "/fund-profiles/#{fund.slug}.json"
   data = guest.response.parsed_body
   entity_assert!(guest.response.status == 200 && data.dig("company", "aum_usd") == 25_000_000 && !data.key?("account"), "independent fund facts are public without a user account")

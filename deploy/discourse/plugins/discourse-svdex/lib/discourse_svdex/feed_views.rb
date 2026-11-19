@@ -7,9 +7,9 @@ module DiscourseSvdex
       TopicQuery.add_custom_filter(:svdex_view) { |results, _query| results }
       TopicQuery.add_custom_filter(:svdex_presales) do |results, query|
         value = query.options[:svdex_presales].presence
-        raise Discourse::InvalidParameters.new(:svdex_presales) if value && value.to_s != "1"
+        raise Discourse::InvalidParameters.new(:svdex_presales) if value && !%w[0 1].include?(value.to_s)
         if value && Products.category?(query.options[:category_id])
-          results.where(category_id: SiteSetting.svdex_presales_category_id)
+          value.to_s == "1" ? results.where(category_id: SiteSetting.svdex_presales_category_id) : results.where.not(category_id: SiteSetting.svdex_presales_category_id)
         else
           results
         end
@@ -30,7 +30,7 @@ module DiscourseSvdex
           native.order_by_start(topics.reorder(nil), view == "past" ? "DESC" : "ASC").order("topics.id DESC")
         elsif opts[:filter].to_s == "latest"
           discussion = Category.find_by(id: category_id)&.slug == "discussion"
-          view ||= discussion ? "activity" : "latest"
+          view ||= discussion || category_id.zero? ? "activity" : "latest"
           raise Discourse::InvalidParameters.new(:svdex_view) unless %w[latest activity].include?(view)
           # Explicit native column sorts still work outside the dedicated tabs.
           if opts[:order].blank? && view == "latest"

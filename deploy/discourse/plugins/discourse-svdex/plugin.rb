@@ -132,6 +132,9 @@ after_initialize do
   if defined?(DiscourseSvdex::Prototypes::CompanyProfiles)
     require_relative "lib/discourse_svdex/prototypes/company_relationships"
     require_relative "lib/discourse_svdex/prototypes/company_catalog"
+    require_relative "lib/discourse_svdex/prototypes/public_catalog"
+    register_topic_custom_field_type(DiscourseSvdex::Prototypes::PublicCatalog::PRODUCT_KEY, :string)
+    register_topic_custom_field_type(DiscourseSvdex::Prototypes::PublicCatalog::PRODUCT_STATE, :json)
     register_topic_custom_field_type(DiscourseSvdex::Prototypes::CompanyCatalog::PROPOSAL_FIELD, :json)
     require_relative "lib/discourse_svdex/prototypes/company_profile_directory"
     DiscourseSvdex::Prototypes::CompanyRelationships.install!
