@@ -60,6 +60,7 @@ for requested in "$@"; do
   fi
 done
 if (( ${#selected[@]} == 0 )); then selected=("${checks[@]}"); fi
+node scripts/dev-ui.js --assert-stopped
 printf 'Running %s of %s native checks.\n' "${#selected[@]}" "${#checks[@]}"
 docker exec "$container" bash -lc 'test "$(printenv DISCOURSE_HOSTNAME)" = localhost && test "$(printenv DISCOURSE_PORT)" = 4080'
 docker cp deploy/discourse/verify-production.rb "$container:/tmp/svdex-production-smoke.rb"

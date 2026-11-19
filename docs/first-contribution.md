@@ -21,20 +21,37 @@ mail is at <http://localhost:4081>. Keep both ports private. No SVDEX account,
 AWS access, production backup or paid service is needed.
 
 For later sessions use `npm start`. Repeated setup preserves data, but it is much
-slower than importing the part you changed. There is no automatic hot reload.
+slower than importing the part you changed. Run `npm run dev` to start automatic
+local theme updates for the UI session.
 
 ## Make a small UI change
 
 1. Find the native component in `frontend/discourse-interface/` or the relevant
    style file in `frontend/discourse-appearance/styles/`.
-2. Edit the source. Prefer native Discourse components, spacing and typography.
-3. For Interface/Sidebar edits, run `npm run sync:themes`. For styles, run
-   `npm run sync:styles` (also imports Interface/Sidebar and branding).
-4. Reload the browser. Review desktop and narrow mobile widths, long names,
+2. Run `npm run dev`, then edit the source. Prefer native Discourse components,
+   spacing and typography. Keep the command running in a terminal; it starts Rails
+   once and imports only changed theme components. It requests a native browser
+   refresh automatically. Styles regenerate `common.scss` without watching that
+   generated output again. No tests or application rebuilds run on save.
+   Reload an already-open browser tab once after starting so it picks up fast
+   local refresh intervals. Chrome is the verified live-preview browser. If the
+   Codex in-app browser stays stale, use Chrome or explicitly reload that preview.
+3. Review desktop and narrow mobile widths, long names,
    empty/populated states and any native screens sharing the styles. Check the
    browser console: successful compilation does not catch every boot-order error.
-5. Run `npm run check` and include screenshots in your PR. Style imports regenerate
-   `common.scss`; commit it with its source files.
+4. Stop with Ctrl-C or `npm run dev:stop` before running native checks or full theme
+   configuration imports. `npm run dev:status` shows whether this checkout owns a
+   watcher. Use `npm run ui:sync` for one content-only update without watching.
+5. Run `npm run check` after a batch and include screenshots in your PR. Run the
+   relevant native checks for changed behavior; CI still performs full verification.
+   Commit generated `common.scss` with its source files.
+
+The watcher covers Interface/Sidebar modules, templates, settings and styles. It
+does not apply branding, native site settings, fixtures, Ruby or plugin client
+routes. Use `npm run sync:themes` for full Interface/Sidebar configuration or
+`npm run sync:styles` for full appearance/branding configuration. Those manual
+commands now share one Rails startup per invocation. Open the local browser tab
+when checking update speed; inactive/background tabs can delay native refreshes.
 
 Do not rerun setup or reset the database for a spacing change.
 

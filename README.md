@@ -31,6 +31,11 @@ Setup builds the pinned upstream Discourse version and can take some time. It
 creates a local administrator; credentials are in the ignored private file
 `.data/discourse-local-admin.json`, not in terminal output or source control.
 
+For fast UI iteration, run `npm run dev` and keep the local browser open. Saved
+theme JS/templates/styles update automatically, without rerunning tests or
+rebuilding Discourse. Stop with Ctrl-C or `npm run dev:stop` before native checks
+or configuration imports. `npm run dev:status` reports whether it is running.
+
 Docker volumes hold the database/uploads; `.data/` holds private local tooling.
 Repeated setup preserves the administrator and existing data. For ordinary code
 edits, use the smaller update commands instead of rerunning setup:
