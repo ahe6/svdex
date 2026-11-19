@@ -24,7 +24,9 @@ Two custom tables store investor submissions:
 
 Two additional tables, `svdex_discoveries` and `svdex_discovery_events`, track
 staff-reviewed attribution and its append-only review history. Four plugin-owned
-tables exist in total; these are separate from native users/topics/custom fields.
+tables support the deployed feature model; these are separate from native
+users/topics/custom fields. The optional [local independent-company experiment](../../../../docs/independent-company-prototype.md)
+adds a fifth local-only table, with no production migration or registered route.
 
 Migrations and ordinary native backups include all four tables. A submission is not
 an accepted order or executed investment. Updating replaces the saved record;

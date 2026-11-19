@@ -72,6 +72,14 @@ require_relative "lib/discourse_svdex/financial_submissions"
 require_relative "lib/discourse_svdex/engine"
 
 after_initialize do
+  if GlobalSetting.hostname == "localhost" && SiteSetting.port.to_s == "4080"
+    require_relative "lib/discourse_svdex/prototypes/company_profiles"
+    Discourse::Application.routes.append do
+      get "/company/:slug", to: "discourse_svdex/prototypes/company_profiles#page", constraints: { format: "html" }
+      get "/company-profiles/:slug", to: "discourse_svdex/prototypes/company_profiles#show", defaults: { format: :json }
+      put "/company-profiles/:slug", to: "discourse_svdex/prototypes/company_profiles#update", defaults: { format: :json }
+    end
+  end
   require_relative "lib/discourse_svdex/retired_information_pages"
   AboutController.prepend(DiscourseSvdex::RetiredAboutPage)
   StaticController.prepend(DiscourseSvdex::RetiredGuidelinesPages)

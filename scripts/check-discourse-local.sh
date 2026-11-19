@@ -6,6 +6,7 @@ checks=(
   verify-upstream-contracts-local
   verify-category-navigation-local
   verify-companies-local
+  verify-independent-company-local
   verify-directory-query-cost-local
   verify-people-directory-local
   verify-account-management-local

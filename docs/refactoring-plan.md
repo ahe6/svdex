@@ -49,8 +49,11 @@ is incremental, attached to actual field changes rather than a speculative rewri
   anonymization and immutable financial-history requirements are decided (R11).
 - **Offering count edge:** reproduce an empty out-of-range page before changing
   native count plumbing (R12).
-- **Organization ownership:** keep account-backed company/fund/person profiles.
-  Multi-person organization management can be designed when actually needed.
+- **Organization ownership:** current directories remain account-backed. The
+  [local independent-company prototype](independent-company-prototype.md) explores
+  a separate record and optional participation account; no migration is approved
+  by that experiment. Multi-person organization management still needs explicit
+  rules.
 
 ## Boundaries to retain
 

@@ -19,6 +19,10 @@ Do not move access checks into themes to claim theme-only portability. No manage
 host has agreed to support this plugin, and no newer Discourse revision was
 installed as part of this review.
 
+An [independent-company local prototype](independent-company-prototype.md) now
+explores separating directory identity from participation accounts. This does not
+change the current production model or imply a decision to migrate it.
+
 ## Findings register
 
 | ID | Priority | Status | Finding and action |

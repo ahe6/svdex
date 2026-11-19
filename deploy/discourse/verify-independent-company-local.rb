@@ -1,0 +1,67 @@
+# frozen_string_literal: true
+abort "Local only" unless GlobalSetting.hostname == "localhost" && SiteSetting.port.to_s == "4080"
+Middleware::AnonymousCache.disable_anon_cache
+DiscourseSvdex::Prototypes::CompanyProfiles.setup!
+def profile_assert!(condition, message)
+  raise message unless condition
+  puts "PASS #{message}"
+end
+def profile_session(user = nil, password = nil)
+  app = ActionDispatch::Integration::Session.new(Rails.application)
+  app.host! "localhost"
+  app.remote_addr = "198.18.#{SecureRandom.random_number(256)}.#{SecureRandom.random_number(254) + 1}"
+  return [app, {}] unless user
+  app.get "/session/csrf.json"
+  headers = { "X-CSRF-Token" => app.response.parsed_body.fetch("csrf"), "HTTP_ACCEPT" => "application/json", "X-Requested-With" => "XMLHttpRequest" }
+  app.post "/session.json", params: { login: user.username, password: password }, headers: headers
+  raise "Login failed" unless app.response.status == 200
+  [app, headers]
+end
+User.transaction do
+  password = SecureRandom.hex(24)
+  staff = User.create!(username: "padmin_#{SecureRandom.hex(4)}", email: "#{SecureRandom.hex(8)}@example.invalid", password: password, active: true, approved: true, admin: true)
+  member = User.create!(username: "pmember_#{SecureRandom.hex(4)}", email: "#{SecureRandom.hex(8)}@example.invalid", password: password, active: true, approved: true, trust_level: 2)
+  [staff, member].each { |u| u.email_tokens.update_all(confirmed: true) }
+  count = User.count
+  record = DiscourseSvdex::Prototypes::CompanyProfileRecord.create!(slug: "harbor-#{SecureRandom.hex(4)}", name: "Harbor Research", summary: "Research infrastructure for private markets.", facts: { total_funding_usd: 2_000_000, company_tag_id: User.find_by!(username: "svdex-company").custom_fields[DiscourseSvdex::CompanyDirectory::FIELDS.fetch("company_tag_id")] })
+  profile_assert!(User.count == count && record.official_account_id.nil?, "a company profile exists without creating or requiring an account")
+  guest, = profile_session
+  path = "/company-profiles/#{record.slug}.json"
+  guest.get path
+  profile_assert!(guest.response.status == 404, "unlisted company profiles remain unavailable to guests")
+  record.update!(listed: true)
+  guest.get path
+  profile_assert!(guest.response.status == 200 && guest.response.parsed_body.dig("company", "total_funding_usd") == 2_000_000 && !guest.response.parsed_body.key?("account") && !guest.response.parsed_body.key?("editor") && (guest.response.parsed_body.fetch("company").keys & %w[sector_tag_id company_tag_id]).empty?, "published independent facts are public without a fabricated user")
+  guest.put path, params: { profile: { name: "Changed" } }
+  profile_assert!(guest.response.status == 403 && record.reload.name == "Harbor Research", "guests cannot edit independent facts")
+  signed_in, member_headers = profile_session(member, password)
+  signed_in.put path, params: { profile: { name: "Changed" } }, headers: member_headers
+  profile_assert!(signed_in.response.status == 403, "ordinary accounts cannot claim or edit a company by choosing its slug")
+  editor, headers = profile_session(staff, password)
+  account = User.find_by!(username: "svdex-company")
+  original_funding = account.custom_fields[DiscourseSvdex::CompanyDirectory::FIELDS.fetch("total_funding_usd")]
+  editor.put path, params: { profile: { official_username: account.username, facts: { total_funding_usd: 3_000_000 } } }, headers: headers
+  profile_assert!(editor.response.status == 200 && record.reload.official_account_id == account.id && record.facts["total_funding_usd"] == 3_000_000, "staff can maintain independent facts and explicitly link a participation account")
+  profile_assert!(account.reload.custom_fields[DiscourseSvdex::CompanyDirectory::FIELDS.fetch("total_funding_usd")] == original_funding, "editing independent company facts never rewrites account facts")
+  editor.put path, params: { profile: { facts: { total_funding_usd: "bad" } } }, headers: headers
+  profile_assert!(editor.response.status == 400 && record.reload.facts["total_funding_usd"] == 3_000_000, "financial validation is reused without losing saved facts")
+  original_hide = SiteSetting.allow_users_to_hide_profile
+  begin
+    SiteSetting.allow_users_to_hide_profile = true
+    account.user_option.update!(hide_profile: true)
+    guest.get path
+    profile_assert!(guest.response.status == 200 && !guest.response.parsed_body.key?("account") && !guest.response.parsed_body.key?("interest_account"), "a private linked account is redacted without making independently published company facts private")
+  ensure
+    SiteSetting.allow_users_to_hide_profile = original_hide
+    account.user_option.update!(hide_profile: false)
+  end
+  editor.put path, params: { profile: { official_username: "" } }, headers: headers
+  profile_assert!(editor.response.status == 200 && record.reload.official_account_id.nil? && User.exists?(account.id), "unlinking an account preserves both the company profile and the account")
+  profile_assert!(User.count == count, "profile maintenance creates no login identities")
+  temporary = User.create!(username: "plink_#{SecureRandom.hex(4)}", email: "#{SecureRandom.hex(8)}@example.invalid", password: password, active: true, approved: true)
+  record.update!(official_account: temporary)
+  temporary.destroy!
+  profile_assert!(record.reload.official_account_id.nil? && record.facts["total_funding_usd"] == 3_000_000, "native account deletion clears its optional link while preserving the independent company record")
+  raise ActiveRecord::Rollback
+end
+puts "Independent company checks complete; scenario records rolled back."
