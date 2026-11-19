@@ -75,7 +75,8 @@ indications Unverified.
 
 **Current local storage is not ready for financial documents.** It uses local
 uploads, Secure Uploads is disabled and PDF is not an allowed extension. No real
-documents were received and no S3 infrastructure was changed by this work.
+documents were received. Subsequent staging storage configuration and probe
+results are recorded in [Secure uploads](secure-uploads.md); production is unchanged.
 
 The request endpoint refuses to start document intake, and the member modal hides
 Request verification, unless all of these conditions hold:
@@ -85,6 +86,7 @@ Request verification, unless all of these conditions hold:
 - `secure_uploads_allow_embed_images_in_emails` is disabled, so statement images
   are not copied into outgoing notification emails.
 - `authorized_extensions` includes `pdf`.
+- The backend draft-upload ownership guard is installed.
 
 The admin review panel reports when intake is closed. Staff can still record a
 manual review from another private channel. Saving/withdrawing interest and public
@@ -136,5 +138,6 @@ my-interest and offering-bids native check groups. The staff review form, holdin
 selector and member modal were reviewed at desktop and 375px mobile widths.
 The document-intake checks exercise every missing prerequisite and native request
 text/permissions using an isolated requirements stub; they do **not** claim an
-end-to-end S3 upload or direct-object authorization test. Those activation checks
-remain outstanding on an actual protected object store.
+end-to-end S3 upload or direct-object authorization test. Subsequent real staging S3 checks are documented in
+[Secure uploads](secure-uploads.md). Intake remains disabled until a matching
+release, approved disclosure and retention decision are ready.

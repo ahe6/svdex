@@ -72,6 +72,8 @@ require_relative "lib/discourse_svdex/financial_submissions"
 require_relative "lib/discourse_svdex/engine"
 
 after_initialize do
+  require_relative "lib/discourse_svdex/secure_draft_uploads"
+  UploadsController.prepend(DiscourseSvdex::SecureDraftUploads)
   if GlobalSetting.hostname == "localhost" && SiteSetting.port.to_s == "4080"
     require_relative "lib/discourse_svdex/prototypes/company_profiles"
     Discourse::Application.routes.append do

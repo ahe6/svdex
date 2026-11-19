@@ -107,6 +107,7 @@ module DiscourseSvdex
         secure: SiteSetting.secure_uploads,
         private_email: !SiteSetting.secure_uploads_allow_embed_images_in_emails,
         pdf: SiteSetting.authorized_extensions.split("|").include?("pdf"),
+        draft_privacy: UploadsController.ancestors.include?(SecureDraftUploads),
       }
     end
     def self.document_uploads_ready?

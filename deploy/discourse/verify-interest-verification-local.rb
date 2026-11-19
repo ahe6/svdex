@@ -58,8 +58,9 @@ begin
     capacity_assert!(outsider.response.status == 404, "another member cannot request review of someone else's indication")
     # Policy test only: no real object store is configured or claimed as tested.
     # Never enable S3 or invite real financial uploads in the local fixture setup.
-    ready_requirements = { enabled: true, s3: true, secure: true, private_email: true, pdf: true }
+    ready_requirements = { enabled: true, s3: true, secure: true, private_email: true, pdf: true, draft_privacy: true }
     ready_requirements.each_key do |missing|
+      RateLimiter.new(member, "svdex-capacity-request", 5, 1.day).clear!
       verification_model.define_singleton_method(:document_upload_requirements) { ready_requirements.merge(missing => false) }
       account.post request_path, headers: headers
       capacity_assert!(account.response.status == 400 && !Topic.exists?(title: "Interest verification: #{org.name}", user_id: member.id), "document intake stays closed without #{missing}")

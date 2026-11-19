@@ -38,6 +38,7 @@ checks=(
   verify-offering-structure-local
   verify-company-updates-local
   verify-interest-verification-local
+  verify-secure-drafts-local
   verify-public-interest-local
   verify-offering-bids-local
   verify-my-interest-local
