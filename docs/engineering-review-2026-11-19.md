@@ -93,6 +93,10 @@ runner observations, not a controlled benchmark or a promised release speed.
 
 ## Work order after this batch
 
+The [refactoring plan](refactoring-plan.md) maps these findings to bounded batches,
+including existing cleanup opportunities and what should remain unchanged. It is
+a plan, not a claim that the remaining items have been implemented.
+
 1. Measure R06 and representative catalog sizes for R10; optimize the measured
    path without changing privacy-aware counts or adding a parallel company model.
 2. Add the small signed-in browser scenarios in R08, covering inaccessible-source
