@@ -7,6 +7,7 @@ checks=(
   verify-category-navigation-local
   verify-companies-local
   verify-independent-company-local
+  verify-company-catalog-local
   verify-directory-query-cost-local
   verify-people-directory-local
   verify-account-management-local
@@ -78,6 +79,8 @@ docker cp deploy/discourse/native-workflow-check-helper.rb "$container:/tmp/nati
 docker exec "$container" mkdir -p /tmp/svdex-prototypes
 docker cp deploy/discourse/prototypes/private-access-workflow.rb "$container:/tmp/svdex-prototypes/private-access-workflow.rb"
 docker cp deploy/discourse/upstream-contracts.json "$container:/tmp/svdex-upstream-contracts.json"
+docker exec "$container" mkdir -p /tmp/svdex-company-catalog-input
+docker cp directory/companies/. "$container:/tmp/svdex-company-catalog-input/"
 failed=()
 for script in "${selected[@]}"; do
   docker cp "deploy/discourse/$script.rb" "$container:/tmp/$script.rb"

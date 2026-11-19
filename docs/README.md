@@ -8,6 +8,7 @@
 - [Engineering review and active findings — November 19](engineering-review-2026-11-19.md)
 - [Refactoring map and batch order](refactoring-plan.md)
 - [Independent company profile: local experiment](independent-company-prototype.md)
+- [Reviewed company files and site corrections](company-catalog.md)
 - [Source boundaries, checks and upstream upgrades](discourse-maintenance.md)
 - [Local and remote development operations](operations.md)
 - [Cloud editing, browser reports and PR previews](cloud-development.md)

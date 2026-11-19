@@ -9,6 +9,8 @@ import { ajax } from "discourse/lib/ajax";
 import { popupAjaxError } from "discourse/lib/ajax-error";
 import DButton from "discourse/ui-kit/d-button";
 import DModal from "discourse/ui-kit/d-modal";
+import CompanyCorrection from "./svdex-company-correction.gjs";
+import DiscourseURL from "discourse/lib/url";
 import DiscoveryAdmin from "./svdex-discovery-admin.gjs";
 import CompanyProfileSummary from "./svdex-company-profile-summary.gjs";
 
@@ -20,21 +22,21 @@ class CompanyEditor extends Component {
     const data = this.args.model.data;
     this.values = { ...data.profile, official_username: data.editor.official_username || "", facts: { ...data.editor.facts } };
   }
-  fields = [{ key: "name", label: "Company name" }, { key: "summary", label: "Summary" }, { key: "official_username", label: "Official account username (optional)" }];
-  facts = [{ key: "total_funding_usd", label: "Total funding (USD)", min: 0 }, { key: "last_valuation_usd", label: "Last valuation (USD)", min: 1 }];
+  get fields() { const fields = [{ key: "name", label: "Company name" }, { key: "summary", label: "Summary" }, { key: "official_username", label: "Official account username (optional)" }]; return this.args.model.data.profile.catalog_managed ? fields.slice(2) : fields; }
+  get facts() { return this.args.model.data.profile.catalog_managed ? [] : [{ key: "total_funding_usd", label: "Total funding (USD)", min: 0 }, { key: "last_valuation_usd", label: "Last valuation (USD)", min: 1 }]; }
   @action update(key, event) { this.values = { ...this.values, [key]: event.target.value }; }
   @action updateFact(key, event) { this.values = { ...this.values, facts: { ...this.values.facts, [key]: event.target.value } }; }
   @action async save() {
     this.saving = true;
     try {
-      const data = await ajax(`/company-profiles/${encodeURIComponent(this.args.model.data.profile.slug)}.json`, { type: "PUT", contentType: "application/json", data: JSON.stringify({ profile: this.values }) });
+      const data = await ajax(`/company-profiles/${encodeURIComponent(this.args.model.data.profile.slug)}.json`, { type: "PUT", contentType: "application/json", data: JSON.stringify({ profile: this.args.model.data.profile.catalog_managed ? { official_username: this.values.official_username } : this.values }) });
       this.args.model.saved(data);
       this.args.closeModal();
     } catch (error) { popupAjaxError(error); }
     finally { this.saving = false; }
   }
   <template>
-    <DModal @title="Edit company" @closeModal={{@closeModal}}>
+    <DModal @title={{if @model.data.profile.catalog_managed "Manage account" "Edit company"}} @closeModal={{@closeModal}}>
       <:body>
         {{#each this.fields as |field|}}<div class="control-group"><label for="company-profile-{{field.key}}">{{field.label}}</label><input id="company-profile-{{field.key}}" value={{get this.values field.key}} maxlength={{if (eq field.key "summary") 180 120}} disabled={{this.saving}} {{on "input" (fn this.update field.key)}} /></div>{{/each}}
         {{#each this.facts as |field|}}<div class="control-group"><label for="company-profile-{{field.key}}">{{field.label}}</label><input id="company-profile-{{field.key}}" type="number" min={{field.min}} max="9007199254740991" step="1" value={{get this.values.facts field.key}} disabled={{this.saving}} {{on "input" (fn this.updateFact field.key)}} /></div>{{/each}}
@@ -45,11 +47,16 @@ class CompanyEditor extends Component {
 }
 export default class IndependentCompany extends Component {
   @service modal;
+  @service currentUser;
   @tracked updated;
   get data() { return this.updated || this.args.model; }
   @action saved(data) { this.updated = data; }
   @action async refresh() { this.updated = await ajax(`/company-profiles/${encodeURIComponent(this.data.profile.slug)}.json`); }
   get discoveryEndpoint() { return `/company-profiles/${encodeURIComponent(this.data.profile.slug)}/discovery.json`; }
+  @action suggest() {
+    if (!this.currentUser) return DiscourseURL.routeTo("/login");
+    this.modal.show(CompanyCorrection, { model: this.data });
+  }
   @action edit() { this.modal.show(CompanyEditor, { model: { data: this.data, saved: this.saved } }); }
   <template>
     <div class="user-main user-summary-page">
@@ -57,7 +64,8 @@ export default class IndependentCompany extends Component {
         <div><h1>{{this.data.profile.name}}</h1><p>{{this.data.profile.summary}}</p></div>
         <div class="svdex-independent-company-actions">
           {{#if this.data.account}}<DButton @href={{this.data.account.activity_url}} @translatedLabel="Official account activity" />{{/if}}
-          {{#if this.data.editor}}<DButton @action={{this.edit}} @icon="pencil" @translatedLabel="Edit company" />{{/if}}
+          {{#if this.data.profile.catalog_managed}}<DButton @action={{this.suggest}} @icon="pencil" @translatedLabel="Suggest changes" />{{/if}}
+          {{#if this.data.editor}}<DButton @action={{this.edit}} @translatedLabel={{if this.data.profile.catalog_managed "Manage account" "Edit company"}} />{{/if}}
         </div>
       </div>
       <div class="user-content"><CompanyProfileSummary @data={{this.data}}  @independent={{true}} @onRefresh={{this.refresh}} />{{#if this.data.editor}}<details><summary>Manage discovery credit</summary><DiscoveryAdmin @endpoint={{this.discoveryEndpoint}} @onSave={{this.refresh}} /></details>{{/if}}</div>

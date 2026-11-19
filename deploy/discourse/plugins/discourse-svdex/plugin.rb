@@ -83,6 +83,7 @@ after_initialize do
       put "/company-profile-interests/:organization_id/:side", to: "discourse_svdex/prototypes/company_interests#update", defaults: { format: :json }
       get "/company/:slug", to: "discourse_svdex/prototypes/company_profiles#page", constraints: { format: "html" }
       get "/company-profiles/:slug", to: "discourse_svdex/prototypes/company_profiles#show", defaults: { format: :json }
+      post "/company-profiles/:slug/suggestions", to: "discourse_svdex/prototypes/company_profiles#suggest", defaults: { format: :json }
       put "/company-profiles/:slug", to: "discourse_svdex/prototypes/company_profiles#update", defaults: { format: :json }
     end
   end
@@ -117,6 +118,8 @@ after_initialize do
   require_relative "app/controllers/discourse_svdex/my_interest_controller"
   if defined?(DiscourseSvdex::Prototypes::CompanyProfiles)
     require_relative "lib/discourse_svdex/prototypes/company_relationships"
+    require_relative "lib/discourse_svdex/prototypes/company_catalog"
+    register_topic_custom_field_type(DiscourseSvdex::Prototypes::CompanyCatalog::PROPOSAL_FIELD, :json)
     require_relative "lib/discourse_svdex/prototypes/company_profile_directory"
     DiscourseSvdex::Prototypes::CompanyRelationships.install!
   end

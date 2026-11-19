@@ -170,3 +170,19 @@ logo payloads are covered. Browser review compared the original row markup, veri
 both logos loaded at 48px, exercised searchable Company/Sell and Fund/Buy selection,
 and checked the toolbar at 320px and 375px without document overflow. No new
 financial indication was submitted during this visual/entry-point check.
+
+
+### Reviewed public data-file slice
+
+SVDEX's independent profile now projects `directory/companies/svdex.json` into the
+same local database record. File-owned facts use a stored content revision and
+snapshot; direct edits to them are rejected, and imports refuse unreconciled database
+drift. Logos, account linking, publication and financial/discovery records remain
+operational database state. The first file intentionally has unspecified financial
+figures rather than inheriting the earlier local account's invented amounts.
+
+Suggest changes sends a native private review topic, with a structured proposed
+public document and base revision. Staff can prepare that document as a candidate
+file and review it through GitHub; submissions never auto-publish or grant ownership.
+See [the catalog workflow](company-catalog.md). This is a working local slice, not a
+Funds/People migration or a production deployment integration.

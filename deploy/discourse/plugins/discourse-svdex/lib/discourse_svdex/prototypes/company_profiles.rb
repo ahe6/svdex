@@ -42,6 +42,7 @@ module DiscourseSvdex
           connection.add_foreign_key CompanyProfileRecord.table_name, :uploads, column: :logo_upload_id, on_delete: :nullify
         end
         CompanyRelationships.setup!
+        CompanyCatalog.setup!
         CompanyProfileRecord.reset_column_information
       end
     end
@@ -76,10 +77,24 @@ module DiscourseSvdex
         CompanyRelationships.record_discovery!(record, current_user, params.require(:discovery).permit(:provenance, :status, :contributor, :listed_at, :reason).to_h)
         render_json_dump(CompanyRelationships.discovery_payload(record))
       end
+      def suggest
+        raise Discourse::InvalidAccess unless current_user
+        response.headers["Cache-Control"] = "private, no-store"
+        RateLimiter.new(current_user, "svdex-company-correction", 5, 1.hour).performed!
+        record = profile!
+        values = params.require(:suggestion).permit(:revision, :name, :summary, :total_funding_usd, :last_valuation_usd, :as_of, :source_url, :reason).to_h
+        topic = CompanyCatalog.suggest!(record, current_user, values)
+        render_json_dump(url: topic.relative_url)
+      rescue CatalogDocument::Invalid => error
+        raise Discourse::InvalidParameters.new(error.message)
+      end
       def update
         record = profile!
         data = params.require(:profile).permit(:name, :summary, :official_username, facts: CompanyProfiles::FACTS).to_h
         record.with_lock do
+          if CompanyCatalog.managed?(record) && (data.key?("name") || data.key?("summary") || data.fetch("facts", {}).keys.any? { |key| CompanyCatalog::FACTS.include?(key) })
+            raise Discourse::InvalidParameters.new("Submit a correction for reviewed company facts")
+          end
           record.name = data["name"] if data.key?("name")
           record.summary = data["summary"] if data.key?("summary")
           if data.key?("official_username")
@@ -122,14 +137,15 @@ module DiscourseSvdex
         company = record.facts.except("sector_tag_id", "company_tag_id", *REFERENCE_FACTS).symbolize_keys.merge(kind: "companies", entity_type: "company", sector: sector, key_people: CompanyDirectory.public_references(record.facts["key_people"], guardian), related_entities: CompanyDirectory.public_references(record.facts["related_entities"], guardian),
           open_offerings: offerings.where(closed: false, archived: false).count, offerings_url: base, open_offerings_url: base && "#{base}?svdex_active=1")
         company[:interest_totals] = CompanyRelationships.totals([record.id], guardian)[record.id] if InterestIndication.totals_visible?(guardian)
-        result = { profile: record.slice(:id, :slug, :name, :summary).merge(url: "/company/#{record.slug}", logo_template: record.logo_upload&.url || User.default_template(record.slug)), company: company,
+        result = { profile: record.slice(:id, :slug, :name, :summary).merge(url: "/company/#{record.slug}", logo_template: record.logo_upload&.url || User.default_template(record.slug), catalog_managed: CompanyCatalog.managed?(record)), company: company,
           discovery: CompanyRelationships.credit(record, guardian), interest_endpoint: "/company-profile-interests/#{record.id}",
           offerings: offerings.order(created_at: :desc).limit(6).map(&summary), updates: updates.order(created_at: :desc).limit(6).map(&summary),
           updates_url: tag && updates_category && guardian.can_see?(updates_category) ? "/tags#{updates_category.url}/#{tag[:slug]}/#{tag[:id]}" : nil }
         if visible_account
           result[:account] = { id: account.id, username: account.username, name: account.name, activity_url: "/u/#{account.username_lower}/activity" }
         end
-        result[:editor] = { facts: record.facts, official_username: account&.username } if guardian.is_staff?
+        result[:correction] = { revision: record.catalog_revision, financials: record.catalog_document["financials"] } if CompanyCatalog.managed?(record)
+        result[:editor] = { facts: record.facts, official_username: account&.username, catalog_document: record.catalog_document, catalog_revision: record.catalog_revision } if guardian.is_staff?
         result
       end
     end
