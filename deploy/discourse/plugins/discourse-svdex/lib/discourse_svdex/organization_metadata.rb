@@ -80,11 +80,12 @@ module DiscourseSvdex
       end
     end
 
-    def self.metadata(user, guardian, reference_users = nil)
-      values = METADATA_TYPES.keys.to_h { |key| [key.to_sym, user.custom_fields[FIELDS.fetch(key)]] }
+    def self.metadata(user, guardian, reference_users = nil, custom_fields: user.custom_fields, fund_ids: nil)
+      values = METADATA_TYPES.keys.to_h { |key| [key.to_sym, custom_fields[FIELDS.fetch(key)]] }
       values[:key_people] = public_references(values[:key_people], guardian, reference_users)
       values[:related_entities] = public_references(values[:related_entities], guardian, reference_users)
-      values[:kind] = user.groups.where(name: SiteSetting.svdex_funds_group_name).exists? ? "funds" : "companies"
+      is_fund = fund_ids ? fund_ids.include?(user.id) : user.groups.where(name: SiteSetting.svdex_funds_group_name).exists?
+      values[:kind] = is_fund ? "funds" : "companies"
       values[:entity_type] ||= "company"
       values
     end

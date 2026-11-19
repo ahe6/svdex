@@ -21,9 +21,7 @@
     white-space: normal;
   }
 }
-// Preserve core's username + seven-statistic grid. Only the first statistic
-// belongs to the company summary; Sector starts in the second statistic slot.
-// The six company facts fill the remaining native statistic positions.
+// Keep native table typography; the wider identity track also holds the summary.
 @container directory-table (min-width: 47em) {
   .svdex-companies-page {
     // Use the regular native text size consistently across company facts.
@@ -31,8 +29,6 @@
       font-size: var(--font-0);
       white-space: normal;
     }
-    .svdex-companies-table .directory-table__header > :first-child,
-    .svdex-companies-table .directory-table__row > :first-child { grid-column: 1 / span 2; }
   }
 }
 
@@ -42,18 +38,6 @@
 :is(.topic-list-item, .latest-topic-list-item, #topic-title, .extra-info-wrapper, .fps-result .search-category) .badge-category__name {
   .svdex-category-full { display: none; }
   .svdex-category-short { display: inline; }
-}
-
-// Let core size its real column labels without exposing a duplicate directory.
-.svdex-companies-grid { position: relative; }
-.svdex-company-grid-reference {
-  position: absolute;
-  inset-inline: 0;
-  top: 0;
-  height: 0;
-  overflow: hidden;
-  visibility: hidden;
-  pointer-events: none;
 }
 
 // Use native heading typography and ComboBox controls for company navigation.

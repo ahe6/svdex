@@ -6,7 +6,7 @@ import { action } from "@ember/object";
 import HomeFiltersModal from "./svdex-home-filters-modal.gjs";
 import { activeFilterCount } from "../lib/svdex-mobile-filters";
 import { isProductCatalog, productFilterValue } from "../lib/svdex-products";
-import DButton from "discourse/ui-kit/d-button";
+import FilterTrigger from "./svdex-filter-trigger.gjs";
 
 export default class ListingMobileFilters extends Component {
   @service modal;
@@ -32,14 +32,13 @@ export default class ListingMobileFilters extends Component {
     return activeFilterCount(this.router.currentRoute?.queryParams, this.args.outletArgs.tag, this.args.outletArgs.additionalTags) + Number(typeActive);
   }
   get active() { return this.count > 0; }
-  get title() { return this.active ? `Filters (${this.count} active)` : "Filters"; }
   @action open() {
     this.modal.show(HomeFiltersModal, { model: { ...this.args.outletArgs, isOffering: this.isOffering, homeFeed: this.homeFeed } });
   }
   <template>
     {{#if this.visible}}
       <span class={{if this.homeFeed "svdex-mobile-filters svdex-home-filters" "svdex-mobile-filters"}}>
-        <DButton @icon="angle-right" @translatedLabel="Filter" @translatedTitle={{this.title}} @translatedAriaLabel={{this.title}} class={{if this.active "btn-primary svdex-filter-trigger" "btn-default svdex-filter-trigger"}} @action={{this.open}} />
+        <FilterTrigger @active={{this.active}} @count={{this.count}} @action={{this.open}} />
       </span>
     {{/if}}
   </template>

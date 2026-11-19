@@ -39,15 +39,24 @@ jobs:
           needed=any(name and not name.endswith('.md') and (name.startswith(prefixes) or name == 'playwright.config.js' or name.startswith('package') and name.endswith('.json')) for name in names)
           with open(os.environ['GITHUB_OUTPUT'],'a') as out: out.write(f'needs_forum={str(needed).lower()}\n')
           PY
-      - name: Build a fresh pinned forum and local configuration
+      # Browser/system dependencies and the Docker forum build are independent.
+      # Overlap preparation while retaining both exit statuses and every check.
+      - name: Prepare the fresh forum and browser
         if: github.event_name != 'pull_request' || steps.changes.outputs.needs_forum == 'true'
-        run: npm run setup
+        run: |
+          browser_log="$RUNNER_TEMP/svdex-browser-install.log"
+          npx playwright install --with-deps chromium --only-shell > "$browser_log" 2>&1 &
+          browser_pid=$!
+          setup_status=0
+          npm run setup || setup_status=$?
+          browser_status=0
+          wait "$browser_pid" || browser_status=$?
+          cat "$browser_log"
+          if test "$setup_status" -ne 0; then exit "$setup_status"; fi
+          exit "$browser_status"
       - name: Native permissions, financial workflows and theme compilation
         if: github.event_name != 'pull_request' || steps.changes.outputs.needs_forum == 'true'
         run: npm run check:discourse
-      - name: Install browser for isolated UI checks
-        if: github.event_name != 'pull_request' || steps.changes.outputs.needs_forum == 'true'
-        run: npx playwright install --with-deps chromium --only-shell
       - name: Guest navigation and responsive browser checks
         if: github.event_name != 'pull_request' || steps.changes.outputs.needs_forum == 'true'
         run: npm run check:browser

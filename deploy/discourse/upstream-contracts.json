@@ -110,6 +110,26 @@
       "path": "frontend/discourse/app/ui-kit/helpers/d-category-link.js",
       "sha256": "5806cc7f1dafc097b9d44a8731a48a4dffc52343ba991dd8199b890d27ced07a",
       "integration": "Single native category renderer composes onboarding URLs and compact metadata labels"
+    },
+    {
+      "path": "frontend/discourse/app/ui-kit/d-user-info.gjs",
+      "sha256": "7a05afdbc50b1258a7a83f98ca934c7ac6b32486d70992cce30711f91ae21c59",
+      "integration": "Native identity markup used by Companies; summary navigation removes user-card behavior"
+    },
+    {
+      "path": "lib/directory_items_query.rb",
+      "sha256": "27d1569d226c2f01dc6f9fa72cc0362d4def74fa5faf55cd37c18e9a714205e8",
+      "integration": "Directory extension order: search before ordering, then totals and pagination"
+    },
+    {
+      "path": "lib/guardian/user_guardian.rb",
+      "sha256": "017320d8c9c0f704ae65f6729bab0fab9b73e3bc77ebf324a163044fcee0736f",
+      "integration": "Native profile privacy checked before managed organization profile fallback"
+    },
+    {
+      "path": "app/models/concerns/has_custom_fields.rb",
+      "sha256": "f8971a2d398a3f079a0a1c3418035381c35ffe4ec5982cf5f36de176bbee0347",
+      "integration": "Native typed bulk custom-field reader for directory facts and associations"
     }
   ]
 }

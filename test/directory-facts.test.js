@@ -1,11 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-// The same transformation is used by both the table and profile view.
-let source = readFileSync(new URL('../frontend/discourse-interface/javascripts/discourse/lib/svdex-directory-columns.js', import.meta.url), 'utf8');
-const base = new URL('../frontend/discourse-interface/javascripts/discourse/lib/', import.meta.url);
-source = source.replace('"./svdex-financial-format"', JSON.stringify(new URL('svdex-financial-format.js', base).href)).replace('"./svdex-company-filters"', JSON.stringify(new URL('svdex-company-filters.js', base).href));
-const {directoryColumns, directoryFacts, fundLife} = await import(`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`);
+import { directoryColumns, directoryFacts, fundLife } from '../frontend/discourse-interface/javascripts/discourse/lib/svdex-directory-columns.js';
+
 test('company and fund facts stay distinct with eight directory columns apiece', () => {
  assert.equal(directoryColumns('companies').length, 8);
  assert.equal(directoryColumns('funds').length, 8);

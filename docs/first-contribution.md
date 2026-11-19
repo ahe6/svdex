@@ -14,6 +14,11 @@ npm ci
 npm run setup
 ```
 
+`npm run check` can also run before setup: it checks source and packaging without
+starting a forum or using cloud credentials. PR CI performs a fresh Linux setup,
+then native and browser checks. That is the clean-install check; don't rebuild
+another forum on a Docker host already running someone's development checkout.
+
 The first setup builds the pinned Discourse version and creates local content.
 It can take tens of minutes. Open <http://localhost:4080>; the generated local
 administrator credentials are in `.data/discourse-local-admin.json`. Captured
