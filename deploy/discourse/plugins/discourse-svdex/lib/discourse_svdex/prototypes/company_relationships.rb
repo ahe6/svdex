@@ -85,7 +85,7 @@ module DiscourseSvdex
           end
           raise Discourse::InvalidParameters.new(:listed_at) if contributor && date.nil?
           raise Discourse::InvalidParameters.new(:profile) if contributor && status == "accepted" && record.summary.to_s.strip.length < 20
-          row.assign_attributes(entity_kind: "companies", original_company_profile_id: record.id, provenance: provenance, status: status, contributor_user_id: contributor&.id, listed_at: date)
+          row.assign_attributes(entity_kind: record.kind, original_company_profile_id: record.id, provenance: provenance, status: status, contributor_user_id: contributor&.id, listed_at: date)
           row.original_contributor_user_id ||= contributor&.id
           row.save!
           Discoveries.event!(row, actor, "reviewed", reason, before)
@@ -105,7 +105,7 @@ module DiscourseSvdex
       private
       def organization!
         record = CompanyProfileRecord.find_by(id: params[:organization_id])
-        raise Discourse::NotFound unless CompanyRelationships.visible?(record, guardian)
+        raise Discourse::NotFound unless CompanyRelationships.visible?(record, guardian) && record.kind != "people"
         record
       end
       def verification_target(record)
@@ -131,7 +131,7 @@ module DiscourseSvdex
         accessible = CompanyRelationships.visible?(record, guardian)
         { id: row.id, kind: kind, status: FinancialSubmissions.state(row), amount_cents: row.amount_cents, currency: row.currency,
           updated_at: row.updated_at, expires_at: row.expires_at, withdrawn_at: row.withdrawn_at, side: row.side, market: row.market, verification: InterestVerification.qualification(row),
-          organization: accessible ? { id: record.id, name: record.name, url: "/company/#{record.slug}", interest_endpoint: "/company-profile-interests/#{record.id}" } : nil,
+          organization: accessible ? { id: record.id, name: record.name, url: record.profile_url, interest_endpoint: "/company-profile-interests/#{record.id}" } : nil,
           topic: nil, proposed_terms: nil, can_edit: !!(accessible && SiteSetting.svdex_interest_enabled) }
       end
     end
@@ -139,12 +139,13 @@ module DiscourseSvdex
     module CompanyDiscoveryHistory
       def additional_history(user, guardian, type: nil)
         entries = super
-        return entries unless CompanyRelationships.ready? && (type.nil? || type == "companies")
-        rows = Discovery.where(contributor_user_id: user.id, entity_kind: "companies", provenance: "discovered", status: "accepted", superseded_by_id: nil).where.not(company_profile_id: nil).includes(:company_profile)
+        return entries unless CompanyRelationships.ready?
+        rows = Discovery.where(contributor_user_id: user.id, provenance: "discovered", status: "accepted", superseded_by_id: nil).where.not(company_profile_id: nil).includes(:company_profile)
+        rows = rows.where(entity_kind: type) if type
         entries + rows.filter_map do |row|
           record = row.company_profile
           next unless CompanyRelationships.visible?(record, guardian)
-          { id: row.id, entity: { name: record.name }, kind: "companies", background: record.summary, provenance: row.provenance, listed_at: row.listed_at.iso8601, url: "/company/#{record.slug}" }
+          { id: row.id, entity: { name: record.name }, kind: record.kind, background: record.summary, provenance: row.provenance, listed_at: row.listed_at.iso8601, url: record.profile_url }
         end
       end
     end

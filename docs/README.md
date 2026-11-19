@@ -10,6 +10,7 @@
 - [Independent company profile: local experiment](independent-company-prototype.md)
 - [Reviewed company files and site corrections](company-catalog.md)
 - [Private capacity reviews and public interest totals](interest-verification.md)
+- [Feed tabs, event views and the pre-sales filter](feed-navigation.md)
 - [Source boundaries, checks and upstream upgrades](discourse-maintenance.md)
 - [Local and remote development operations](operations.md)
 - [Cloud editing, browser reports and PR previews](cloud-development.md)

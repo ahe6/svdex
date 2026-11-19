@@ -40,11 +40,11 @@ export default apiInitializer((api) => {
       get name() { return `svdex-${kind}`; }
       get text() { return text; }
       get title() { return text; }
-      get independent() { return kind === "companies" && window.location.hostname === "localhost" && window.location.port === "4080"; }
-      get route() { return this.independent ? "independent-companies" : "companies"; }
+      get independent() { return window.location.hostname === "localhost" && window.location.port === "4080"; }
+      get route() { return this.independent ? `independent-${kind}` : "companies"; }
       get query() { return { kind, order: kind === "funds" ? "svdex_aum" : "svdex_total_funding", asc: null, name: null, svdex_sector: null, svdex_funding: null, svdex_valuation: null, svdex_stage: null, svdex_location: null, svdex_open: null, svdex_type: null, svdex_aum: null, svdex_buy_interest: null, svdex_sell_interest: null }; }
       get prefixValue() { return icon; }
-      get currentWhen() { if (this.independent) return this.router.currentRouteName === "independent-companies"; return this.router.currentRouteName === "companies" && (this.router.currentRoute.queryParams.kind || "companies") === kind; }
+      get currentWhen() { if (this.independent) return this.router.currentRouteName === `independent-${kind}` || this.router.currentRouteName === (kind === "funds" ? "independent-fund" : "independent-company"); return this.router.currentRouteName === "companies" && (this.router.currentRoute.queryParams.kind || "companies") === kind; }
     });
   }
 
@@ -92,7 +92,7 @@ export default apiInitializer((api) => {
       get name() { return "svdex-people"; }
       get text() { return "People"; }
       get title() { return "People"; }
-      get route() { return "people"; }
+      get route() { return window.location.hostname === "localhost" && window.location.port === "4080" ? "independent-people" : "people"; }
       get query() { return { period: "all", order: "username", asc: true, name: null }; }
       get prefixValue() { return "address-book"; }
     });

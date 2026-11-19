@@ -42,7 +42,7 @@ export default class HomeFiltersModal extends Component {
 
   @action clear() {
     const params = new URLSearchParams(this.router.currentURL.split("?")[1]);
-    ["tags", "match_all_tags", "no_tags", "svdex_company", "svdex_valuation", "search", "page"].forEach(key => params.delete(key));
+    ["tags", "match_all_tags", "no_tags", "svdex_company", "svdex_valuation", "svdex_presales", "search", "page"].forEach(key => params.delete(key));
     const mode = /\/(top|latest|new|unread|unseen|hot)$/.exec(this.router.currentURL.split("?")[0])?.[1] || "latest";
     const products = this.site.categories.find(category => Number(category.id) === Number(this.siteSettings.svdex_products_category_id));
     const category = this.productCatalog ? products : this.args.model.category;

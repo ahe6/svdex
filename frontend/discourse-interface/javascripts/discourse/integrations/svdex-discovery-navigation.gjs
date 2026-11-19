@@ -15,9 +15,25 @@ import MobileCategoryHeading from "../components/svdex-mobile-category-heading.g
 import ListingMobileFilters from "../components/svdex-mobile-filters.gjs";
 import NavItem, { customNavItemHref } from "discourse/models/nav-item";
 import ListingTagGroupFilters from "../components/svdex-tag-group-filters.gjs";
+import PresalesChip from "../components/svdex-presales-chip.gjs";
+import { feedViews, feedViewHref } from "../lib/svdex-feed-views";
 
 export default function registerDiscoveryNavigation(api, { settings, router, site }) {
   registerDiscoveryTabs(api);
+  api.registerValueTransformer("navigation-items", ({ value: items, context }) => {
+    const query = router.currentRoute?.queryParams || {};
+    const config = feedViews({ ...context, settings, routeName: router.currentRouteName, query });
+    if (!config) return items;
+    const tabs = config.views.map(([view, label]) => {
+      const path = NavItem.pathFor(view === "top" ? "top" : "latest", { category: context.category, tag: context.tag });
+      return NavItem.create({ name: `svdex-${view}`, displayName: label, title: label,
+        filterType: view === "top" ? "top" : "latest", active: view === config.selected,
+        svdexHref: feedViewHref(path, query, view) });
+    });
+    return [...tabs, ...items.filter(item => !["latest", "top", "svdex-events-calendar"].includes(item.name))];
+  });
+  api.renderInOutlet("extra-nav-item", PresalesChip);
+  api.renderInOutlet("inline-extra-nav-item", PresalesChip);
   api.registerValueTransformer("topic-list-columns", ({ value: columns, context }) => {
     if (context.listContext === "discovery" &&
       (isOfferingCategory(context.category?.id, settings) || isPresaleCategory(context.category?.id, settings) || isProductCategory(context.category?.id, settings) ||
@@ -116,6 +132,7 @@ export default function registerDiscoveryNavigation(api, { settings, router, sit
   api.modifyClass("component:tag-drop", extendTagDrop);
 
   customNavItemHref(item => {
+    if (item.svdexHref) return item.svdexHref;
     const query = item.currentRouteQueryParams || {};
     if (!item.category && !item.tag && query.svdex_home === "1" && ["latest", "top"].includes(item.name)) {
       const params = new URLSearchParams({svdex_home: "1"});

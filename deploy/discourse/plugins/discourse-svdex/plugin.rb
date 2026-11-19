@@ -85,6 +85,15 @@ after_initialize do
       get "/company-profiles/:slug", to: "discourse_svdex/prototypes/company_profiles#show", defaults: { format: :json }
       post "/company-profiles/:slug/suggestions", to: "discourse_svdex/prototypes/company_profiles#suggest", defaults: { format: :json }
       put "/company-profiles/:slug", to: "discourse_svdex/prototypes/company_profiles#update", defaults: { format: :json }
+      { "fund" => "funds", "person" => "people" }.each do |singular, kind|
+        get "/#{singular}-directory", to: "discourse_svdex/prototypes/company_profiles#directory", defaults: { kind: kind }, constraints: { format: "html" }
+        get "/#{singular}-profiles", to: "discourse_svdex/prototypes/company_profiles#index", defaults: { kind: kind, format: :json }
+        get "/#{singular}-profiles/:slug/discovery", to: "discourse_svdex/prototypes/company_profiles#discovery", defaults: { kind: kind, format: :json }
+        put "/#{singular}-profiles/:slug/discovery", to: "discourse_svdex/prototypes/company_profiles#update_discovery", defaults: { kind: kind, format: :json }
+        get "/#{singular}-profiles/:slug", to: "discourse_svdex/prototypes/company_profiles#show", defaults: { kind: kind, format: :json }
+        put "/#{singular}-profiles/:slug", to: "discourse_svdex/prototypes/company_profiles#update", defaults: { kind: kind, format: :json }
+        get "/#{singular}/:slug", to: "discourse_svdex/prototypes/company_profiles#page", defaults: { kind: kind }, constraints: { format: "html" }
+      end
     end
   end
   require_relative "lib/discourse_svdex/retired_information_pages"
@@ -166,6 +175,8 @@ after_initialize do
   end
   require_relative "lib/discourse_svdex/topic_discovery"
   DiscourseSvdex::TopicDiscovery.install!(self)
+  require_relative "lib/discourse_svdex/feed_views"
+  DiscourseSvdex::FeedViews.install!(self)
   require_relative "lib/discourse_svdex/presales"
   DiscourseSvdex::Presales.install!(self)
   require_relative "lib/discourse_svdex/products"

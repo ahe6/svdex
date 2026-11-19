@@ -4,19 +4,22 @@ module DiscourseSvdex
     # Deliberately bounded to the local experiment. Reuses public fact payloads,
     # ranges and controls; production-scale SQL/index design remains separate.
     class CompanyProfileDirectory
-      MONEY = { "svdex_funding" => "total_funding_usd", "svdex_valuation" => "last_valuation_usd", "svdex_buy_interest" => "buy", "svdex_sell_interest" => "sell" }.freeze
+      MONEY = { "svdex_funding" => "total_funding_usd", "svdex_valuation" => "last_valuation_usd", "svdex_aum" => "aum_usd", "svdex_buy_interest" => "buy", "svdex_sell_interest" => "sell" }.freeze
       def initialize(guardian, params)
         @guardian, @params = guardian, params
       end
       def payload
         page = @params[:page].to_s.presence || "0"
         raise Discourse::InvalidParameters.new(:page) unless page.match?(/\A\d{1,4}\z/)
-        scope = CompanyProfileRecord.order(:id)
+        kind = @params[:kind].presence || "companies"
+        raise Discourse::InvalidParameters.new(:kind) unless %w[companies funds people].include?(kind)
+        scope = CompanyProfileRecord.where(kind: kind).order(:id)
         scope = scope.where(listed: true) unless @guardian.is_staff?
         all = scope.limit(501).to_a
         raise Discourse::InvalidParameters.new(:directory_size) if all.length > 500
         name = @params[:name].to_s.strip
         records = all.select { |record| record.name.downcase.include?(name.downcase) }
+        return people_payload(records, all, page.to_i) if kind == "people"
         entries = records.map { |record| CompanyProfiles.payload(record, @guardian).slice(:profile, :company) }
         MONEY.each do |key, field|
           range = @params[key].presence
@@ -54,8 +57,8 @@ module DiscourseSvdex
             actual == value
           end
         end
-        order = @params[:order].presence || "svdex_total_funding"
-        raise Discourse::InvalidParameters.new(:order) unless %w[username svdex_total_funding svdex_last_valuation svdex_buy_interest svdex_sell_interest].include?(order)
+        order = @params[:order].presence || (kind == "funds" ? "svdex_aum" : "svdex_total_funding")
+        raise Discourse::InvalidParameters.new(:order) unless %w[username svdex_total_funding svdex_last_valuation svdex_aum svdex_buy_interest svdex_sell_interest].include?(order)
         if %w[svdex_buy_interest svdex_sell_interest].include?(order) && !InterestIndication.totals_visible?(@guardian)
           raise Discourse::InvalidAccess
         end
@@ -68,6 +71,19 @@ module DiscourseSvdex
         { profiles: entries.slice(page.to_i * 25, 25).to_a, total: entries.length, has_more: entries.length > (page.to_i + 1) * 25,
           sectors: CompanyDirectory.tag_options("Sectors", @guardian), stages: all.filter_map { |record| record.facts["stage"].presence }.uniq.sort,
           locations: all.filter_map { |record| record.facts["headquarters_country"].presence }.uniq.sort }
+      end
+      def people_payload(records, all, page)
+        PeopleDirectory.validate_filters!(@params.slice(*PeopleDirectory::FILTER_KEYS))
+        entries = records.map { |record| CompanyProfiles.person_payload(record, @guardian).slice(:profile, :person) }
+        if @params[:svdex_organization].present?
+          entries.select! { |entry| entry[:person][:organizations].any? { |org| org[:id].to_s == @params[:svdex_organization].to_s } }
+        end
+        entries.select! { |entry| entry[:person][:location] == @params[:svdex_location] } if @params[:svdex_location].present?
+        entries.sort_by! { |entry| [entry[:profile]["name"].downcase, entry[:profile]["id"]] }
+        entries.reverse! if @params[:asc].to_s == "false"
+        organizations = all.flat_map { |record| CompanyProfiles.person_payload(record, @guardian)[:person][:organizations] }.uniq { |org| org[:id] }.sort_by { |org| org[:name].downcase }
+        { profiles: entries.slice(page * 25, 25).to_a, total: entries.length, has_more: entries.length > (page + 1) * 25,
+          organizations: organizations.map { |org| org.slice(:id, :name) }, locations: all.filter_map { |record| record.facts["location"].presence }.uniq.sort }
       end
       def sort_value(entry, order)
         return entry[:profile]["name"].downcase if order == "username"

@@ -7,6 +7,7 @@ checks=(
   verify-category-navigation-local
   verify-companies-local
   verify-independent-company-local
+  verify-independent-entities-local
   verify-company-catalog-local
   verify-directory-query-cost-local
   verify-people-directory-local
@@ -27,6 +28,7 @@ checks=(
   verify-help-feeds-local
   verify-private-offerings-local
   verify-events-local
+  verify-feed-views-local
   verify-production-configuration-local
   verify-site-pages-local
   verify-interface-theme-local

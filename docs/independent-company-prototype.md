@@ -1,14 +1,17 @@
 # Independent company profile: local feasibility prototype
 
 Status: an isolated local experiment, not a migration or a production feature.
-The Companies sidebar link now opens the independent directory locally. Funds and
-People remain account-backed. Existing accounts, their financial records and profile
+The Companies, Funds and People sidebar links now open independent directories
+locally. Existing accounts, their financial records and profile
 URLs are preserved for comparison; no records have been converted. Compare:
 
 - Independent directory: <http://localhost:4080/company-directory>
 - Original account-backed directory: <http://localhost:4080/companies>
 - Existing account-backed Summary: <http://localhost:4080/u/svdex-company/summary>
 - Independent company profile: <http://localhost:4080/company/svdex>
+- Independent Funds: <http://localhost:4080/fund-directory>
+- Independent People: <http://localhost:4080/person-directory>
+- Original People comparison: <http://localhost:4080/people>
 
 ## What exists
 
@@ -66,7 +69,7 @@ original timestamps and original contributor IDs retain their existing protectio
 
 ## What is deliberately incomplete
 
-- Funds/People models, key-person/related-entity editing, public dataset export,
+- Public data files for Funds/People, key-person/related-entity editing, public dataset export,
   bulk conversion and a production migration.
 - Existing account-based interest, bids, topic issuer resolution and attribution
   are **not** automatically transferred or merged with independent records.
@@ -119,8 +122,8 @@ UI components, logging and database/backup infrastructure.
 The directory and explicit interest/discovery references now work locally. Before
 production migration, resolve bid/topic issuers and choose publication/claim/representative
 rules explicitly. Avoid running two authoritative financial models indefinitely.
-No decision to replace the current account-backed implementation is implied by
-this experiment.
+The experiment now extends to Funds and People; production replacement remains a
+separate migration/release decision.
 
 ## Validation
 
@@ -185,4 +188,43 @@ Suggest changes sends a native private review topic, with a structured proposed
 public document and base revision. Staff can prepare that document as a candidate
 file and review it through GitHub; submissions never auto-publish or grant ownership.
 See [the catalog workflow](company-catalog.md). This is a working local slice, not a
-Funds/People migration or a production deployment integration.
+production deployment integration. Funds/People use staff-maintained database
+facts for now; they are not silently imported into the company-only JSON format.
+
+### Funds and People extension
+
+The shared local profile record has a constrained `kind` (companies/funds/people),
+optional account link and independent native Upload reference. Its original
+company-prototype table/class names are retained in this local slice; do not add
+three parallel entity databases. A production schema and public file formats still
+need a deliberate migration design. The installer is
+`deploy/discourse/setup-entity-profiles-prototype-local.rb`: it copies existing local
+facts once, preserves edits on rerun and never runs in release configuration.
+
+Funds reuse the existing directory columns, AUM sorting/ranges, summary renderer,
+native-topic offerings/updates and explicit profile interest/discovery references.
+Their interest stays separate from the old account's amounts. People retain their
+existing directory layout, background, current roles, location and sourced net-worth
+display, with a new lightweight professional summary. A person accepts no financial
+interest. Key-person links now reference independent people; affiliations are the
+reverse of those explicit references, not name matching or native group membership.
+Unpublished organizations are omitted from public affiliations and filter choices.
+
+Staff can edit fund/person public facts and optional account links through native
+modal controls. Net-worth edits require the existing public HTTPS source/date/basis
+validation; unknown amounts remain unknown. Native account privacy controls the
+optional participation/activity link, not the curated entity's publication state.
+Account deletion/unlinking does not remove the directory profile or its references.
+
+The localhost-only routes are `/fund-profiles`, `/fund/:slug`, `/fund-directory`,
+`/person-profiles`, `/person/:slug` and `/person-directory`. Existing `/companies`
+and `/people` remain comparison routes; production routes and original accounts
+are unchanged. Discovery history includes each independent profile's actual kind
+before shared pagination. No existing account discovery/financial records are
+automatically duplicated into the new profiles.
+
+Validation on 2026-11-19: 58 source/unit checks and 13 relevant native groups
+passed across the entity extension and feed-tab work. Browser review covered both
+independent directories and profiles, fund Buy / Sell selection, person editing,
+public links and mobile rows, plus the feed controls at desktop/375px/320px.
+No production profile/account conversion or financial-data transfer was performed.

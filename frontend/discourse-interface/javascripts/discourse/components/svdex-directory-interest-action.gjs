@@ -14,7 +14,7 @@ import { InterestModal } from "./svdex-interest.gjs";
 class InterestOrganizationSelect extends ComboBox {
   async search(filter) {
     if (this.independent) {
-      const data = await ajax("/company-profiles.json", { data: { name: filter, order: "username", asc: true } });
+      const data = await ajax("/company-profiles.json", { data: { name: filter, kind: this.kind, order: "username", asc: true } });
       return data.profiles.map(({profile}) => ({ id: profile.id, name: profile.name, endpoint: `/company-profile-interests/${profile.id}` }));
     }
     const data = await ajax("/listings/company-directory.json", { data: { name: filter, kind: this.kind, order: "username", asc: true } });

@@ -43,7 +43,7 @@ module DiscourseSvdex
         { id: "account:#{user.id}", name: "#{user.name.presence || user.username} · @#{user.username}", target_type: "account", target_id: user.id }
       end
       if defined?(Prototypes::CompanyProfileRecord) && Prototypes::CompanyProfileRecord.table_exists?
-        records = Prototypes::CompanyProfileRecord.order(:name)
+        records = Prototypes::CompanyProfileRecord.where(kind: %w[companies funds]).order(:name)
         records = records.where("name ILIKE ?", "%#{ActiveRecord::Base.sanitize_sql_like(query)}%") if query.present?
         rows.concat(records.limit(25).map { |record| { id: "company:#{record.id}", name: record.name, target_type: "company", target_id: record.id } })
       end

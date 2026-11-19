@@ -67,7 +67,7 @@ module DiscourseSvdex
         { type: type, id: target.id, name: target.name.presence || target.username }
       elsif type == "company" && defined?(Prototypes::CompanyProfileRecord) && Prototypes::CompanyProfileRecord.table_exists?
         target = Prototypes::CompanyProfileRecord.find_by(id: id)
-        raise Discourse::NotFound unless Prototypes::CompanyRelationships.visible?(target, guardian)
+        raise Discourse::NotFound unless Prototypes::CompanyRelationships.visible?(target, guardian) && target.kind != "people"
         { type: type, id: target.id, name: target.name }
       else
         raise Discourse::NotFound

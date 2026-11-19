@@ -9,5 +9,6 @@ export function isProductCatalog(id, settings) {
 export function productFilterValue(id, url, settings) {
   if (!isProductCatalog(id, settings)) return "all";
   if (!isProductCategory(id, settings)) return "presales";
+  if (new URL(url, "https://svdex.invalid").searchParams.get("svdex_presales") === "1") return "presales";
   return /\/none(?:\/|$)/.test(url.split("?")[0]) ? "products" : "all";
 }

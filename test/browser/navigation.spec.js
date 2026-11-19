@@ -88,16 +88,33 @@ test("private-access badge uses onboarding URL without a fabricated category rou
   await expect(page).toHaveURL(/\/private-offerings$/);
 });
 
-test("Offerings navigation contains Latest and Top only", async ({ page, isMobile }, info) => {
+test("Offerings navigation separates Latest, Activity and Top", async ({ page, isMobile }, info) => {
   await visit(page, categoryPath("offerings"));
   await ready(page);
   if (isMobile) await page.getByRole("button", { name: "Latest", exact: true }).click();
   const navigation = isMobile ? page.getByRole("dialog").filter({ has: page.getByRole("link", { name: "Top", exact: true }) }) : page.locator("#navigation-bar");
   await expect(navigation.getByRole("link", { name: "Latest", exact: true })).toBeVisible();
   await expect(navigation.getByRole("link", { name: "Top", exact: true })).toBeVisible();
-  await expect(navigation.getByRole("link")).toHaveCount(2);
+  await expect(navigation.getByRole("link", { name: "Activity", exact: true })).toBeVisible();
+  await expect(navigation.getByRole("link")).toHaveCount(3);
   expect(await page.title()).not.toMatch(/<\/?span/);
   await proof(page, info, "offering-tabs");
+});
+
+test("Products pre-sales checkbox survives sort changes and browser Back", async ({ page, isMobile }, info) => {
+  await visit(page, categoryPath("products"));
+  await ready(page);
+  const chip = page.locator("#navigation-bar").getByRole("checkbox", { name: "Pre-sales only", exact: true });
+  await chip.check();
+  await expect(page).toHaveURL(/svdex_presales=1/);
+  if (isMobile) await page.getByRole("button", { name: "Latest", exact: true }).click();
+  await page.getByRole("link", { name: "Activity", exact: true }).click();
+  await expect(page).toHaveURL(/svdex_view=activity/);
+  await expect(chip).toBeChecked();
+  await page.goBack();
+  await expect(chip).toBeChecked();
+  await fitsScreen(page);
+  await proof(page, info, "products-presales-chip");
 });
 
 test("product type filter keeps search and clears back to combined catalog", async ({ page }, info) => {

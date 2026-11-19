@@ -6,6 +6,7 @@ import DTableHeaderToggle from "discourse/ui-kit/d-table-header-toggle";
 import DUserInfo from "discourse/ui-kit/d-user-info";
 import DButton from "discourse/ui-kit/d-button";
 import DModal from "discourse/ui-kit/d-modal";
+import ProfileIdentity from "./svdex-profile-identity.gjs";
 
 class NetWorthDetails extends Component {
   <template>
@@ -22,7 +23,7 @@ class NetWorthDetails extends Component {
 class PersonRow extends Component {
   @service modal;
   @service site;
-  get person() { return this.args.item.user.svdex_person || {}; }
+  get person() { return this.args.item.person || this.args.item.user?.svdex_person || {}; }
   get affiliations() {
     const organizations = this.person.organizations || [];
     return organizations.map(organization => ({ ...organization,
@@ -43,12 +44,12 @@ class PersonRow extends Component {
     ];
   }
   @action showEstimate() {
-    this.modal.show(NetWorthDetails, { model: { name: this.args.item.user.name, estimate: this.person.net_worth } });
+    this.modal.show(NetWorthDetails, { model: { name: this.args.item.profile?.name || this.args.item.user.name, estimate: this.person.net_worth } });
   }
   <template>
     <div class="directory-table__row" role="row">
       <div class="directory-table__cell" role="rowheader">
-        <DUserInfo @headingLevel={{3}} @user={{@item.user}} class="svdex-person-named" />
+        {{#if @item.profile}}<ProfileIdentity @profile={{@item.profile}} />{{else}}<DUserInfo @headingLevel={{3}} @user={{@item.user}} class="svdex-person-named" />{{/if}}
       </div>
       {{#each this.facts as |fact|}}
         <div class="directory-table__cell--user-field" role="cell">

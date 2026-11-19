@@ -1,5 +1,5 @@
 export function organizationDirectoryPage(url = "") {
-  return /^\/(?:companies|company-directory)\/?$/.test(url.split("?")[0]);
+  return /^\/(?:companies|company-directory|fund-directory)\/?$/.test(url.split("?")[0]);
 }
 
 export function privateAccessNoticePage(url = "", categories = [], settings = {}) {

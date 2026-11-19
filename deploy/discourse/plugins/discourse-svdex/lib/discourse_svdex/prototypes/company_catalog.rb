@@ -21,7 +21,7 @@ module DiscourseSvdex
         record.respond_to?(:catalog_key) && record.catalog_key.present?
       end
       def self.target(doc)
-        CompanyProfileRecord.find_by(catalog_key: doc.fetch("id")) || CompanyProfileRecord.find_by(slug: doc.fetch("id")) || CompanyProfileRecord.new(slug: doc.fetch("id"))
+        CompanyProfileRecord.find_by(catalog_key: doc.fetch("id"), kind: "companies") || CompanyProfileRecord.find_by(slug: doc.fetch("id"), kind: "companies") || CompanyProfileRecord.new(slug: doc.fetch("id"), kind: "companies")
       end
       def self.tag_id(name, group, guardian)
         return nil unless name

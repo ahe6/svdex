@@ -1,4 +1,17 @@
 // Preserve desktop page alignment without reserving a scrollbar on mobile.
+.svdex-presales-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin: 0;
+  white-space: nowrap;
+  font-size: var(--font-down-1);
+  input { margin: 0; }
+}
+@media (max-width: 360px) {
+  .svdex-presales-chip { font-size: var(--font-down-2); }
+}
+
 html:has(body.desktop-view) {
   scrollbar-gutter: stable;
 }

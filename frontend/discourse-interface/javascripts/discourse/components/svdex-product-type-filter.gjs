@@ -26,6 +26,7 @@ export default class ProductTypeFilter extends Component {
     const mode = /\/l\/top(?:\/|$)/.test(url.pathname) ? "top" : "latest";
     const path = NavItem.pathFor(mode, { category, tag: this.args.model.tag, noSubcategories: value === "products" });
     url.searchParams.delete("page");
+    url.searchParams.delete("svdex_presales");
     DiscourseURL.routeTo(`${path}${url.search}`);
   }
   <template>

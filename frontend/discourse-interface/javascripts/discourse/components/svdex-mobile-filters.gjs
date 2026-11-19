@@ -32,13 +32,14 @@ export default class ListingMobileFilters extends Component {
     return activeFilterCount(this.router.currentRoute?.queryParams, this.args.outletArgs.tag, this.args.outletArgs.additionalTags) + Number(typeActive);
   }
   get active() { return this.count > 0; }
+  get compact() { return this.site.mobileView && isProductCatalog(this.args.outletArgs.category?.id, this.siteSettings); }
   @action open() {
     this.modal.show(HomeFiltersModal, { model: { ...this.args.outletArgs, isOffering: this.isOffering, homeFeed: this.homeFeed } });
   }
   <template>
     {{#if this.visible}}
       <span class={{if this.homeFeed "svdex-mobile-filters svdex-home-filters" "svdex-mobile-filters"}}>
-        <FilterTrigger @active={{this.active}} @count={{this.count}} @action={{this.open}} />
+        <FilterTrigger @active={{this.active}} @count={{this.count}} @compact={{this.compact}} @action={{this.open}} />
       </span>
     {{/if}}
   </template>
