@@ -113,8 +113,9 @@ module DiscourseSvdex
       field = FIELDS.fetch("headquarters_country")
       users = User.joins(:groups).where(groups: { name: SiteSetting.svdex_companies_group_name })
         .where(id: UserCustomField.where(name: field).where.not(value: [nil, ""]).select(:user_id))
-        .includes(:user_option, :user_stat, :user_custom_fields)
-      users.filter_map { |user| user.custom_fields[field].presence if guardian.can_see_profile?(user) }.uniq.sort_by(&:downcase)
+        .includes(:user_option, :user_stat)
+      visible = users.select { |user| guardian.can_see_profile?(user) }
+      User.custom_fields_for_ids(visible.map(&:id), [field]).values.filter_map { |fields| fields[field].presence }.uniq.sort_by(&:downcase)
     end
 
     def self.filter_items(items, filters, guardian)
@@ -178,22 +179,31 @@ module DiscourseSvdex
     # Called once for the native directory page, not once per company. Counts
     # respect the current visitor's topic and tag permissions.
     def self.populate(users, guardian)
+      return if users.empty?
+      ActiveRecord::Associations::Preloader.new(records: users, associations: [:user_option, :user_stat]).call
+      # Native custom_fields ignores the user_custom_fields AR association.
+      # Use its typed bulk reader without changing the User instances' editable
+      # field caches or introducing a second financial parsing implementation.
+      fields_by_id = User.custom_fields_for_ids(users.map(&:id), FIELDS.values)
+      fund_ids = GroupUser.where(user_id: users.map(&:id), group_id: Group.where(name: SiteSetting.svdex_funds_group_name).select(:id)).pluck(:user_id).to_set
       sectors = tag_options("Sectors", guardian).index_by { |tag| tag[:id] }
       companies = tag_options("Companies", guardian).index_by { |tag| tag[:id] }
-      tag_ids = users.filter_map { |user| companies[user.custom_fields[FIELDS.fetch("company_tag_id")].to_i]&.fetch(:id) }.uniq
+      tag_ids = users.filter_map { |user| companies[fields_by_id.dig(user.id, FIELDS.fetch("company_tag_id")).to_i]&.fetch(:id) }.uniq
       linked = offering_scope(guardian).joins(:topic_tags).where(topic_tags: { tag_id: tag_ids })
       counts = linked.group("topic_tags.tag_id").distinct.count("topics.id")
       open_counts = linked.where(closed: false, archived: false).group("topic_tags.tag_id").distinct.count("topics.id")
       reference_ids = users.flat_map do |user|
-        %w[key_people related_entities].flat_map { |key| Array(user.custom_fields[FIELDS.fetch(key)]).filter_map { |entry| entry["user_id"] if entry.is_a?(Hash) } }
+        %w[key_people related_entities].flat_map { |key| Array(fields_by_id.dig(user.id, FIELDS.fetch(key))).filter_map { |entry| entry["user_id"] if entry.is_a?(Hash) } }
       end
       reference_users = User.where(id: reference_ids).includes(:user_option, :user_stat).index_by(&:id)
       interests = InterestIndication.totals(users.map(&:id), guardian)
+      offerings_url = Category.find(SiteSetting.svdex_listings_category_id).url if tag_ids.any?
       users.each do |user|
-        values = FIELDS.transform_values { |field| user.custom_fields[field] }
+        custom_fields = fields_by_id.fetch(user.id, {})
+        values = FIELDS.transform_values { |field| custom_fields[field] }
         company_tag = companies[values["company_tag_id"].to_i]
         user.svdex_company_directory_details = {
-          **metadata(user, guardian, reference_users),
+          **metadata(user, guardian, reference_users, custom_fields: custom_fields, fund_ids: fund_ids),
           **(InterestIndication.totals_visible?(guardian) ? { interest_totals: interests[user.id] || {} } : {}),
           total_funding_usd: values["total_funding_usd"]&.to_i,
           last_valuation_usd: values["last_valuation_usd"]&.to_i,
@@ -204,8 +214,8 @@ module DiscourseSvdex
           open_offering: company_tag ? open_counts.fetch(company_tag[:id], 0) > 0 : nil,
           open_offerings: company_tag ? open_counts.fetch(company_tag[:id], 0) : 0,
           company_tag: company_tag,
-          open_offerings_url: company_tag ? "/tags#{Category.find(SiteSetting.svdex_listings_category_id).url}/#{company_tag[:slug]}/#{company_tag[:id]}?svdex_active=1" : nil,
-          offerings_url: company_tag ? "/tags#{Category.find(SiteSetting.svdex_listings_category_id).url}/#{company_tag[:slug]}/#{company_tag[:id]}" : nil,
+          open_offerings_url: company_tag ? "/tags#{offerings_url}/#{company_tag[:slug]}/#{company_tag[:id]}?svdex_active=1" : nil,
+          offerings_url: company_tag ? "/tags#{offerings_url}/#{company_tag[:slug]}/#{company_tag[:id]}" : nil,
         }
       end
     end
@@ -217,10 +227,12 @@ module DiscourseSvdex
       return {} unless group && guardian.public_can_see_profiles? && guardian.can_see_group_and_members?(group)
       counts = Hash.new(0)
       organizations = group.users.where(active: true, staged: false, admin: false, moderator: false)
-        .includes(:user_option, :user_stat, :user_custom_fields)
+        .includes(:user_option, :user_stat)
+      organizations = organizations.select { |organization| guardian.can_see_profile?(organization) }
+      key_people = FIELDS.fetch("key_people")
+      fields_by_id = User.custom_fields_for_ids(organizations.map(&:id), [key_people])
       organizations.each do |organization|
-        next unless guardian.can_see_profile?(organization)
-        ids = Array(organization.custom_fields[FIELDS.fetch("key_people")]).filter_map do |entry|
+        ids = Array(fields_by_id.dig(organization.id, key_people)).filter_map do |entry|
           entry["user_id"].to_i if entry.is_a?(Hash) && entry["user_id"].to_i > 0
         end
         ids.uniq.each { |id| counts[id] += 1 }
@@ -270,12 +282,9 @@ module DiscourseSvdex
         organization_ids = GroupUser.joins(:user).where(users: { admin: false, moderator: false }).where(group_id: Group.where(name: [
           SiteSetting.svdex_companies_group_name,
           SiteSetting.svdex_funds_group_name,
-        ]).select(:id)).pluck(:user_id)
-        candidates = items.joins(:user).where.not(user_id: organization_ids)
+        ]).select(:id)).select(:user_id)
+        items.joins(:user).where.not(user_id: organization_ids)
           .where("NULLIF(BTRIM(users.name), '') IS NOT NULL")
-        visible_ids = User.where(id: candidates.select(:user_id)).includes(:user_option, :user_stat)
-          .select { |person| guardian.can_see_profile?(person) }.map(&:id)
-        PeopleDirectory.filter_items(items.where(user_id: visible_ids), @svdex_people_filters, guardian)
       end
 
       # Classification is independent of identity, activity and login history.
@@ -290,13 +299,20 @@ module DiscourseSvdex
         [items.where.not(user_id: maintained.select(:user_id)), excluded_ids]
       end
 
-      def visible_company_user_ids
-        @svdex_visible_company_user_ids ||= User.where(admin: false, moderator: false).joins(:groups)
-          .where(groups: { name: SiteSetting.svdex_companies_group_name })
+      def visible_company_user_ids(items)
+        @svdex_visible_company_user_ids ||= User.where(id: items.select(:user_id), admin: false, moderator: false)
           .includes(:user_option, :user_stat).select { |account| guardian.can_see_profile?(account) }.map(&:id)
       end
 
       def order_items(items, requested_order, ascending)
+        if @svdex_people_directory
+          # Native name/username search has already narrowed the relation here.
+          # Visibility still applies before native counts, ordering and paging.
+          items = PeopleDirectory.filter_items(items, @svdex_people_filters, guardian)
+          visible_ids = User.where(id: items.select(:user_id)).includes(:user_option, :user_stat)
+            .select { |person| guardian.can_see_profile?(person) }.map(&:id)
+          items = items.where(user_id: visible_ids)
+        end
         if @svdex_people_directory && requested_order == "username"
           return items.joins(:user).order(Arel.sql("LOWER(BTRIM(users.name)) #{ascending ? 'ASC' : 'DESC'}"), id: :asc)
         end
@@ -309,7 +325,7 @@ module DiscourseSvdex
         if @svdex_company_directory
           # A hidden financial disclosure must not be inferred through a filter.
           if CompanyDirectory::FILTER_KEYS.any? { |key| @svdex_filters[key].present? }
-            items = items.where(user_id: visible_company_user_ids)
+            items = items.where(user_id: visible_company_user_ids(items))
           end
           items = items.joins(:user).where(users: { admin: false, moderator: false })
           items = CompanyDirectory.filter_items(items, @svdex_filters, guardian)
@@ -327,7 +343,7 @@ module DiscourseSvdex
         # Keep missing disclosures last in both directions. Never sort formatted
         # money strings, and keep legacy malformed values out of numeric casts.
         quoted = ActiveRecord::Base.connection.quote(field)
-        visible_ids = visible_company_user_ids.presence || [0]
+        visible_ids = visible_company_user_ids(items).presence || [0]
         amount = "CASE WHEN directory_items.user_id IN (#{visible_ids.join(',')}) AND company_amount.value ~ '^[0-9]{1,16}$' THEN company_amount.value::bigint END"
         items.joins("LEFT JOIN user_custom_fields company_amount ON company_amount.user_id = directory_items.user_id AND company_amount.name = #{quoted}")
           .order(Arel.sql("#{amount} #{ascending ? 'ASC' : 'DESC'} NULLS LAST"), :id => :asc)

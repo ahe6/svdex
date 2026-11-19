@@ -252,3 +252,55 @@ migration of authored offering text needs a separate schema and authoring
 workflow decision, rather than guessing numeric values during this cleanup.
 Profile visibility-aware directory queries with representative data before adding
 caches or denormalized tables; no large-directory throughput claim is established.
+
+## Query and integration review — 19 November 2026
+
+Directory search now narrows the candidate relation before Ruby profile visibility
+checks. Those checks still precede native counts, sorting and pagination. People
+organization filters resolve only the requested organization. Classification
+exclusions remain SQL subqueries instead of materialized arrays of every ID.
+
+Company/Fund fact population, location options and People/Users organization
+references use native `User.custom_fields_for_ids` for typed batch reads. Loading
+`user_custom_fields` as an Active Record association does **not** preload native
+`user.custom_fields`. Keep the bulk results local; do not replace a User's editable
+field cache with a partial preload proxy. Fund classification and offering category
+URLs are also loaded once per fact batch. No visitor-permission cache is added.
+
+The bounded query-cost check uses transaction-scoped records, cold associations
+and disabled SQL caching. In the reviewed local scenario, company fact population
+changed from 14 queries for one row / 42 for eight rows to 15 / 15. This measures
+fact loading, not complete HTTP latency or large-catalog capacity. The check also
+ensures a username search does not check every unrelated profile. Full unfiltered
+catalog visibility and association-option scans still exist; do not claim those
+have become constant-time queries.
+
+The remaining identity DOM adapter is intentional: native `DUserInfo` hardcodes
+user-card attributes on its identity links and exposes no per-instance summary
+link/no-card option. Keep the tiny scoped adapter rather than copying its whole
+markup. Its native source is now checked during upgrades, alongside native
+profile visibility, directory query ordering and custom-field decoding. Existing
+Chat shell, composer and navigation contracts remain in place.
+
+### Financial field boundaries
+
+| Facts | Storage / interpretation |
+| --- | --- |
+| Company funding, last valuation, fund AUM and fund size | Typed whole USD integers; AUM and fundraising target remain distinct |
+| Offering post-money valuation | Positive whole USD integer; not a SAFE cap |
+| Other authored offering terms | Bounded text preserving currency, ranges and qualifications; instrument-specific display does not erase hidden values |
+| Interest and bids | Validated positive integer USD cents, separate consent/state/visibility rules |
+| Personal net worth | Sourced text/range with date and basis; never inferred from company valuation |
+
+Reviewed composer field limits, instrument choices, directory ranges and existing
+native validation/serialization checks. No schema migration or conversion of
+free-form offering text is justified by this review.
+
+### CI preparation
+
+The successful tooling PR's native run took about 19 minutes: fresh forum setup
+6m45s, native checks 4m17s, browser preparation 4m47s, browser checks 2m46s, plus
+small checkout/report steps. Browser preparation now overlaps forum setup; both
+must succeed before native/browser checks proceed. This removes serial waiting,
+not test coverage. Actual savings depend on runner resources and download speeds.
+No Docker-image cache, shared production data or deployment credentials are added.

@@ -48,26 +48,27 @@ module DiscourseSvdex
       filters
     end
 
-    def self.visible_organizations(guardian)
+    def self.visible_organizations(guardian, ids: nil)
       group = Group.find_by(name: SiteSetting.svdex_companies_group_name)
       return [] unless group && guardian.public_can_see_profiles? && guardian.can_see_group_and_members?(group)
       users = group.users.where(active: true, staged: false, admin: false, moderator: false)
+      users = users.where(id: ids) if ids
       funds = Group.find_by(name: SiteSetting.svdex_funds_group_name)
       if funds && !guardian.can_see_group_and_members?(funds)
         users = users.where.not(id: GroupUser.where(group_id: funds.id).select(:user_id))
       end
-      users.includes(:user_option, :user_stat, :user_custom_fields).select { |organization| guardian.can_see_profile?(organization) }
+      users.includes(:user_option, :user_stat).select { |organization| guardian.can_see_profile?(organization) }
     end
 
-    def self.person_ids(organization)
-      Array(organization.custom_fields[CompanyDirectory::FIELDS.fetch("key_people")]).filter_map do |entry|
+    def self.person_ids(organization, fields: organization.custom_fields)
+      Array(fields[CompanyDirectory::FIELDS.fetch("key_people")]).filter_map do |entry|
         entry["user_id"].to_i if entry.is_a?(Hash) && entry["user_id"].to_i > 0
       end.uniq
     end
 
     def self.filter_items(items, filters, guardian)
       if filters["svdex_organization"]
-        organization = visible_organizations(guardian).find { |candidate| candidate.id == filters["svdex_organization"].to_i }
+        organization = visible_organizations(guardian, ids: [filters["svdex_organization"].to_i]).first
         items = items.where(user_id: organization ? person_ids(organization) : [])
       end
       if filters["svdex_location"]
@@ -87,8 +88,10 @@ module DiscourseSvdex
         .includes(:user_option, :user_stat, :user_profile)
       people = candidates.select { |person| guardian.can_see_profile?(person) }
       ids = people.map(&:id).to_set
-      organizations = visible_organizations(guardian).filter_map do |organization|
-        next unless person_ids(organization).any? { |id| ids.include?(id) }
+      visible = visible_organizations(guardian)
+      fields_by_id = User.custom_fields_for_ids(visible.map(&:id), [CompanyDirectory::FIELDS.fetch("key_people")])
+      organizations = visible.filter_map do |organization|
+        next unless person_ids(organization, fields: fields_by_id.fetch(organization.id, {})).any? { |id| ids.include?(id) }
         { id: organization.id, name: organization.name.presence || organization.username }
       end.sort_by { |organization| organization[:name].downcase }
       { organizations: organizations, locations: people.filter_map { |person| person.user_profile.location.presence }.uniq.sort }
@@ -107,12 +110,17 @@ module DiscourseSvdex
     end
 
     def self.populate(users, guardian)
-      ActiveRecord::Associations::Preloader.new(records: users, associations: [:user_custom_fields, :user_profile, :user_option, :user_stat]).call
+      return if users.empty?
+      ActiveRecord::Associations::Preloader.new(records: users, associations: [:user_profile, :user_option, :user_stat]).call
       fields = UserField.public_fields.where(external_type: FIELD_TYPE).pluck(:external_name, :id).to_h
+      facts_by_id = User.custom_fields_for_ids(users.map(&:id), fields.values.map { |id| "#{User::USER_FIELD_PREFIX}#{id}" })
       person_ids = users.map(&:id).to_set
       references = Hash.new { |hash, key| hash[key] = [] }
-      visible_organizations(guardian).each do |organization|
-        Array(organization.custom_fields[CompanyDirectory::FIELDS.fetch("key_people")]).each do |entry|
+      visible = visible_organizations(guardian)
+      key_people = CompanyDirectory::FIELDS.fetch("key_people")
+      fields_by_id = User.custom_fields_for_ids(visible.map(&:id), [key_people])
+      visible.each do |organization|
+        Array(fields_by_id.dig(organization.id, key_people)).each do |entry|
           next unless entry.is_a?(Hash) && person_ids.include?(entry["user_id"].to_i)
           references[entry["user_id"].to_i] << {
             id: organization.id, name: organization.name.presence || organization.username,
@@ -123,7 +131,8 @@ module DiscourseSvdex
       end
       users.each do |user|
         next unless guardian.can_see_profile?(user)
-        values = fields.transform_values { |id| user.user_fields[id.to_s].to_s.strip.presence }
+        facts = facts_by_id.fetch(user.id, {})
+        values = fields.transform_values { |id| facts["#{User::USER_FIELD_PREFIX}#{id}"].to_s.strip.presence }
         organizations = references[user.id].uniq { |entry| entry[:id] }
         user.svdex_person_directory_details = {
           background: ActionView::Base.full_sanitizer.sanitize(values["background"].to_s).strip.presence,
