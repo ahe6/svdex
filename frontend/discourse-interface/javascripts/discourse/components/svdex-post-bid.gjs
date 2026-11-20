@@ -23,7 +23,7 @@ export default class PostBid extends Component {
   }
   <template>
     {{#if this.siteSettings.svdex_bids_enabled}}
-      <DButton ...attributes class="post-action-menu__svdex-bid btn-primary" @translatedLabel="Submit bid" @translatedAriaLabel="Submit bid" @translatedTitle="Submit bid" @action={{this.open}} />
+      <DButton ...attributes class="post-action-menu__svdex-bid btn-primary" @translatedLabel="Indicate buy interest" @translatedAriaLabel="Indicate buy interest" @translatedTitle="Indicate buy interest" @action={{this.open}} />
     {{/if}}
   </template>
 }

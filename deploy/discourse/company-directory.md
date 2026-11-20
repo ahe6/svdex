@@ -89,19 +89,20 @@ the native profile instead of being a directory column.
 Organizations come from existing explicit Key people references on visible company
 and fund accounts. Real names supply the Person sort order in both directions.
 
-`configure-people.rb` idempotently provisions seven optional, non-user-editable native
-UserFields identified by `external_type=svdex_people`: background, role, focus, net_worth,
-net_worth_source, net_worth_date and net_worth_basis. Staff maintain them in the
+`configure-people.rb` provisions optional, non-user-editable native UserFields
+for background, role, focus, birth year and source, and the net-worth band,
+source, date and basis. Staff maintain them in the
 native user editor. Native profile visibility still controls directory disclosure;
 organization relationships do not establish account control. Location and full biography use native user profile fields. The separate Background
 field covers experience, education or current studies with named organizations
 or institutions where known; it never falls back to the biography when blank.
 Keep Key people associations current; put past roles in Background. Production provisioning adds no personal facts.
 
-The directory withholds a net-worth figure unless it also has an HTTPS source,
-valid nonfuture ISO date and a written basis. Text estimates can represent ranges
-and currencies without fake numerical precision. They are not sorted as numbers.
-The native modal shows supporting information when an estimate is clicked. This
+The directory shows a precise USD amount or one of four lower-bound bands
+(`$100k+`, `$1M+`, `$10M+`, or `$100M+`) when the
+estimate has an HTTPS source, valid nonfuture ISO date and a written basis.
+Older USD ranges use their lower end. The native modal shows the band, source
+and date. The raw fields stay out of the native public profile. This
 completeness check cannot establish source quality; staff must review it. Keep
 all public native profile fields accurate and sourced when editing them.
 

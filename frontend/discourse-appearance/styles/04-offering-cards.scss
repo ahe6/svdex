@@ -1,32 +1,184 @@
-// Mobile offerings share a directory-style identity and compact financial text.
+.svdex-topic-logo {
+  flex: none;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.btn.svdex-product-upvote {
+  flex: none;
+  align-self: center;
+  min-inline-size: 2.25rem;
+  padding: var(--space-1) var(--space-2);
+  flex-direction: column;
+  gap: 0;
+  border: 1px solid var(--primary-low);
+  border-radius: var(--d-border-radius);
+  font-size: var(--font-down-1);
+  line-height: var(--line-height-small);
+  color: var(--primary-high);
+
+  .d-icon { margin: 0; color: inherit; }
+  &.is-voted {
+    color: var(--tertiary);
+    border-color: var(--tertiary-low);
+    background: var(--tertiary-lowest);
+  }
+}
+
+.svdex-product-directory-table .btn.svdex-product-upvote {
+  flex-direction: row;
+  gap: var(--space-1);
+}
+
+.mobile-view .svdex-offering-card__identity:has(.svdex-product-upvote) {
+  gap: var(--space-2);
+}
+
+.topic-list.svdex-catalog-topics { margin-block-start: var(--space-1); }
+
+.desktop-view .topic-list.svdex-catalog-topics:has(.svdex-catalog-overview-cell) {
+  --svdex-catalog-row-padding: var(--space-2);
+  --svdex-catalog-terms-width: clamp(8.5rem, 24vw, 22rem);
+  --svdex-catalog-stats-width: 2.75rem;
+  --svdex-catalog-stats-gap: var(--space-4);
+  table-layout: fixed;
+
+  .topic-list-header th.default {
+    padding: var(--space-2) var(--svdex-catalog-row-padding);
+    font-size: var(--font-0);
+    line-height: var(--line-height-large);
+    position: relative;
+  }
+
+  .svdex-catalog-terms-heading {
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline-end: var(--svdex-catalog-row-padding);
+    translate: 0 -50%;
+    inline-size: calc(var(--svdex-catalog-terms-width) + var(--svdex-catalog-stats-width) + var(--svdex-catalog-stats-gap));
+    text-align: start;
+  }
+}
+
+.topic-list.svdex-listing-topics .svdex-listing-topic {
+  --topic-list-item-background-color--visited: var(--topic-list-item-background-color);
+  --topic-title-font-weight--visited: var(--topic-title-font-weight);
+
+  .latest-topic-list-item a.title:not(.badge-notification) { color: var(--primary); }
+
+  .svdex-offering-card a.raw-topic-link {
+    color: var(--primary);
+    font-weight: bold;
+  }
+}
+
+.desktop-view .svdex-catalog-topics .svdex-catalog-overview-cell {
+  padding: 0;
+
+  .latest-topic-list-item {
+    padding: var(--space-3) var(--svdex-catalog-row-padding);
+    align-items: flex-start;
+    border-block-end: 0;
+    line-height: var(--line-height-large);
+
+    .main-link { min-width: 0; }
+    .top-row { margin-block-end: 0; font-size: inherit; }
+    a.title { padding: 0; font-weight: bold; }
+    .topic-stats { align-self: center; }
+  }
+
+  // Restore Overview stats inside the topic table's outer cell.
+  .topic-stats > .topic-list-data.num {
+    width: auto;
+    min-width: 0;
+    padding: 0;
+    text-align: inherit;
+    font-size: var(--font-up-1);
+
+    .badge-posts { padding: 0; }
+  }
+
+  .svdex-catalog-overview-preview {
+    display: block;
+    flex-basis: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    font-size: inherit;
+    line-height: inherit;
+
+    > span {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  .latest-topic-list-item:has(.svdex-catalog-row-terms) {
+    .main-link { flex: 1 1 auto; min-width: 0; max-width: none; }
+
+    .topic-stats {
+      display: grid;
+      grid-template-columns: var(--svdex-catalog-terms-width) var(--svdex-catalog-stats-width);
+      column-gap: var(--svdex-catalog-stats-gap);
+      align-items: center;
+      width: auto;
+      flex: none;
+    }
+
+    .svdex-catalog-row-terms {
+      grid-row: span 2;
+      min-width: 0;
+      position: relative;
+
+      // Fit funding progress in the row's existing bottom padding.
+      .svdex-offering-terms__progress {
+        position: absolute;
+        inset-block-start: calc(100% + var(--space-1));
+        inset-inline-start: 0;
+        margin: 0;
+      }
+    }
+
+    .topic-stats > :is(.posts, .topic-last-activity) { justify-self: end; }
+    .svdex-offering-terms__primary { font-size: var(--font-up-1); }
+    .svdex-offering-terms__secondary { font-size: var(--font-down-1); }
+  }
+}
+
+@container (max-width: 47em) {
+  .desktop-view .topic-list.svdex-catalog-topics:has(.svdex-catalog-overview-cell) {
+    --svdex-catalog-row-padding: var(--space-3);
+    .topic-list-header:not(:has(button, .svdex-catalog-terms-heading)) { display: none; }
+    .svdex-catalog-overview-cell .latest-topic-list-item {
+      padding-block: calc(var(--space-3) + var(--space-2));
+    }
+  }
+}
+
+// Mobile catalog topics keep the logo beside the title and the preview below.
 .svdex-product-topic .svdex-home-listing-summary {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-.svdex-product-type-filter { display: grid; gap: var(--space-2); margin-block: var(--space-3); }
 
 .mobile-view .topic-list .svdex-offering-mobile-cell {
   padding: var(--space-3) 0;
-  .svdex-offering-card { --svdex-offering-content-inset: 55px; contain: inline-size; min-width: 0; }
+  .svdex-offering-card { contain: inline-size; min-width: 0; }
   .svdex-offering-card__identity {
-    display: flex;
     align-items: flex-start;
-    gap: 10px;
     width: 100%;
-    .user-image { flex: 0 0 45px; margin: 0; }
-    .user-detail { flex: 1; min-width: 0; padding: 0; font-size: var(--font-0); }
-    .name-line { margin: 0; display: block; white-space: normal; }
-    .raw-topic-link {
-      font-size: var(--font-up-1);
-      font-weight: normal;
-      color: var(--primary-high);
-      display: inline;
-      white-space: normal;
-      overflow-wrap: anywhere;
-    }
-    .badge-notification.new-topic { display: inline-block; margin-inline-start: var(--space-1); }
+    margin: 0;
+
+    .user-image { flex: 0 0 48px; }
+    .user-detail { flex: 1; padding: 0; }
+    .name-line { white-space: normal; }
+    .name-wrapper { white-space: normal; overflow-wrap: anywhere; }
+    .raw-topic-link { font-weight: bold; white-space: normal; }
+    .badge-notification.new-topic { margin-inline-start: var(--space-1); }
   }
   .svdex-offering-card__replies {
     flex: 0 0 auto;
@@ -36,6 +188,7 @@
   }
   .svdex-offering-card__summary {
     font-size: var(--font-down-1);
+    flex-basis: 100%;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
@@ -45,12 +198,11 @@
   .svdex-offering-card__preview {
     overflow-wrap: anywhere;
     display: block;
-    width: calc(100% - var(--svdex-offering-content-inset));
+    width: 100%;
     box-sizing: border-box;
     font-size: var(--font-0);
     color: var(--primary-high);
     margin: var(--space-2) 0 0;
-    margin-inline-start: var(--svdex-offering-content-inset);
   }
   .svdex-offering-card__footer {
     display: flex;
@@ -63,6 +215,26 @@
     .svdex-offering-card__tags { flex: 1; min-width: 0; }
     .discourse-tags { display: inline; font-size: inherit; }
     .discourse-tags > li, .discourse-tags__tag-separator { display: inline; }
+  }
+}
+
+.mobile-view .topic-list.svdex-catalog-topics .svdex-offering-mobile-cell {
+  padding: calc(var(--space-3) + var(--space-2)) var(--space-3);
+
+  .svdex-offering-card__identity {
+    line-height: var(--line-height-large);
+    .user-detail { min-width: 0; }
+    .name-wrapper { display: flex; flex-basis: 100%; min-width: 0; }
+    .raw-topic-link { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  }
+
+  .svdex-offering-card__summary {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: inherit;
   }
 }
 
@@ -97,6 +269,15 @@
   &__primary { font-size: var(--font-up-2); font-weight: 600; color: var(--primary); }
   &__primary--missing { color: var(--primary-medium); }
   &__secondary { margin-top: var(--space-1); color: var(--primary-high); font-size: var(--font-0); }
+  &--single-line {
+    max-width: none;
+
+    .svdex-offering-terms__secondary {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
   &__progress {
     display: block;
     appearance: none;

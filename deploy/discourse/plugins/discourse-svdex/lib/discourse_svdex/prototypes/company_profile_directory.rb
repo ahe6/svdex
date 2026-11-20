@@ -79,8 +79,19 @@ module DiscourseSvdex
           entries.select! { |entry| entry[:person][:organizations].any? { |org| org[:id].to_s == @params[:svdex_organization].to_s } }
         end
         entries.select! { |entry| entry[:person][:location] == @params[:svdex_location] } if @params[:svdex_location].present?
-        entries.sort_by! { |entry| [entry[:profile]["name"].downcase, entry[:profile]["id"]] }
-        entries.reverse! if @params[:asc].to_s == "false"
+        order = @params[:order].presence || "username"
+        field = PeopleDirectory::SORT_FIELDS[order]
+        raise Discourse::InvalidParameters.new(:order) unless order == "username" || field
+        if field
+          direction = @params[:asc].to_s == "true" ? 1 : -1
+          entries.sort_by! do |entry|
+            score = entry.dig(:person, field, :sort_value)
+            [score.nil? ? 1 : 0, direction * score.to_i, entry[:profile]["name"].downcase, entry[:profile]["id"]]
+          end
+        else
+          entries.sort_by! { |entry| [entry[:profile]["name"].downcase, entry[:profile]["id"]] }
+          entries.reverse! unless @params[:asc].to_s == "true"
+        end
         organizations = all.flat_map { |record| CompanyProfiles.person_payload(record, @guardian)[:person][:organizations] }.uniq { |org| org[:id] }.sort_by { |org| org[:name].downcase }
         { profiles: entries.slice(page * 25, 25).to_a, total: entries.length, has_more: entries.length > (page + 1) * 25,
           organizations: organizations.map { |org| org.slice(:id, :name) }, locations: all.filter_map { |record| record.facts["location"].presence }.uniq.sort }

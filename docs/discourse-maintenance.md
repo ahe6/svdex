@@ -176,7 +176,7 @@ Chat shell, composer and navigation contracts remain in place.
 | Offering post-money valuation | Positive whole USD integer; not a SAFE cap |
 | Other authored offering terms | Bounded text preserving currency, ranges and qualifications; instrument-specific display does not erase hidden values |
 | Interest and bids | Validated positive integer USD cents, separate consent/state/visibility rules |
-| Personal net worth | Sourced text/range with date and basis; never inferred from company valuation |
+| Personal net worth | Sourced lower-bound USD band with date and qualitative basis |
 
 Reviewed composer field limits, instrument choices, directory ranges and existing
 native validation/serialization checks. No schema migration or conversion of

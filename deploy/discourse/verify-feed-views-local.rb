@@ -11,7 +11,7 @@ Topic.transaction do
   products = Category.find(SiteSetting.svdex_products_category_id)
   presales = Category.find(SiteSetting.svdex_presales_category_id)
   events = Category.find(SiteSetting.svdex_events_category_id)
-  create = ->(category, title) { PostCreator.create!(actor, title: "#{title} #{SecureRandom.hex(5)}", raw: "Details for this community research topic.", category: category.id, skip_validations: true, skip_jobs: true).topic }
+  create = ->(category, title, **fields) { PostCreator.create!(actor, title: "#{title} #{SecureRandom.hex(5)}", raw: "Details for this community research topic.", category: category.id, skip_validations: true, skip_jobs: true, **fields).topic }
   old, fresh = create.call(discussion, "Older research"), create.call(discussion, "New research")
   old.update_columns(created_at: 3.days.ago, bumped_at: Time.current)
   fresh.update_columns(created_at: 1.day.ago, bumped_at: 1.day.ago)
@@ -25,7 +25,8 @@ Topic.transaction do
   older_update.update_columns(created_at: 3.days.ago, bumped_at: Time.current)
   fresh_update.update_columns(created_at: 1.day.ago, bumped_at: 1.day.ago)
   feed_assert!(select.call(TopicQuery.new(nil).list_latest, [older_update.id, fresh_update.id]) == [older_update.id, fresh_update.id], "Home Latest defaults to native recent activity")
-  product, campaign = create.call(products, "Research workspace"), create.call(presales, "Research hardware campaign")
+  product = create.call(products, "Research workspace")
+  campaign = create.call(presales, "Research hardware campaign", svdex_presale_product_id: product.id)
   feed_assert!(select.call(TopicQuery.new(nil, category: products.id).list_latest, [product.id, campaign.id]).sort == [product.id, campaign.id].sort, "Products stays mixed by default")
   feed_assert!(select.call(TopicQuery.new(nil, category: products.id, svdex_presales: "1").list_latest, [product.id, campaign.id]) == [campaign.id], "Pre-sales availability filters by category before pagination")
   feed_assert!(select.call(TopicQuery.new(nil, category: products.id, svdex_presales: "0").list_latest, [product.id, campaign.id]) == [product.id], "Launched availability excludes pre-sales before pagination")
@@ -33,6 +34,10 @@ Topic.transaction do
   guest.host! "localhost"
   guest.get "#{products.url}/l/top.json?period=all&svdex_presales=1"
   feed_assert!(guest.response.status == 200 && guest.response.parsed_body.dig("topic_list", "topics").none? { |t| t["id"] == product.id }, "native Top accepts the same pre-sales filter")
+  presales_count = -> { TopicQuery.new(nil, category: presales.id).list_latest.topics.first.attributes.fetch("svdex_catalog_count").to_i }
+  open_count = presales_count.call
+  campaign.update!(closed: true)
+  feed_assert!(presales_count.call == open_count - 1, "Pre-sales count excludes closed campaigns")
   dated = lambda do |label, start, finish, category = events|
     topic = create.call(category, label)
     event = DiscourseEvents::Events::Event.create!(id: topic.first_post.id, original_starts_at: start, original_ends_at: finish)
@@ -45,13 +50,33 @@ Topic.transaction do
   recent = dated.call("Recent event", 1.day.ago, 1.day.ago + 1.hour)
   older = dated.call("Older event", 3.days.ago, 3.days.ago + 1.hour)
   private_event = dated.call("Restricted event", 1.hour.from_now, 2.hours.from_now, Category.find(SiteSetting.svdex_private_offerings_category_id))
+  public_offer = create.call(Category.find(SiteSetting.svdex_public_offerings_category_id), "Public directory security")
+  unlisted_offer = create.call(public_offer.category, "Unlisted directory security")
+  unlisted_offer.update!(visible: false)
+  parent_id = SiteSetting.svdex_listings_category_id
+  security_ids = [public_offer.id, private_event.id, unlisted_offer.id]
+  [nil, actor].each do |viewer|
+    securities = TopicQuery.new(viewer, category: parent_id, svdex_view: "directory").list_latest
+    feed_assert!(select.call(securities, security_ids) == [public_offer.id], "Securities exposes only visible public offerings to #{viewer ? 'staff' : 'guests'}")
+  end
   all = [ongoing, soon, later, recent, older, private_event].map(&:id)
   upcoming = TopicQuery.new(nil, category: events.id).list_latest
   feed_assert!(select.call(upcoming, all) == [ongoing.id, soon.id, later.id], "Upcoming includes ongoing events and orders by native start date")
+  one_upcoming = TopicQuery.new(nil, category: events.id, per_page: 1).list_latest
+  all_upcoming = TopicQuery.new(nil, category: events.id, limit: false).list_latest
+  feed_assert!(one_upcoming.topics.one? && one_upcoming.topics.first.attributes["svdex_catalog_count"].to_i == all_upcoming.topics.size,
+    "Upcoming count applies the date filter and counts beyond the first page")
   past = TopicQuery.new(nil, category: events.id, svdex_view: "past").list_latest
   feed_assert!(select.call(past, all) == [recent.id, older.id], "Past excludes ongoing/future events and orders newest event first")
   guest.get "#{events.url}/l/latest.json?svdex_view=past"
   feed_assert!(guest.response.status == 200 && (guest.response.parsed_body.dig("topic_list", "topics").map { |t| t["id"] } & all) == [recent.id, older.id], "event view URLs preserve native anonymous permissions")
+  all_past = TopicQuery.new(nil, category: events.id, svdex_view: "past", limit: false).list_latest
+  feed_assert!(guest.response.parsed_body.dig("topic_list", "svdex_catalog_count") == all_past.topics.size,
+    "Past count is serialized from the filtered list")
+  guest.get "/filter.json", params: { q: "order:created" }
+  exported = guest.response.parsed_body.dig("topic_list", "topics").map { |topic| topic["id"] }
+  feed_assert!((all - [private_event.id] - exported).empty? && exported.exclude?(private_event.id),
+    "Native guest export feed includes past and upcoming events while excluding restricted topics")
   raise ActiveRecord::Rollback
 end
 puts "Feed view checks complete; scenario records rolled back."

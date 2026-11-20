@@ -29,7 +29,8 @@ User.transaction do
   person.user_profile.update!(bio_raw: "Research and infrastructure.", location: "New York, US")
   DirectoryItem.refresh_period!(:all)
   fields = UserField.where(external_type: DiscourseSvdex::PeopleDirectory::FIELD_TYPE).index_by(&:external_name)
-  people_assert!(fields.length == DiscourseSvdex::PeopleDirectory::FIELDS.length && fields.values.all? { |field| !field.editable && !field.show_on_signup && field.optional? && field.show_on_profile }, "People facts are optional public native fields maintained by staff")
+  people_assert!(fields.length == DiscourseSvdex::PeopleDirectory::FIELDS.length && fields.values.all? { |field| !field.editable && !field.show_on_signup && field.optional? }, "People facts are optional native fields maintained by staff")
+  people_assert!(DiscourseSvdex::PeopleDirectory::DIRECTORY_ONLY_FIELDS.none? { |key| fields.fetch(key).show_on_profile }, "native profiles withhold raw wealth and birth year fields")
   staff, headers = people_login(actor, password)
   values = { "background" => "Previously built infrastructure tools.", "role" => "Founder", "focus" => "Infrastructure", "net_worth" => "$10–20M" }
   staff.put "/u/#{person.username}.json", params: { user_fields: values.to_h { |key, value| [fields.fetch(key).id, value] } }, headers: headers
@@ -56,10 +57,37 @@ User.transaction do
   owner.put "/u/#{person.username}.json", params: { user_fields: { fields.fetch("background").id => "Changed" } }, headers: owner_headers
   people_assert!(load_person.call["background"].nil?, "members cannot overwrite staff-maintained background")
   people_assert!(facts["net_worth"].nil?, "unsupported personal wealth figures are withheld")
-  source = { "net_worth_source" => "https://example.com/estimate", "net_worth_date" => Date.current.iso8601, "net_worth_basis" => "Published range; ownership and illiquidity assumptions apply." }
+  source = { "net_worth_source" => "https://example.com/estimate", "net_worth_date" => Date.current.iso8601, "net_worth_basis" => "Published range of $10–20M." }
   staff.put "/u/#{person.username}.json", params: { user_fields: source.to_h { |key, value| [fields.fetch(key).id, value] } }, headers: headers
   estimate = load_person.call.fetch("net_worth")
-  people_assert!(estimate["value"] == "$10–20M" && estimate["source"] == source["net_worth_source"] && estimate["basis"] == source["net_worth_basis"], "sourced estimates include the range, date and basis")
+  people_assert!(estimate == { "value" => "$10M+", "sort_value" => 1_000_000_000, "source" => source["net_worth_source"], "date" => Date.current.iso8601 }, "sourced legacy ranges publish the lower band, its sort value, source and date")
+
+  younger, unknown = %w[Younger Unknown].map do |name|
+    User.create!(username: "facts_#{SecureRandom.hex(4)}", name: "#{name} person", email: "#{SecureRandom.hex(8)}@example.invalid",
+      password: password, active: true, approved: true, trust_level: 2)
+  end
+  [younger, unknown].each { |account| people.add(account) }
+  DirectoryItem.refresh_period!(:all)
+  people_values = {
+    person => { "birth_year" => "1970–1975", "birth_year_source" => source.fetch("net_worth_source") },
+    younger => source.merge("birth_year" => "1985", "birth_year_source" => source.fetch("net_worth_source"), "net_worth" => "$12,500,000"),
+  }
+  people_values.each do |account, disclosures|
+    staff.put "/u/#{account.username}.json", params: { user_fields: disclosures.to_h { |key, value| [fields.fetch(key).id, value] } }, headers: headers
+    people_assert!(staff.response.status == 200, "staff can record age ranges and precise dollar amounts")
+  end
+  {
+    "svdex_age" => [person.id, younger.id],
+    "svdex_net_worth" => [younger.id, person.id],
+  }.each do |order, descending|
+    [false, true].each do |ascending|
+      guest.get "/people/directory_items.json", params: { order: order, asc: ascending }
+      rows = guest.response.parsed_body.fetch("directory_items")
+      ordered = rows.map { |row| row.fetch("id") } & [person.id, younger.id, unknown.id]
+      expected = (ascending ? descending.reverse : descending) + [unknown.id]
+      people_assert!(ordered == expected, "#{order} sorts ranges and precise values with missing disclosures last")
+    end
+  end
   %w[javascript:alert(1) https://user:password@example.com/estimate http://example.com/estimate].each do |url|
     people_assert!(DiscourseSvdex::PeopleDirectory.estimate(values.merge(source).merge("net_worth_source" => url)).nil?, "unsafe estimate source is rejected")
   end
@@ -73,6 +101,7 @@ User.transaction do
   refs = load_person.call.fetch("organizations")
   people_assert!(refs.length == 1 && refs.first["url"] == "/u/#{organization.username}/summary", "explicit organization links are deduplicated and link to the native summary")
   guest.get "/u/#{person.username}.json"
+  people_assert!(!guest.response.body.include?("$10–20M"), "the native account profile does not expose the raw estimate")
   profile_refs = guest.response.parsed_body.dig("user", "svdex_affiliations")
   people_assert!(profile_refs.length == 1 && profile_refs.first["id"] == organization.id && profile_refs.first["role"] == "Founder", "People Summary affiliations reuse the deduplicated directory links and roles")
   people_assert!(profile_refs.first["avatar_template"].present? && profile_refs.first["username"] == organization.username, "affiliations use native account identities and avatars")

@@ -9,6 +9,7 @@ checks=(
   verify-independent-company-local
   verify-independent-entities-local
   verify-public-catalog-local
+  verify-catalog-proposals-local
   verify-company-catalog-local
   verify-directory-query-cost-local
   verify-people-directory-local

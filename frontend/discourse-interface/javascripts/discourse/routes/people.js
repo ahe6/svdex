@@ -9,6 +9,6 @@ export default class PeopleRoute extends UsersRoute {
   titleToken() { return "People"; }
   model(params) {
     return { params: { ...params, period: "all", group: this.siteSettings.svdex_people_group_name,
-      order: "username", asc: params.asc }, columns: [] };
+      order: params.order || "username", asc: params.asc }, columns: [] };
   }
 }

@@ -58,7 +58,27 @@ model.transaction do
   entity_assert!(editor.response.status == 400 && person.reload.facts["net_worth"].nil?, "unsourced person net-worth claims cannot be saved")
   sourced = { net_worth: "$8M–$12M", net_worth_source: "https://example.org/research", net_worth_date: Date.current.iso8601, net_worth_basis: "Published estimate; uncertain and not liquid capital." }
   editor.put person_path, params: { profile: { facts: sourced } }, headers: staff_headers
-  entity_assert!(editor.response.status == 200 && editor.response.parsed_body.dig("person", "net_worth", "value") == sourced[:net_worth], "person estimates retain their public source, date and basis")
+  estimate = editor.response.parsed_body.dig("person", "net_worth")
+  entity_assert!(editor.response.status == 200 && person.reload.facts["net_worth"] == "$1M+" &&
+    estimate == { "value" => "$1M+", "sort_value" => 100_000_000, "source" => sourced[:net_worth_source], "date" => sourced[:net_worth_date] },
+    "staff person estimates are saved and published as lower bands with a source and date")
+  person.update!(facts: person.facts.merge("birth_year" => "1970–1975", "birth_year_source" => sourced[:net_worth_source]))
+  younger = model.create!(kind: "people", slug: "person-#{SecureRandom.hex(4)}", name: "Alex Researcher",
+    listed: true, facts: sourced.stringify_keys.merge("net_worth" => "$1,250,000", "birth_year" => 1985,
+      "birth_year_source" => sourced[:net_worth_source]))
+  unknown = model.create!(kind: "people", slug: "person-#{SecureRandom.hex(4)}", name: "Alex Unknown", listed: true)
+  {
+    "svdex_age" => [person.id, younger.id],
+    "svdex_net_worth" => [younger.id, person.id],
+  }.each do |order, descending|
+    [false, true].each do |ascending|
+      guest.get "/person-profiles.json", params: { name: "Alex", order: order, asc: ascending }
+      ordered = guest.response.parsed_body.fetch("profiles").map { |entry| entry.dig("profile", "id") }
+      ordered &= [person.id, younger.id, unknown.id]
+      entity_assert!(ordered == (ascending ? descending.reverse : descending) + [unknown.id],
+        "independent People keeps missing disclosures last for #{order}")
+    end
+  end
   editor.put "/fund-profiles/#{fund.slug}.json", params: { profile: { facts: { aum_usd: "26000000" } } }, headers: staff_headers
   entity_assert!(editor.response.status == 200 && fund.reload.facts["aum_usd"] == 26_000_000, "staff update fund AUM through the native-style profile editor endpoint")
   app.put "/company-profile-interests/#{person.id}/buy.json", params: { interest: { amount: "1", currency: "USD", confirmation: "nonbinding" } }, headers: headers

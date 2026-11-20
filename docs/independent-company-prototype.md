@@ -158,11 +158,13 @@ name-line and two-line summary structure. Logos are native Upload records with
 company-owned UploadReferences, independent of the optional participation account;
 missing logos use Discourse's standard fallback. Local setup copies the existing
 logos and public key-person/related-entity associations once, without overwriting
-later company edits. The directory uses the same native global interest notice.
+later company edits. The directory no longer shows the global interest notice.
 
-Companies and Funds have a secondary Add interest action next to Add company/
-Add fund. Native SelectKit searches the corresponding authorized directory, then
-Company/fund, direction and amount now share one indication modal. Amount shortcuts remain.
+Companies and Funds use a blue outline and blue text for the Indicate interest
+button. Add company and Add fund use the standard primary button. The interest button uses the native arrows-left-right
+icon. Native
+SelectKit searches the corresponding authorized directory. Company/fund, direction
+and amount share one indication modal. Amount shortcuts remain.
 On mobile the action shares the existing count row to preserve the heading/search/
 filter/plus row. This change does not submit an indication until the existing
 confirmation and save step is completed.
@@ -184,12 +186,11 @@ drift. Logos, account linking, publication and financial/discovery records remai
 operational database state. The first file intentionally has unspecified financial
 figures rather than inheriting the earlier local account's invented amounts.
 
-Suggest changes sends a native private review topic, with a structured proposed
-public document and base revision. Staff can prepare that document as a candidate
-file and review it through GitHub; submissions never auto-publish or grant ownership.
-See [the catalog workflow](company-catalog.md). This is a working local slice, not a
-production deployment integration. Funds/People use staff-maintained database
-facts for now; they are not silently imported into the company-only JSON format.
+On file-managed profiles, Suggest changes opens a GitHub contribution through the
+[shared directory workflow](public-content-sync.md). Existing private correction
+threads can still be exported by staff. The independent profile backend runs
+locally. Staff can link existing Funds and People to the public catalog by
+reviewing an initial data file for each record.
 
 ### Funds and People extension
 
@@ -246,15 +247,21 @@ import/create flow should require or assign stable identity tags; these local
 fixtures are not a production backfill. Person tag associations are staff API
 facts, not public editing permissions.
 
-The directory Add interest action uses the native primary button; Add company /
-Add fund use native secondary buttons. This makes indicating interest the leading
-action while retaining a clear separate path to submit a profile.
-
 Individual company/fund summaries now use compact, labeled definition rows under
-native user-summary headings, native topic summaries and a single Add interest
-button. The directory tables are unchanged by this profile redesign. The form's
+native user-summary headings, native topic summaries and two icon-free actions:
+Buy interest and Sell interest, with matching blue/red outlines. Each opens its own direction directly. The
+directory uses one Indicate interest button. The form's
 organization selection and direction are integrated with its amount/consent fields;
 no Continue step or second modal. Changing organization cancels stale loads and
 resets capacity/consent; changing direction loads that side's existing indication.
 Product availability uses neutral joined native buttons; it does not count as an
 extra Filter selection. Active Filter triggers keep the native neutral style.
+
+### Toolbar parity review
+
+Directory controls share native 37.5px desktop control height and a row-level
+0.5em bottom reservation; direct child margins are reset consistently instead of
+offsetting individual actions. Compact controls activate before the long directory
+action row would wrap. People uses the same native mobile heading scale. Desktop
+Chat restores the standard main-content gap; old Lounge-only compensation is removed.
+The Offerings search no longer renders an adjacent total.

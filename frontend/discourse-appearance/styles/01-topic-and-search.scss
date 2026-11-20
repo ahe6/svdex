@@ -38,14 +38,27 @@
   min-height: min(650px, calc(100dvh - 70px));
 }
 
-// Match the native Users input in common/base/discourse.scss. Directory inputs
-// inherit that rule directly; composed topic search controls need the same width.
-.desktop-view { --svdex-topic-search-width: 210px; }
+// Use one desktop width for topic and directory search.
+:root { --svdex-search-width: 210px; }
+
+// The native magnifying glass already supplies the gap before the text.
+:is(.svdex-company-search-form, .svdex-discovery-search, .svdex-panel-search, .svdex-company-search-modal) .filter-input-container,
+.svdex-directory-search {
+  > .filter-input {
+    min-width: 0;
+    padding-inline-start: 0;
+
+    &::placeholder {
+      color: var(--primary-medium);
+      opacity: 1;
+    }
+  }
+}
 
 // Native filter input; only size it to fit the existing breadcrumb row.
 .svdex-company-search-form {
   display: flex;
-  width: 210px;
+  width: var(--svdex-search-width);
   max-width: 100%;
   .filter-input-container { width: 100%; }
 }
@@ -59,7 +72,7 @@
   .filter-input-clear-btn { flex-shrink: 0; padding-block: 0; min-height: 0; }
 }
 .select-kit.combo-box.tag-drop.svdex-company-suggestion-menu {
-  min-width: 210px;
+  min-width: var(--svdex-search-width);
   width: 100%;
   .select-kit-body { width: 100%; }
   .select-kit-row a { color: inherit; width: 100%; }
@@ -95,9 +108,8 @@
 .desktop-view .list-controls .navigation-container:has(.svdex-company-search-item) {
   justify-content: flex-end;
   column-gap: var(--space-3);
-  .svdex-company-search-form { width: var(--svdex-topic-search-width); }
+  .svdex-company-search-form { width: var(--svdex-search-width); }
   .navigation-controls { order: 3; }
-  #navigation-bar { order: -1; }
   .category-breadcrumb {
     flex: 1 1 0;
     flex-wrap: nowrap;

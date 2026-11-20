@@ -9,6 +9,7 @@ import CompanySearchModal from "./svdex-company-search-modal.gjs";
 
 export default class CompanyMobileControls extends Component {
   @service modal;
+  @service site;
   @tracked filtersOpen = false;
   @action filters(event) { this.filterTrigger = event?.currentTarget; this.filtersOpen = true; }
   @action closeFilters() { this.filtersOpen = false; this.filterTrigger?.focus(); }
@@ -16,7 +17,7 @@ export default class CompanyMobileControls extends Component {
   <template>
       <span class="svdex-company-mobile-controls">
         <DButton @icon="magnifying-glass" @translatedTitle={{@controller.searchTitle}} @translatedAriaLabel={{@controller.searchTitle}} @action={{this.search}} class={{if @controller.name "btn-primary svdex-company-search-trigger" "btn-default svdex-company-search-trigger"}} />
-        <FilterTrigger @active={{@controller.hasCompanyFilters}} @action={{this.filters}} />
+        <FilterTrigger @compact={{this.site.mobileView}} @active={{@controller.hasCompanyFilters}} @action={{this.filters}} />
       </span>
       {{#if this.filtersOpen}}
         <CompanyFiltersModal @model={{@controller}} @closeModal={{this.closeFilters}} />

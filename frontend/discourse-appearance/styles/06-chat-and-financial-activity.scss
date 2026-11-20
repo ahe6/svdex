@@ -1,7 +1,36 @@
+// Core Chat removes the sidebar/content gap. Keep the native page gutter on
+// desktop, rather than compensating separately on the Lounge or DM list.
+.desktop-view body.has-sidebar-page.has-full-page-chat #main-outlet-wrapper {
+  column-gap: var(--d-main-content-gap);
+}
+
+.full-page-chat .c-routes.--direct-messages {
+  box-sizing: border-box;
+  padding-block-start: var(--space-4);
+}
+
+.desktop-view .full-page-chat .c-routes.--direct-messages {
+  .chat-channel-row__info:has(.chat-channel__last-message) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    row-gap: var(--space-1);
+  }
+
+  .chat-channel__last-message {
+    grid-column: 1 / -1;
+    color: var(--primary-medium);
+    font-size: var(--font-down-1);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    .emoji { width: 1em; height: 1em; }
+  }
+}
+
 // Lounge retains the native chat shell, with a non-scrolling Discussions toolbar.
 .svdex-discussion-chat-navigation {
   flex: 0 0 auto;
-  padding: var(--space-4) 0 0 calc(var(--space-4) * 2);
+  padding: var(--space-4) 0 0;
   .navigation-container { margin-block-end: var(--space-4); }
   .navigation-controls, .category-breadcrumb { display: none; }
 }
@@ -74,19 +103,21 @@ html.has-full-page-chat body #main-outlet:has(> .svdex-discussion-chat-navigatio
 
 // A persistent sidebar can leave a desktop directory as narrow as a tablet.
 // Follow the available content width instead of keeping a desktop-size input.
-.svdex-companies-page .users-directory { container-type: inline-size; }
+:is(.svdex-companies-page, .svdex-people-page) .users-directory { container-type: inline-size; }
 .desktop-view .svdex-company-search-trigger { display: none; }
-@container (max-width: 45rem) {
+@container (max-width: 55rem) {
   .desktop-view .svdex-companies-page {
     .directory-controls {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
+      flex-wrap: wrap;
       gap: var(--space-2);
-      .period-controls { display: contents; }
-      h2 { grid-column: 1; grid-row: 1; margin: 0; align-self: center; }
+      .period-controls { gap: 0 var(--space-2); }
       .filter-name { display: none; }
     }
-    .svdex-company-directory-tools { grid-column: 2; grid-row: 1; flex-wrap: nowrap; align-self: center; gap: var(--space-2); }
+    .svdex-company-directory-tools {
+      max-width: 100%;
+      margin-inline-start: auto;
+      gap: var(--space-2);
+    }
     .svdex-company-directory-tools .inline-form { margin: 0; align-items: center; }
     .svdex-company-search-trigger { display: inline-flex; }
     .svdex-company-application { white-space: nowrap; }

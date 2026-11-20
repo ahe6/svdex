@@ -43,7 +43,7 @@ export class InterestModal extends Component {
   @action changeMarket(value) { this.market = value; this.savedPending = false; }
   get endpoint() { return this.organization?.endpoint || (this.organization ? `/listings/interests/${this.organization.id}` : null) || this.args.model.interestEndpoint || `/listings/interests/${this.args.model.organizationId}`; }
   get isBuy() { return this.side === "buy"; }
-  get title() { if (this.args.model.allowDirection) return "Add interest"; return this.isBuy ? "Buy interest" : "Sell interest"; }
+  get title() { if (this.args.model.allowDirection) return "Indicate interest"; return this.isBuy ? "Buy interest" : "Sell interest"; }
   get saveLabel() { return this.isBuy ? "Save buy interest" : "Save sell interest"; }
   get fieldsDisabled() { return this.loading || !this.loaded; }
   get saveDisabled() { return this.loading || !this.loaded || !this.confirmation || !(Number(this.amount) > 0); }
@@ -166,7 +166,7 @@ export class InterestModal extends Component {
             <input type="checkbox" name="confirmation" checked={{this.confirmation}} disabled={{this.fieldsDisabled}} {{on "change" this.update}} />
             <span>{{if this.siteSettings.svdex_interest_public_totals "This is my current nonbinding interest, and I agree to include this amount in public aggregate totals after staff capacity verification. It is not an order or investment commitment." "This is my current nonbinding interest, not an order or investment commitment."}}</span>
           </label>
-          <p class="svdex-interest-hint">Private to you and SVDEX staff. Manage or withdraw in <a href="/my/activity/interest">My Bids</a>.</p>
+          <p class="svdex-interest-hint">Private to you and SVDEX staff. Manage or withdraw in <a href="/my/activity/interest">My Interests</a>.</p>
           {{#if this.error}}<p class="alert alert-error" role="alert">{{this.error}}</p>{{/if}}
           {{#if this.error}}{{#unless this.loading}}<DButton @translatedLabel="Try again" @action={{this.load}} />{{/unless}}{{/if}}
         </div>
@@ -188,5 +188,5 @@ export default class InterestButton extends Component {
   @action open() {
     if (!this.currentUser) return getOwner(this).lookup("route:application").send("showLogin");
     this.modal.show(InterestModal, { model: { interestEndpoint: this.args.interestEndpoint, organizationId: this.args.organizationId, organizationName: this.args.organizationName, side: this.args.side, allowDirection: this.args.allowDirection, topicId: this.args.topicId, topicTitle: this.args.topicTitle, onChange: this.args.onChange } }); }
-  <template>{{#if this.siteSettings.svdex_interest_enabled}}<DButton @translatedLabel={{if @label @label "Indicate interest"}} @translatedTitle={{@title}} @translatedAriaLabel={{@title}} @action={{this.open}} class={{if @buttonClass @buttonClass "btn-primary"}} />{{/if}}</template>
+  <template>{{#if this.siteSettings.svdex_interest_enabled}}<DButton @icon={{@icon}} @translatedLabel={{if @label @label "Indicate interest"}} @translatedTitle={{@title}} @translatedAriaLabel={{@title}} @action={{this.open}} class={{if @buttonClass @buttonClass "btn-primary"}} />{{/if}}</template>
 }

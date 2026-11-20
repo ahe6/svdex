@@ -1,3 +1,10 @@
+import CatalogOverviewRow, {
+  CatalogOverviewLogo,
+  CatalogOverviewPreview,
+  CatalogOverviewTerms,
+  CatalogOverviewTermsHeading,
+  isCatalogCategory,
+} from "../components/svdex-catalog-overview-row.gjs";
 import PresaleFields from "../components/svdex-presale-fields.gjs";
 import { isPresaleCategory } from "../lib/svdex-presales";
 import { isProductCategory } from "../lib/svdex-products";
@@ -11,6 +18,7 @@ import { homeOfferColumn, HomeOfferHeader } from "../components/svdex-home-offer
 import ListingHomePreview from "../components/svdex-listing-home-preview.gjs";
 import ListingOverview from "../components/svdex-listing-overview.gjs";
 import PostBid from "../components/svdex-post-bid.gjs";
+import { CatalogTopicProposalAction } from "../components/svdex-catalog-proposal.gjs";
 import { isOfferingCategory, composerCategoryScope, composerCategoryChoices } from "../lib/svdex-offering-categories";
 import OfferingMobileCard from "../components/svdex-offering-mobile-card.gjs";
 import ListingFields from "../components/svdex-listing-fields.gjs";
@@ -65,6 +73,8 @@ export default function registerOfferingTopics(api, { settings, router, site }) 
   api.registerValueTransformer("post-menu-buttons", ({ value: dag, context: { buttonKeys, collapsedButtons } }) => {
     dag.add("svdex-bid", PostBid, { before: buttonKeys.REPLY });
     collapsedButtons.show("svdex-bid");
+    dag.add("svdex-suggest-catalog", CatalogTopicProposalAction, { before: buttonKeys.REPLY });
+    collapsedButtons.show("svdex-suggest-catalog");
   });
   api.registerValueTransformer("create-topic-label", ({ value, context }) => {
     if ((value === "topic.create" || value === "") && isProductCategory(context.category?.id, settings)) return "svdex.add_product";
@@ -86,6 +96,10 @@ export default function registerOfferingTopics(api, { settings, router, site }) 
   });
   api.renderInOutlet("discovery-list-area", OfferingsEmptyState);
   api.renderInOutlet("topic-list-item", OfferingMobileCard);
+  api.renderInOutlet("topic-list-heading-bottom", CatalogOverviewTermsHeading);
+  api.renderInOutlet("latest-topic-list-item-topic-poster", CatalogOverviewLogo);
+  api.renderInOutlet("latest-topic-list-item-main-link-bottom-row", CatalogOverviewPreview);
+  api.renderInOutlet("latest-topic-list-item-topic-stats", CatalogOverviewTerms);
   api.renderInOutlet("composer-fields", ListingFields);
   api.renderInOutlet("composer-fields", PresaleFields);
   api.renderInOutlet("topic-list-main-link-bottom", ListingHomePreview);
@@ -95,6 +109,14 @@ export default function registerOfferingTopics(api, { settings, router, site }) 
     // Every desktop topic list shares one offering presentation. Ordinary
     // topics still render the native posters cell through the wrapper.
     if (!site.mobileView) {
+      if (context.listContext === "discovery" && isCatalogCategory(context.category, settings)) {
+        columns.replace("topic", { item: CatalogOverviewRow });
+        for (const key of ["posters", "replies", "likes", "op-likes", "views", "activity"]) {
+          columns.delete(key);
+        }
+        return columns;
+      }
+
       const posters = columns.resolve().find(entry => entry.key === "posters");
       if (posters) columns.replace("posters", {
         header: HomeOfferHeader,
@@ -105,6 +127,7 @@ export default function registerOfferingTopics(api, { settings, router, site }) 
     return columns;
   });
   api.registerValueTransformer("topic-list-class", ({ value, context }) => {
+    if (isCatalogCategory(context.category, settings)) value.push("svdex-catalog-topics");
     if (isOfferingCategory(context.category?.id, settings) || isPresaleCategory(context.category?.id, settings)) value.push("svdex-listing-topics");
     return value;
   });

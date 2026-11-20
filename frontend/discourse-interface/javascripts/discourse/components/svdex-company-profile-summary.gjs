@@ -65,7 +65,10 @@ export default class CompanyProfileSummary extends Component {
             <div class="svdex-company-details-header">
               <h3 class="stats-title">{{this.heading}}{{#if this.isSpv}} · SPV{{/if}}</h3>
               {{#if (or @user.id @data.profile.id)}}
-                <InterestButton @interestEndpoint={{@data.interest_endpoint}} @organizationId={{or @data.profile.id @user.id}} @organizationName={{or @data.profile.name @user.name}} @allowDirection={{true}} @label="Add interest" @title="Indicate buy or sell interest" @buttonClass="btn-primary" @onChange={{this.refresh}} />
+                <div class="svdex-profile-interest-actions" role="group" aria-label="Indicate interest">
+                  <InterestButton @interestEndpoint={{@data.interest_endpoint}} @organizationId={{or @data.profile.id @user.id}} @organizationName={{or @data.profile.name @user.name}} @side="buy" @label="Buy interest" @title="Indicate buy interest" @buttonClass="btn-default" @onChange={{this.refresh}} />
+                  <InterestButton @interestEndpoint={{@data.interest_endpoint}} @organizationId={{or @data.profile.id @user.id}} @organizationName={{or @data.profile.name @user.name}} @side="sell" @label="Sell interest" @title="Indicate sell interest" @buttonClass="btn-default" @onChange={{this.refresh}} />
+                </div>
               {{/if}}
             </div>
             <dl class="svdex-organization-facts">

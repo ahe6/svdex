@@ -149,6 +149,7 @@ PYTHON
   presales)
     docker cp "$repo_dir/deploy/discourse/configure-presales.rb" "$config:/tmp/configure-presales.rb"
     docker exec -u discourse "$config" bash -lc 'cd /var/www/discourse && bundle exec rails runner /tmp/configure-presales.rb'
+    "$0" products
     docker cp "$repo_dir/deploy/discourse/setup-presales-local.rb" "$config:/tmp/setup-presales-local.rb"
     exec docker exec -u discourse "$config" bash -lc 'cd /var/www/discourse && bundle exec rails runner /tmp/setup-presales-local.rb'
     ;;

@@ -1,4 +1,8 @@
 plugins:
+  svdex_catalog_publishing_enabled:
+    default: false
+  svdex_catalog_proposals_enabled:
+    default: false
   svdex_presales_category_id:
     default: 0
     type: category

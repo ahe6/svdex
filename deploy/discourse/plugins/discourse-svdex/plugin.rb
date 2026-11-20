@@ -20,10 +20,6 @@ module ::DiscourseSvdex
     [SiteSetting.svdex_listings_category_id.to_i, SiteSetting.svdex_public_offerings_category_id.to_i, SiteSetting.svdex_private_offerings_category_id.to_i].select(&:positive?).uniq
   end
 
-  def self.home_category_ids
-    (offering_category_ids + [SiteSetting.svdex_introductions_category_id.to_i, SiteSetting.svdex_presales_category_id.to_i]).select(&:positive?).uniq
-  end
-
   def self.offering_category?(id)
     offering_category_ids.include?(id.to_i)
   end
@@ -72,6 +68,9 @@ require_relative "lib/discourse_svdex/financial_submissions"
 require_relative "lib/discourse_svdex/engine"
 
 after_initialize do
+  require_relative "app/controllers/discourse_svdex/catalog_proposals_controller"
+  add_to_serializer(:site, :svdex_catalog_publishing_ready) { DiscourseSvdex::CatalogProposals.publishing_ready? }
+  add_to_serializer(:site, :svdex_catalog_proposals_available) { DiscourseSvdex::CatalogProposals.enabled? }
   require_relative "lib/discourse_svdex/secure_draft_uploads"
   UploadsController.prepend(DiscourseSvdex::SecureDraftUploads)
   if GlobalSetting.hostname == "localhost" && SiteSetting.port.to_s == "4080"
@@ -181,11 +180,34 @@ after_initialize do
   require_relative "lib/discourse_svdex/topic_discovery"
   DiscourseSvdex::TopicDiscovery.install!(self)
   require_relative "lib/discourse_svdex/feed_views"
+  require_relative "lib/discourse_svdex/securities_directory"
   DiscourseSvdex::FeedViews.install!(self)
   require_relative "lib/discourse_svdex/presales"
   DiscourseSvdex::Presales.install!(self)
   require_relative "lib/discourse_svdex/products"
   DiscourseSvdex::Products.install!(self)
+  DiscourseSvdex::TopicDiscovery.install_catalog_counts!(self)
+  add_to_serializer(:topic_view, :svdex_catalog_security_id, include_condition: -> {
+    DiscourseSvdex::SecuritiesDirectory.eligible?(object.topic) &&
+      object.topic.custom_fields[DiscourseSvdex::SecuritiesDirectory::CATALOG_KEY].present?
+  }) { object.topic.custom_fields[DiscourseSvdex::SecuritiesDirectory::CATALOG_KEY] }
+  if defined?(DiscourseSvdex::Prototypes::PublicCatalog)
+    add_to_serializer(:topic_view, :svdex_catalog_product_id, include_condition: -> {
+      (DiscourseSvdex::Products.topic?(object.topic) || DiscourseSvdex::Presales.topic?(object.topic)) &&
+        object.topic.custom_fields[DiscourseSvdex::Prototypes::PublicCatalog::PRODUCT_KEY].present?
+    }) { object.topic.custom_fields[DiscourseSvdex::Prototypes::PublicCatalog::PRODUCT_KEY] }
+  end
+  require_relative "lib/discourse_svdex/product_directory"
+  Discourse::Application.routes.append do
+    get "/product-directory", to: "discourse_svdex/product_directory#index", defaults: { format: :json }, constraints: { format: "json" }
+    get "/directory-proposals/:kind/:id", to: "discourse_svdex/catalog_proposals#show", defaults: { format: :json }, constraints: { format: "json" }
+    post "/directory-proposals/:kind", to: "discourse_svdex/catalog_proposals#create", defaults: { format: :json }, constraints: { format: "json" }
+    put "/directory-proposals/:kind/:id", to: "discourse_svdex/catalog_proposals#update", defaults: { format: :json }, constraints: { format: "json" }
+  end
+  if defined?(DiscourseSvdex::Prototypes::CompanyProfiles)
+    require_relative "lib/discourse_svdex/prototypes/topic_logos"
+    DiscourseSvdex::Prototypes::TopicLogos.install!(self)
+  end
 
   DiscourseSvdex::FIELDS.each do |name, length|
     register_topic_custom_field_type(name, name == DiscourseSvdex::VALUATION_FIELD ? :integer : :string, max_length: length)

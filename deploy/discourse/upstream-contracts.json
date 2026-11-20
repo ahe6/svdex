@@ -137,6 +137,11 @@
       "integration": "Keep native DM list on desktop instead of redirecting to last channel; preserve anonymous guard"
     },
     {
+      "path": "plugins/chat/assets/javascripts/discourse/components/chat-channel-row.gjs",
+      "sha256": "5ff268e0894fbdf86ef496048cd2f9bd3848080c347bf4f5938d3ce9b7bdcd9b",
+      "integration": "Use the native last-message excerpt in full-page desktop DM rows"
+    },
+    {
       "path": "lib/secure_upload_endpoint_helpers.rb",
       "sha256": "169b8cea145166e7ba3e2f51a5c43b2ea3cfb6b6249f3ee12e0fa9f383d67e4f",
       "integration": "Secure draft ownership guard delegates posted upload authorization to native helper"

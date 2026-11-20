@@ -1,7 +1,7 @@
 # Reviewed company files and site corrections
 
-Status: local-only experiment for the independent Companies directory. Funds,
-People, production deployment and automatic GitHub publishing are unchanged.
+Independent Companies profiles are available locally. The shared importer also
+handles Funds, People and Products. See [current rollout status](public-content-sync.md).
 
 The public data file is the source for the fields it contains. Discourse's database
 serves the existing searchable directory/profile and holds account links, logos,
@@ -23,14 +23,13 @@ The stable public ID is separate from the database row ID and any account name.
 
 ## Local import
 
-Install the current plugin code locally and stop the UI watcher. Schema setup adds
-catalog key/revision/document/snapshot metadata to the existing local company
-record; there is no production database migration or automatic release import.
+Install the current plugin code locally and stop the UI watcher. The shared
+importer reads reviewed files from `directory/`.
 
 ```sh
 npm run dev:stop
-bash scripts/import-company-catalog-local.sh          # preview only
-bash scripts/import-company-catalog-local.sh --apply  # explicit local import
+bash scripts/import-public-catalog-local.sh          # preview only
+bash scripts/import-public-catalog-local.sh --apply  # explicit local import
 npm run dev
 ```
 
@@ -41,14 +40,21 @@ also resolves tags and validates stage/location against the site's existing rule
 
 Imports are transactional and content-addressed. Repeating the same content does
 not rewrite rows. A batch conflict rolls back the whole batch, including inside an
-existing transaction. Missing files do not delete profiles. New records start
-unpublished; file changes never grant account control or private-offering access.
+existing transaction. Missing files do not delete profiles. New reviewed records
+are listed. File changes never grant account control or private-offering access.
 Logos, operational links and existing interest/discovery relationships are preserved.
 Unreviewed changes to file-owned database fields block imports instead of being
 silently overwritten. The old staff editor cannot edit those managed fields;
 operational account-link maintenance remains available.
 
-## Site contribution → reviewed file
+## Site contribution
+
+**Suggest changes** now opens a public GitHub proposal for file-managed
+profiles. Follow the [shared directory workflow](public-content-sync.md).
+The older private review threads remain available to staff for exporting
+corrections already submitted.
+
+## Earlier private correction intake
 
 1. A signed-in contributor opens **Suggest changes** on the company profile.
 2. Like native membership requests, this fixed-recipient intake accepts brand-new
@@ -74,13 +80,11 @@ Export requires staff access and checks the proposal's base revision. A stale fo
 cannot submit against a newer imported revision; a stale proposal cannot be exported
 without reconciliation. Individual corrections are not part of the public dataset.
 
-This is two contribution paths into one reviewed source. People are not required
-to use GitHub, and neither path silently wins over changes from the other.
 
 ## Remaining work before a production rollout
 
-- Funds/People schemas and their independent entity relationships.
-- A reviewed production import/release step and a stable public-data licensing policy.
+- Promote the independent profile backend and test the reviewed import on staging.
+- Establish a stable public-data licensing policy.
 - Source/reviewer conventions, representative claims and creation/publication UI.
 - Production-scale query/index design; the current local directory remains bounded.
 

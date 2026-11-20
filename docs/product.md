@@ -32,8 +32,9 @@ Add person opens a native private-message draft to the configured staff contact
 for signed-in members. Staff review suggestions and maintain People membership;
 the button does not automatically publish a profile or grant account ownership.
 
-Home Latest/Top includes viewer-visible offerings, approved Pre-sales and Updates.
-Ordinary products, discussions, Feedback and community Events are outside that allowlist.
+Home Latest/Top shows topics the viewer can access, including offerings,
+pre-sales, products, discussions, Updates and Events. Feedback and category
+description topics are excluded from Home.
 Its native sector dropdown, labeled Filter, narrows the existing feed; it does not silently
 broaden into the global tag feed. Latest/Top retains the tag selection. Standalone
 tag pages remain broader and respect native topic security.
@@ -108,8 +109,9 @@ uses native topic rows, author avatars, company/sector tags, a cached descriptio
 preview and replies/views/activity. New submissions require review; replies and
 edits use the native workflow. The post body holds product descriptions, company
 profile links, websites and links to related pre-sale campaigns. There is no new
-product-account system, checkout, bidding or financial field storage. Ordinary
-products do not enter Home's financing/updates feed. Local fixtures are installed
+product-account system, checkout, bidding or financial field storage. Products
+Latest and Top show upvotes beside the product, and All products sorts by the
+same first-post like count. Local fixtures are installed
 by `setup-products-local.rb`; deployment config creates only the empty category.
 
 ## Pre-sales
@@ -383,8 +385,9 @@ Its native activity columns and optional group filters remain available. Product
 creates an empty People group; local professional fixtures are never published.
 
 People columns are Person (real name, photo and a short background line), Current roles,
-Location and Est. net worth. Current roles pair each organization with its specific
-role underneath. Details are vertically centered on desktop and remain left-aligned.
+Current affiliations, Location, Age and All-Time Money. Age and All-Time Money sort
+numerically, using the lower end of ranges and bands and placing unknown values last.
+Details are vertically centered on desktop and remain left-aligned.
 Focus and general role remain available as native profile fields. They use native responsive directory
 rows instead of account activity stats. Organizations reverse explicit Key people
 account links, respecting profile/group visibility. Person sorting uses real names.

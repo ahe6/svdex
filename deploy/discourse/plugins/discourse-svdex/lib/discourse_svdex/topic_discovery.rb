@@ -3,48 +3,62 @@ module DiscourseSvdex
   # Native discovery query/serializer extensions. Registration stays ordered;
   # filtering remains server-side and always builds on Guardian's secured scope.
   module TopicDiscovery
+    # Run after the feed modifiers so the total includes the native Events date filter.
+    def self.install_catalog_counts!(plugin)
+      plugin.register_modifier(:topic_query_create_list_topics) do |topics, options, query|
+        category_id = query.options.merge(options)[:category_id]
+        field = catalog_count_field(category_id)
+        next topics unless field
+
+        # Count the secured relation before pagination and pin promotion.
+        matching = topics.except(:limit, :offset, :order).reselect("topics.id").distinct
+        if DiscourseSvdex.offering_category?(category_id) || Presales.category?(category_id)
+          matching = matching.where(topics: { closed: false, archived: false })
+        end
+        total = Topic.unscoped.from(matching, :svdex_matching_topics).count
+        topics = topics.select("topics.*") if topics.select_values.empty?
+        topics.select("#{Integer(total)} AS #{field}")
+      end
+
+      %i[svdex_offering_count svdex_catalog_count].each do |field|
+        plugin.add_to_serializer(:topic_list, field, include_condition: -> {
+          TopicDiscovery.catalog_count_field(object.category&.id) == field
+        }) { object.topics.first&.attributes&.fetch(field.to_s, 0).to_i }
+      end
+    end
+
+    def self.catalog_count_field(id)
+      return :svdex_offering_count if DiscourseSvdex.offering_category?(id)
+      if id.to_i.positive? && (Products.category?(id) || Presales.category?(id) || id.to_i == SiteSetting.svdex_events_category_id.to_i)
+        :svdex_catalog_count
+      end
+    end
+
+    def self.home_topics(topics)
+      feedback = SiteSetting.svdex_help_category_id.to_i
+      feedback = SiteSetting.meta_category_id.to_i unless feedback.positive?
+      topics.where.not(category_id: feedback)
+        .where.not(id: Category.where.not(topic_id: nil).select(:topic_id))
+    end
+
     def self.install!(plugin)
       plugin.instance_eval do
-      # Home is a discovery feed for offerings and approved company/fund updates,
-      # including introductions. Discussions and Help remain readable in their own
-      # categories, search, bookmarks, notifications and direct links. Apply the
-      # allowlist before pagination rather than hiding fetched topics in the UI.
-      # Native Guardian filtering still protects private offering categories.
+      # Exclude Feedback and category descriptions from the already secured Home
+      # query before pagination. Scoped category and standalone tag lists remain native.
       register_modifier(:topic_query_create_list_topics) do |topics, options, query|
         opts = query.options.merge(options)
         scoped = %i[category category_id tags tag_id username group_name topic_ids].any? { |key| opts[key].present? }
         if %w[latest top].include?(opts[:filter].to_s) && !scoped
-          topics.where(category_id: DiscourseSvdex.home_category_ids)
-            .where.not(id: Category.where(id: DiscourseSvdex.home_category_ids).where.not(topic_id: nil).select(:topic_id))
+          TopicDiscovery.home_topics(topics)
         else
           topics
         end
       end
 
-      # Count the secured, fully filtered relation before pagination and native
-      # pinning split it into separate queries. Attach that same total to each row.
-      register_modifier(:topic_query_create_list_topics) do |topics, options, query|
-        if DiscourseSvdex.offering_category?(query.options.merge(options)[:category_id])
-          matching = topics.except(:limit, :offset, :order).reselect("topics.id").distinct
-          total = Topic.unscoped.from(matching, :svdex_matching_offerings).count
-          topics = topics.select("topics.*") if topics.select_values.empty?
-          topics.select("#{Integer(total)} AS svdex_offering_count")
-        else
-          topics
-        end
-      end
-      add_to_serializer(:topic_list, :svdex_offering_count, include_condition: -> {
-        DiscourseSvdex.offering_category?(object.category&.id)
-      }) { object.topics.first&.attributes&.fetch("svdex_offering_count", 0).to_i }
-
-      # The native description topic is category documentation, never a listing,
-      # including for staff who can otherwise see unlisted topics.
-      # Home's native tag selector narrows the existing feed, not the global tag
-      # directory. The marker preserves that allowlist through tag filtering.
+      # Home's tag selector keeps the same exclusion as the unfiltered feed.
       TopicQuery.add_custom_filter(:svdex_home) do |results, query|
         if query.options[:svdex_home].to_s == "1"
-          results.where(category_id: DiscourseSvdex.home_category_ids)
-            .where.not(id: Category.where(id: DiscourseSvdex.home_category_ids).where.not(topic_id: nil).select(:topic_id))
+          TopicDiscovery.home_topics(results)
         else
           results
         end

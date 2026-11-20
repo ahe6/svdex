@@ -20,9 +20,6 @@ module DiscourseSvdex
       def self.managed?(record)
         record.kind == "companies" && record.respond_to?(:catalog_key) && record.catalog_key.present?
       end
-      def self.target(doc)
-        CompanyProfileRecord.find_by(catalog_key: doc.fetch("id"), kind: "companies") || CompanyProfileRecord.find_by(slug: doc.fetch("id"), kind: "companies") || CompanyProfileRecord.new(slug: doc.fetch("id"), kind: "companies")
-      end
       def self.tag_id(name, group, guardian)
         return nil unless name
         tag = CompanyDirectory.tag_options(group, guardian).find { |item| item[:name] == name }
@@ -39,35 +36,6 @@ module DiscourseSvdex
       end
       def self.snapshot(record)
         { "name" => record.name, "summary" => record.summary, "facts" => FACTS.to_h { |key| [key, record.facts[key]] } }
-      end
-      def self.import!(documents, actor:, apply: false)
-        CompanyProfiles.ensure_local!
-        raise Discourse::InvalidAccess unless actor&.staff?
-        # Validate all records before any writes. A transaction rolls back the
-        # entire batch on conflicts; absent files never delete directory records.
-        documents.each { |doc| CatalogDocument.validate!(doc) }
-        raise CatalogDocument::Invalid, "Duplicate company IDs" unless documents.map { |doc| doc["id"] }.uniq.length == documents.length
-        report = []
-        CompanyProfileRecord.transaction(requires_new: true) do
-          documents.sort_by { |doc| doc.fetch("id") }.each do |doc|
-            record = target(doc)
-            record.with_lock do
-              raise CatalogDocument::Invalid, "Company ID collision" if managed?(record) && record.catalog_key != doc["id"]
-              if managed?(record) && snapshot(record) != record.catalog_snapshot
-                raise CatalogDocument::Invalid, "Unreviewed database changes for #{doc['id']}; reconcile before importing"
-              end
-              values, revision = attributes(doc, Guardian.new(actor)), CatalogDocument.revision(doc)
-              changed = record.catalog_revision != revision
-              report << { id: doc["id"], changed: changed, before: snapshot(record), after: values }
-              next unless apply && changed
-              record.assign_attributes(name: values["name"], summary: values["summary"], facts: record.facts.merge(values["facts"]),
-                catalog_key: doc["id"], catalog_revision: revision, catalog_document: doc, catalog_snapshot: values)
-              record.save!
-              StaffActionLogger.new(actor).log_custom("svdex_company_catalog_import", profile_id: record.id, revision: revision)
-            end
-          end
-        end
-        report
       end
       def self.reviewer!
         reviewer = User.find_by_username(SiteSetting.svdex_private_access_contact)

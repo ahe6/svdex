@@ -6,7 +6,6 @@ import AboutSectionLink from "discourse/lib/sidebar/common/community-section/abo
 import BadgesSectionLink from "discourse/lib/sidebar/common/community-section/badges-section-link";
 import GroupsSectionLink from "discourse/lib/sidebar/common/community-section/groups-section-link";
 import UsersSectionLink from "discourse/lib/sidebar/common/community-section/users-section-link";
-import MyPostsSectionLink from "discourse/lib/sidebar/user/community-section/my-posts-section-link";
 import ReviewSectionLink from "discourse/lib/sidebar/user/community-section/review-section-link";
 import AdminSectionLink from "discourse/lib/sidebar/user/community-section/admin-section-link";
 import InviteSectionLink from "discourse/lib/sidebar/user/community-section/invite-section-link";
@@ -34,21 +33,6 @@ export default apiInitializer((api) => {
     get currentWhen() { return /^discovery\.(latest|top|overview|new|unread|unseen)$/.test(this.router.currentRouteName); }
   });
 
-  // Separate directory links share one route without sharing active state.
-  for (const [kind, text, icon] of (hasSvdexPlugin ? [["companies", "Companies", "building"], ["funds", "Funds", "chart-pie"]] : [])) {
-    api.addCommunitySectionLink(BaseLink => class extends BaseLink {
-      get name() { return `svdex-${kind}`; }
-      get text() { return text; }
-      get title() { return text; }
-      get independent() { return window.location.hostname === "localhost" && window.location.port === "4080"; }
-      get route() { return this.independent ? `independent-${kind}` : "companies"; }
-      get query() { return { kind, order: kind === "funds" ? "svdex_aum" : "svdex_total_funding", asc: null, name: null, svdex_sector: null, svdex_funding: null, svdex_valuation: null, svdex_stage: null, svdex_location: null, svdex_open: null, svdex_type: null, svdex_aum: null, svdex_buy_interest: null, svdex_sell_interest: null }; }
-      get prefixValue() { return icon; }
-      get currentWhen() { if (this.independent) return this.router.currentRouteName === `independent-${kind}` || this.router.currentRouteName === (kind === "funds" ? "independent-fund" : "independent-company"); return this.router.currentRouteName === "companies" && (this.router.currentRoute.queryParams.kind || "companies") === kind; }
-    });
-  }
-
-
   api.addCommunitySectionLink(BaseLink => class extends BaseLink {
     @service site;
     get category() { return this.site.categories.find(category => Number(category.id) === Number(this.siteSettings.svdex_listings_category_id)); }
@@ -69,37 +53,57 @@ export default apiInitializer((api) => {
     get shouldDisplay() { return Boolean(this.category); }
   });
 
-  if (hasSvdexPlugin) {
-    api.addCommunitySectionLink(BaseLink => class extends BaseLink {
-      @service site;
-      get category() { return this.site.categories.find(category => Number(category.id) === Number(this.siteSettings.svdex_products_category_id)); }
-      get name() { return "svdex-products"; }
-      get text() { return "Products"; }
-      get title() { return "Products and pre-sale campaigns"; }
-      get href() { return this.category?.url; }
-      get prefixValue() { return "box-open"; }
-      get shouldDisplay() { return Boolean(this.category); }
-      get currentWhen() {
-        const path = (this.router.currentURL || "").split("?")[0];
-        const ids = [this.siteSettings.svdex_products_category_id, this.siteSettings.svdex_presales_category_id].map(Number);
-        return this.site.categories.some(category => ids.includes(Number(category.id)) && (path === category.url || path.startsWith(`${category.url}/`) || path.startsWith(`/tags${category.url}/`)));
-      }
-    });
-  }
+  // Separate directory links share one route without sharing active state.
+  const organizationDirectoryLink = (kind, text, icon) => BaseLink => class extends BaseLink {
+    @service router;
+    get name() { return `svdex-${kind}`; }
+    get text() { return text; }
+    get title() { return text; }
+    get independent() { return window.location.hostname === "localhost" && window.location.port === "4080"; }
+    get route() { return this.independent ? `independent-${kind}` : "companies"; }
+    get query() { return { kind, order: kind === "funds" ? "svdex_aum" : "svdex_total_funding", asc: null, name: null, svdex_sector: null, svdex_funding: null, svdex_valuation: null, svdex_stage: null, svdex_location: null, svdex_open: null, svdex_type: null, svdex_aum: null, svdex_buy_interest: null, svdex_sell_interest: null }; }
+    get prefixType() { return "icon"; }
+    get prefixValue() { return icon; }
+    get currentWhen() { if (this.independent) return this.router.currentRouteName === `independent-${kind}` || this.router.currentRouteName === (kind === "funds" ? "independent-fund" : "independent-company"); return this.router.currentRouteName === "companies" && (this.router.currentRoute.queryParams.kind || "companies") === kind; }
+  };
+
+  const catalogCategoryLink = (name, label, setting, icon, suffix = "") => BaseLink => class extends BaseLink {
+    @service site;
+    @service siteSettings;
+    @service router;
+    get category() { return this.site.categories.find(category => Number(category.id) === Number(this.siteSettings[setting])); }
+    get name() { return `svdex-${name}`; }
+    get text() { return label; }
+    get title() { return label; }
+    get href() { return this.category && `${this.category.url}${suffix}`; }
+    get prefixType() { return "icon"; }
+    get prefixValue() { return icon; }
+    get shouldDisplay() { return Boolean(this.category); }
+    get currentWhen() {
+      const url = this.category?.url;
+      const path = (this.router.currentURL || "").split("?")[0];
+      return Boolean(url && (path === url || path.startsWith(`${url}/`) || path.startsWith(`/tags${url}/`)));
+    }
+  };
 
   if (hasSvdexPlugin) {
-    api.addCommunitySectionLink(BaseLink => class extends BaseLink {
-      get name() { return "svdex-people"; }
-      get text() { return "People"; }
-      get title() { return "People"; }
-      get route() { return window.location.hostname === "localhost" && window.location.port === "4080" ? "independent-people" : "people"; }
-      get query() { return { period: "all", order: "username", asc: true, name: null }; }
-      get prefixValue() { return "address-book"; }
-    });
+    api.addCommunitySectionLink(catalogCategoryLink("presales", "Pre-sales", "svdex_presales_category_id", "cart-shopping"));
   }
 
-  // Independent discussions keep their native category and topic controls,
-  // but are no longer mixed into Home's listing/introductions feed.
+  // Events starts with native event topics; Calendar is an alternate view.
+  api.addCommunitySectionLink(BaseLink => class extends BaseLink {
+    @service site;
+    get category() { return this.site.categories.find(c => Number(c.id) === Number(this.siteSettings.svdex_events_category_id)); }
+    get name() { return "svdex-events"; }
+    get text() { return "Events"; }
+    get title() { return "Events and community conversations"; }
+    get href() { return this.category?.url || "/upcoming-events"; }
+    get currentWhen() { return this.router.currentRouteName?.startsWith("discourse-post-event-upcoming-events") || (this.category && this.router.currentURL?.split("?")[0].startsWith(this.category.url)); }
+    get prefixValue() { return "calendar-day"; }
+    get shouldDisplay() { return this.siteSettings.discourse_events_enabled && this.siteSettings.discourse_post_event_enabled; }
+  });
+
+  // Discussions includes the category feed, Overview, and Lounge.
   api.addCommunitySectionLink(BaseLink => class extends BaseLink {
     @service site;
     get category() { return this.site.categories.find(category => category.slug === "discussion"); }
@@ -116,6 +120,20 @@ export default apiInitializer((api) => {
     get prefixValue() { return "comments"; }
     get shouldDisplay() { return Boolean(this.category); }
   });
+
+  if (hasSvdexPlugin) {
+    api.addCommunitySectionLink(organizationDirectoryLink("companies", "Companies", "building"));
+    api.addCommunitySectionLink(organizationDirectoryLink("funds", "Funds", "chart-pie"));
+    api.addCommunitySectionLink(catalogCategoryLink("products", "Products", "svdex_products_category_id", "box-open", "/none"));
+    api.addCommunitySectionLink(BaseLink => class extends BaseLink {
+      get name() { return "svdex-people"; }
+      get text() { return "People"; }
+      get title() { return "People"; }
+      get route() { return window.location.hostname === "localhost" && window.location.port === "4080" ? "independent-people" : "people"; }
+      get query() { return { period: "all", order: "username", asc: true, name: null }; }
+      get prefixValue() { return "address-book"; }
+    });
+  }
 
   api.addCommunitySectionLink(() => class extends FAQSectionLink {
     get shouldDisplay() { return false; }
@@ -148,19 +166,6 @@ export default apiInitializer((api) => {
     get prefixValue() { return "circle-question"; }
     get shouldDisplay() { return Boolean(this.category); }
   }, true);
-  // Events starts with native event topics; Calendar is an alternate view.
-  api.addCommunitySectionLink(BaseLink => class extends BaseLink {
-    @service site;
-    get category() { return this.site.categories.find(c => Number(c.id) === Number(this.siteSettings.svdex_events_category_id)); }
-    get name() { return "svdex-events"; }
-    get text() { return "Events"; }
-    get title() { return "Events and community conversations"; }
-    get href() { return this.category?.url || "/upcoming-events"; }
-    get currentWhen() { return this.router.currentRouteName?.startsWith("discourse-post-event-upcoming-events") || (this.category && this.router.currentURL?.split("?")[0].startsWith(this.category.url)); }
-    get prefixValue() { return "calendar-day"; }
-    get shouldDisplay() { return this.siteSettings.discourse_events_enabled && this.siteSettings.discourse_post_event_enabled; }
-  });
-
   // Personal conversations use native Chat. Staff applications retain private topics.
   api.addCommunitySectionLink(BaseLink => class extends BaseLink {
     get name() { return "my-messages"; }
@@ -171,24 +176,28 @@ export default apiInitializer((api) => {
     get currentWhen() { return "chat.direct-messages"; }
     get shouldDisplay() { return Boolean(this.currentUser?.has_chat_enabled) && this.siteSettings.chat_enabled; }
   });
-  api.addCommunitySectionLink(() => class extends MyPostsSectionLink {
-    constructor(owner, options) { super(owner, { ...options, overriddenName: "My posts" }); }
-    get prefixValue() { return this._hasDraft && this.currentUser?.unified_new_enabled ? "pencil" : "file-lines"; }
+
+  api.addCommunitySectionLink({
+    name: "svdex-index", text: "All tags", title: "All tags", href: "/tags", icon: "tags",
+  }, true);
+  api.addCommunitySectionLink(BaseLink => class extends BaseLink {
+    get name() { return "my-posts"; }
+    get text() { return "My posts"; }
+    get title() { return "View your posts"; }
+    get route() { return "userActivity.index"; }
+    get model() { return this.currentUser; }
+    get prefixValue() { return "file-lines"; }
+    get shouldDisplay() { return Boolean(this.currentUser); }
   });
   api.addCommunitySectionLink(BaseLink => class extends BaseLink {
     get name() { return "svdex-my-interest"; }
-    get text() { return "My Bids"; }
-    get title() { return "My Bids"; }
+    get text() { return "My Interests"; }
+    get title() { return "My Interests"; }
     get route() { return "userActivity.interest"; }
     get model() { return this.currentUser?.username; }
     get prefixValue() { return "file-invoice-dollar"; }
     get shouldDisplay() { return Boolean(this.currentUser) && Boolean(this.siteSettings.svdex_companies_group_name); }
   });
-
-
-  api.addCommunitySectionLink({
-    name: "svdex-index", text: "All tags", title: "All tags", href: "/tags", icon: "tags",
-  }, true);
   // Keep Bookmarks in core's main navigation instead of a separate custom section.
   api.addCommunitySectionLink(BaseLink => class extends BaseLink {
     get name() { return "svdex-bookmarks"; }
@@ -201,7 +210,7 @@ export default apiInitializer((api) => {
   });
   api.addCommunitySectionLink(() => class extends BadgesSectionLink {
     get text() { return "Achievements"; }
-  });
+  }, true);
 
   api.addCommunitySectionLink(() => class extends UsersSectionLink {
     get text() { return "Users"; }

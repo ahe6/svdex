@@ -35,6 +35,12 @@ Post.transaction do
   raise "Count exposed private or unlisted offerings" unless JSON.parse(app.response.body).fetch("topic_list").fetch("svdex_offering_count") == 2
   app.get "#{category.url}.json", params: { svdex_company: "absent-#{SecureRandom.hex(8)}" }
   raise "Empty count must be zero" unless JSON.parse(app.response.body).fetch("topic_list").fetch("svdex_offering_count") == 0
+  Topic.find_by!(title: titles.first).update!(closed: true)
+  Topic.find_by!(title: titles.last).update!(archived: true)
+  app.get "#{category.url}.json", params: { svdex_company: company }
+  payload = app.response.parsed_body.fetch("topic_list")
+  raise "Closed or archived offerings were counted" unless payload.fetch("svdex_offering_count") == 0
+  raise "Closed and archived offerings should still appear in search" unless payload.fetch("topics").map { |topic| topic["title"] }.sort == titles.sort
   puts "PASS offering counts respect filtering, pinning, pagination, empty results and private visibility; security names are searchable"
   app.get "/listings/companies.json", params: { q: "%" }
   raise "Wildcard was not literal" unless JSON.parse(app.response.body)["companies"].empty?

@@ -5,6 +5,7 @@ DiscourseSvdex::Prototypes::CompanyProfiles.setup!
 Catalog = DiscourseSvdex::Prototypes::CompanyCatalog
 Document = DiscourseSvdex::Prototypes::CatalogDocument
 Profiles = DiscourseSvdex::Prototypes::CompanyProfileRecord
+PublicCatalog = DiscourseSvdex::Prototypes::PublicCatalog
 
 def catalog_assert!(value, message)
   raise message unless value
@@ -32,20 +33,23 @@ begin
     [staff, member, stranger].each { |user| user.email_tokens.update_all(confirmed: true) }
     SiteSetting.svdex_private_access_contact = staff.username
     SiteSetting.personal_message_enabled_groups = "1|2|11"
+    import = ->(documents, apply: false) do
+      entries = documents.map { |document| { "kind" => "companies", "document" => document } }
+      PublicCatalog.import!({ "format" => DiscourseSvdex::Prototypes::PublicCatalogDocument::FORMAT, "entries" => entries }, actor: staff, apply: apply)
+    end
     Document.read_directory("/tmp/svdex-company-catalog-input").each { |entry| Catalog.attributes(entry, Guardian.new(staff)) }
     doc = Document.read_directory("/tmp/svdex-company-catalog-input").first.deep_dup
     doc["id"] = "catalog-#{SecureRandom.hex(4)}"
     count = User.count
-    result = Catalog.import!([doc], actor: staff)
+    result = import.call([doc])
     catalog_assert!(result.first[:changed] && !Profiles.exists?(catalog_key: doc["id"]), "default catalog preview never writes company data")
-    Catalog.import!([doc], actor: staff, apply: true)
+    import.call([doc], apply: true)
     record = Profiles.find_by!(catalog_key: doc["id"])
-    catalog_assert!(record.name == doc["name"] && !record.listed && record.official_account_id.nil? && User.count == count, "import creates independent facts without publishing or creating an account")
+    catalog_assert!(record.name == doc["name"] && record.listed && record.official_account_id.nil? && User.count == count, "reviewed import publishes independent facts without creating an account")
     catalog_assert!(record.facts["total_funding_usd"].nil? && record.catalog_revision == Document.revision(doc), "unknown figures remain unknown and carry a content revision")
     timestamp = record.updated_at
-    Catalog.import!([doc], actor: staff, apply: true)
+    import.call([doc], apply: true)
     catalog_assert!(record.reload.updated_at == timestamp, "re-importing the same content is idempotent")
-    record.update!(listed: true)
     guest, = catalog_session
     signed, headers = catalog_session(member, password)
     admin, admin_headers = catalog_session(staff, password)
@@ -81,7 +85,7 @@ begin
     rescue Discourse::InvalidAccess
       puts "PASS proposed-file export remains staff-only"
     end
-    Catalog.import!([proposed], actor: staff, apply: true)
+    import.call([proposed], apply: true)
     catalog_assert!(record.reload.name == suggestion[:name] && record.official_account_id == member.id && record.listed, "reviewed import updates public facts while preserving account link and publication state")
     signed.post proposal_path, params: { suggestion: suggestion }, headers: headers
     catalog_assert!(signed.response.status == 400, "a stale correction form cannot overwrite a newer review revision")
@@ -93,7 +97,7 @@ begin
     end
     record.update!(summary: "A direct database edit that has not been reconciled.")
     begin
-      Catalog.import!([proposed], actor: staff, apply: true)
+      import.call([proposed], apply: true)
       raise "database drift overwritten"
     rescue Document::Invalid
       puts "PASS database drift is detected instead of silently overwritten"
@@ -103,11 +107,11 @@ begin
     changed["summary"] = "Reviewed company research infrastructure."
     invalid = doc.deep_dup
     invalid["id"] = "invalid-#{SecureRandom.hex(4)}"
-    invalid["sector"] = "not-a-configured-sector"
+    invalid["stage"] = "not-a-configured-stage"
     begin
-      Catalog.import!([changed, invalid], actor: staff, apply: true)
+      import.call([changed, invalid], apply: true)
       raise "invalid batch imported"
-    rescue Document::Invalid
+    rescue Document::Invalid, Discourse::InvalidParameters
       catalog_assert!(record.reload.summary == proposed["summary"], "an invalid batch rolls back earlier company writes")
     end
     raise ActiveRecord::Rollback

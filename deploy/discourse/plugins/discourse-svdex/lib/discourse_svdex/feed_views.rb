@@ -19,6 +19,15 @@ module DiscourseSvdex
         category_id = opts[:category_id].to_i
         events = category_id.positive? && category_id == SiteSetting.svdex_events_category_id.to_i
         view = opts[:svdex_view].presence&.to_s
+        if view == "directory"
+          if DiscourseSvdex::SecuritiesDirectory.available?(category_id)
+            public_category = DiscourseSvdex::SecuritiesDirectory.public_category
+            topics = public_category ? topics.where(category_id: public_category.id, visible: true, archetype: Archetype.default) : topics.none
+          elsif !Products.category?(category_id) && !Presales.category?(category_id)
+            raise Discourse::InvalidParameters.new(:svdex_view)
+          end
+          view = "latest"
+        end
         raise Discourse::InvalidParameters.new(:svdex_view) if view && !%w[latest activity upcoming past].include?(view)
         if events && %w[latest top].include?(opts[:filter].to_s)
           view ||= "upcoming"

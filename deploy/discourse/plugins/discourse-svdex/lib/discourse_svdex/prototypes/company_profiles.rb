@@ -26,7 +26,7 @@ module DiscourseSvdex
       REFERENCE_FACTS = %w[key_people related_entities].freeze
       FACTS = %w[total_funding_usd last_valuation_usd sector_tag_id company_tag_id stage headquarters_country].freeze
       FUND_FACTS = %w[aum_usd strategy_focus vintage_year fund_life fund_domicile entity_type manager_name].freeze
-      PERSON_FACTS = %w[topic_tag_id role focus location net_worth net_worth_source net_worth_date net_worth_basis].freeze
+      PERSON_FACTS = %w[topic_tag_id role focus location birth_year birth_year_source net_worth net_worth_source net_worth_date net_worth_basis].freeze
       def self.ensure_local!
         raise Discourse::NotFound unless GlobalSetting.hostname == "localhost" && SiteSetting.port.to_s == "4080"
       end
@@ -127,9 +127,19 @@ module DiscourseSvdex
             end
           end
           if record.kind == "people" && facts.keys.any? { |key| key.start_with?("net_worth") }
+            if facts["net_worth"].present?
+              facts["net_worth"] = PeopleDirectory.net_worth_value(facts["net_worth"])&.fetch(:value)
+              raise Discourse::InvalidParameters.new("Use a USD amount or a supported band") unless facts["net_worth"]
+            end
             merged = record.facts.merge(facts)
             if merged.slice(*CompanyProfiles::PERSON_FACTS.grep(/^net_worth/)).values.any?(&:present?) && PeopleDirectory.estimate(merged).nil?
               raise Discourse::InvalidParameters.new("Net worth needs a public HTTPS source, date and basis")
+            end
+          end
+          if record.kind == "people" && (facts.key?("birth_year") || facts.key?("birth_year_source"))
+            merged = record.facts.merge(facts)
+            if merged.values_at("birth_year", "birth_year_source").any?(&:present?) && PeopleDirectory.estimated_age(merged).nil?
+              raise Discourse::InvalidParameters.new("Birth year needs a valid year and a public HTTPS source")
             end
           end
           { "sector_tag_id" => "Sectors", "company_tag_id" => "Companies", "topic_tag_id" => "People" }.each do |key, group|
@@ -214,7 +224,8 @@ module DiscourseSvdex
             avatar_template: organization.logo_upload&.url || User.default_template(organization.slug) }
         end
         data = { profile: identity(record), topics_url: related_topics_url(record, guardian), person: record.facts.slice("role", "focus", "location").symbolize_keys.merge(
-          background: record.summary, organizations: affiliations, net_worth: PeopleDirectory.estimate(record.facts)),
+          background: record.summary, organizations: affiliations, age: PeopleDirectory.estimated_age(record.facts),
+          net_worth: PeopleDirectory.estimate(record.facts)),
           discovery: CompanyRelationships.credit(record, guardian) }
         account = record.official_account
         if account && account.active? && !account.staged? && guardian.public_can_see_profiles? && guardian.can_see_profile?(account)

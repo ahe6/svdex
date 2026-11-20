@@ -4,33 +4,33 @@ Implemented locally for issues [#10](https://github.com/ahe6/svdex/issues/10) an
 [#11](https://github.com/ahe6/svdex/issues/11); not deployed by this work.
 
 Home and Discussions use Latest / Top, with Latest retaining native recent
-activity order. Discussions adds Chat / Overview; its directory and chat routes
+activity order. Home includes topics the viewer can access and excludes Feedback
+and category description topics. Discussions adds Chat / Overview; its directory and chat routes
 show the same four navigation items. There is no separate Activity tab there.
-Products and Offerings keep Latest / Activity / Top: Latest means creation date,
-Activity means native topic activity, and Top uses native engagement scoring.
+Offerings uses Latest and All securities, Products uses Latest, Top and All
+products, and Pre-sales uses Latest and All pre-sales. Products Top uses native
+ranking and the same period selector as Home and Discussions. Latest sorts by creation date in these
+categories. Existing Top and Activity URLs still work. Activity sorts
+by recent topic activity.
 Overview/Chat remain their existing destinations. Native topic rendering, access
 controls, moderation and ordinary column sorts stay in place.
 
 The view is stored as `svdex_view` on native discovery URLs. Tabs preserve search,
-tags, offering filters and the Products pre-sales selection, while resetting stale
+tags and offering filters, while resetting stale
 pagination and explicit column order. Native discovery query-param registration
 keeps refresh/deep links/Back usable. No parallel topic-feed storage is introduced.
 
-Events uses Upcoming / Past instead. Upcoming combines the installed native Events
-plugin's upcoming and ongoing predicates, ordered by start date ascending. Past
-uses its finished/closed predicate and descending start date. Recurrence/current
-occurrence, missing end-time semantics and topic visibility stay with the native
-Events query. Events without a native event are not included. The native calendar
-route remains available, but Calendar is no longer a main Events tab.
+Events uses Upcoming / Calendar. Upcoming combines the installed native Events
+plugin's upcoming and ongoing predicates, ordered by start date ascending. Calendar
+uses the native Events route, including navigation into previous months. The Past
+tab is removed; existing past-filter URLs retain their finished/closed query.
+Recurrence/current occurrence, missing end-time semantics and topic visibility
+stay with the native Events query. Events without a native event are not included.
 
-Products stays mixed by default. A visible group of native buttons offers All,
-Launched and Pre-sales, independent of Latest / Activity / Top. It sits beside the
-Products heading on mobile and beside the view tabs on desktop. `svdex_presales=1`
-selects the pre-sale child category; `svdex_presales=0` excludes it before pagination.
-Here Launched means the normal Products category, not an inferred shipping date.
-Native child-category and `/none` routes remain supported. The Type selection in
-Filters uses the same classification; clearing filters removes the marker.
-No keyword matching or securities reclassification is introduced.
+Products and Pre-sales have separate sidebar entries. Products opens Discourse's
+`/none` category route to exclude subcategories, and Pre-sales opens its existing
+public category. The feed tabs preserve each category's scope. Existing
+combined URLs and the pre-sales query parameter still work for old links.
 
 At mobile widths, core's single view dropdown is retained. Products uses a native
 square filter-icon action to keep the main toolbar compact at 320px. Staff-only
@@ -52,3 +52,16 @@ the command line in this session.
 The availability button group replaces the earlier checkbox and dropdown.
 The launch-only predicate and stable entity-tag profile links have additional
 native regression coverage. Browser CI expectations follow the selector UI.
+
+
+All products uses public product topics. It joins campaigns by product topic ID
+and links companies by their Companies tag. Its category filters come from
+Sectors. An open campaign sets the Pre-sale stage. Otherwise a concept tag sets
+Concept and other products display Shipping. All pre-sales reuses
+the table on the Pre-sales URL and shows products with open campaigns. Likes uses
+Discourse's topic like count and sorts highest first by default.
+
+All securities uses the native Offering topic query and its filters, limited to
+visible topics in the Public offerings category even for staff. Latest continues
+to use normal category permissions. Securities and Products can be updated
+through the same [public GitHub review flow](public-content-sync.md).

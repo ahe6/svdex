@@ -7,8 +7,11 @@ module DiscourseSvdex
       Invalid = CatalogDocument::Invalid
       PRODUCT_KEY = "svdex_catalog_product_key"
       PRODUCT_STATE = "svdex_public_catalog"
+      def ready?
+        defined?(CompanyProfileRecord) && CompanyProfileRecord.table_exists? && CompanyProfileRecord.column_names.include?("catalog_snapshot")
+      end
       def ready!
-        raise Invalid, "Independent profile backend must be installed before content sync" unless defined?(CompanyProfileRecord) && ActiveRecord::Base.connection.column_exists?(CompanyProfileRecord.table_name, :catalog_snapshot)
+        raise Invalid, "Independent profile backend must be installed before content sync" unless ready?
       end
       def import!(bundle, actor:, apply: false)
         ready!
@@ -20,7 +23,11 @@ module DiscourseSvdex
           ActiveRecord::Base.connection.execute("SELECT pg_advisory_xact_lock(738439, 1)")
           bundle.fetch("entries").sort_by { |e| [e["kind"], e["document"]["id"]] }.each do |entry|
             kind, doc = entry.values_at("kind", "document")
-            result = kind == "products" ? product!(doc, actor, dry_run: !apply) : profile!(kind, doc, actor)
+            result = case kind
+            when "products" then product!(doc, actor, dry_run: !apply)
+            when "securities" then security!(doc, actor, dry_run: !apply)
+            else profile!(kind, doc, actor)
+            end
             reports << { kind: kind, id: doc["id"], changed: result }
           end
           raise ActiveRecord::Rollback unless apply
@@ -83,21 +90,23 @@ module DiscourseSvdex
       def product!(doc, actor, dry_run: false)
         tag = tag!(doc["tag"], "Products")
         sector = tag!(doc["sector"], "Sectors")
-        category_id = doc["facts"]["status"] == "presales" ? SiteSetting.svdex_presales_category_id : SiteSetting.svdex_products_category_id
-        category = Category.find(category_id)
+        company_id = CompanyCatalog.tag_id(doc.dig("facts", "company_tag"), "Companies", Guardian.new)
+        company_tag = Tag.find(company_id).name if company_id
+        category = Category.find(SiteSetting.svdex_products_category_id)
         raise Invalid, "Products catalog only publishes to public product categories" if category.read_restricted?
         row = TopicCustomField.find_by(name: PRODUCT_KEY, value: doc["id"])
         topic = row&.topic
         revision = CatalogDocument.revision(doc)
         raw = [doc["summary"], doc["facts"]["description"]].join("\n\n")
         %w[price includes delivery].each { |key| Presales.validate!(key, doc["facts"][key].to_s) }
-        values = { title: doc["name"], raw: raw, category_id: category.id, tags: [tag.name, sector&.name].compact }
+        stage = doc["facts"]["status"] == "presales" ? "concept" : "shipping"
+        values = { title: doc["name"], raw: raw, category_id: category.id, tags: [tag.name, company_tag, sector&.name, stage].compact.uniq }
         if topic
           topic.lock!
           state = topic.custom_fields[PRODUCT_STATE]
           raise Invalid, "Product content ownership is missing" unless state.is_a?(Hash)
           raise Invalid, "Database edits conflict with reviewed product content" unless state["snapshot"] == product_snapshot(topic)
-          return false if state["revision"] == revision
+          return false if state["revision"] == revision && topic.category_id == category.id
           return true if dry_run
           raise Invalid, "Native product revision failed" unless PostRevisor.new(topic.first_post).revise!(actor, values, skip_validations: true, bypass_bump: true)
         else
@@ -111,6 +120,63 @@ module DiscourseSvdex
         topic.save_custom_fields
         StaffActionLogger.new(actor).log_custom("svdex_product_catalog_import", topic_id: topic.id, revision: revision)
         true
+      end
+
+      def security!(doc, actor, dry_run: false)
+        category = SecuritiesDirectory.public_category
+        raise Invalid, "The public offerings category is unavailable" unless category
+
+        facts = doc.fetch("facts")
+        key = SecuritiesDirectory::CATALOG_KEY
+        link = TopicCustomField.find_by(name: key, value: doc.fetch("id"))
+        topic = link ? Topic.with_deleted.find_by(id: link.topic_id) : Topic.find_by(id: facts["topic_id"])
+        raise Invalid, "Use the existing public security topic ID" unless topic && topic.id == facts["topic_id"]
+
+        fields = ["instrument_type", *PublicCatalogDocument::SECURITY_TERMS].to_h do |field|
+          custom_key = "svdex_#{field}"
+          value = facts[field]
+          [custom_key, value.nil? ? nil : DiscourseSvdex.validate_field!(custom_key, value)]
+        end
+        fields["svdex_summary"] = DiscourseSvdex.validate_field!("svdex_summary", doc["summary"])
+        raw = [doc["summary"], facts["description"]].join("\n\n")
+        issuer_id = CompanyCatalog.tag_id(doc["tag"], "Companies", Guardian.new)
+        sector_id = CompanyCatalog.tag_id(doc["sector"], "Sectors", Guardian.new)
+        catalog_tags = Tag.where(id: [issuer_id, sector_id].compact).pluck(:name)
+        revision = CatalogDocument.revision(doc)
+        values = { title: doc["name"], raw: raw, tags: catalog_tags }
+
+        topic.lock!
+        raise Invalid, "Only visible public securities can be managed here" unless SecuritiesDirectory.eligible?(topic, category)
+        current_key = topic.custom_fields[key]
+        raise Invalid, "This security topic belongs to another directory file" if current_key && current_key != doc["id"]
+        state = topic.custom_fields[PRODUCT_STATE]
+        if current_key
+          raise Invalid, "Security content ownership is missing" unless state.is_a?(Hash)
+          raise Invalid, "Database edits conflict with reviewed security content" unless state["snapshot"] == security_snapshot(topic, state["tags"])
+          return false if state["revision"] == revision && fields.all? { |field, value| topic.custom_fields[field] == value }
+        end
+        # Keep operational tags, including any staff-managed exemption tags.
+        existing_tags = topic.tags.pluck(:name)
+        untouched_tags = existing_tags - Array(state&.fetch("tags", nil))
+        values[:tags] = (untouched_tags + catalog_tags).uniq
+        return true if dry_run
+        first_post = topic.first_post
+        if topic.title != values[:title] || first_post.raw != raw || existing_tags.sort != values[:tags].sort
+          raise Invalid, "Native security revision failed" unless PostRevisor.new(first_post).revise!(actor, values, skip_validations: true, bypass_bump: true)
+        end
+
+        topic.reload
+        topic.custom_fields.merge!(fields, key => doc["id"])
+        topic.custom_fields[PRODUCT_STATE] = { "revision" => revision, "tags" => catalog_tags, "snapshot" => security_snapshot(topic, catalog_tags) }
+        topic.save_custom_fields
+        StaffActionLogger.new(actor).log_custom("svdex_security_catalog_import", topic_id: topic.id, revision: revision)
+        true
+      end
+
+      def security_snapshot(topic, catalog_tags)
+        { "name" => topic.title, "raw" => topic.first_post.raw,
+          "tags" => (topic.tags.pluck(:name) & Array(catalog_tags)).sort,
+          "fields" => DiscourseSvdex::FIELDS.keys.to_h { |field| [field, topic.custom_fields[field]] } }
       end
     end
   end

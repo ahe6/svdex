@@ -15,6 +15,6 @@ export default class DirectoryInterestAction extends Component {
     this.modal.show(InterestModal, { model: { chooseOrganization: true, allowDirection: true, kind: controller.kind, independent: controller.independentProfiles, onChange: controller.refreshInterest } });
   }
   <template>
-    {{#if this.siteSettings.svdex_interest_enabled}}<DButton @translatedLabel="Add interest" @translatedTitle="Indicate buy or sell interest" @action={{this.open}} class="btn-primary svdex-directory-interest-action" />{{/if}}
+    {{#if this.siteSettings.svdex_interest_enabled}}<DButton @icon="arrows-left-right" @translatedLabel="Indicate interest" @translatedTitle="Indicate buy or sell interest" @action={{this.open}} class="btn-default svdex-directory-interest-action" />{{/if}}
   </template>
 }

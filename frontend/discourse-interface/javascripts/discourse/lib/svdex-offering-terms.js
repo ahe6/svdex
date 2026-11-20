@@ -1,3 +1,4 @@
+import { presaleTerms } from "./svdex-presales.js";
 import { compactOfferFact, listingFigures } from "./svdex-home-offer-figures.js";
 import { formatFinancialAmount } from "./svdex-financial-format.js";
 
@@ -35,4 +36,20 @@ export function offeringTerms(data, title = "") {
       : /\bSAFE\b/i.test(title) ? "SAFE" : /^secondary\b/i.test(data?.summary || "") ? "Secondary" : data?.terms?.trim() || "";
   }
   return { primary, secondary, progress, missing: !primaryKey };
+}
+
+const EXEMPTION_LABELS = new Map([["506b", "506(b)"], ["506c", "506(c)"], ["4a7", "4(a)(7)"]]);
+
+export function offeringExemption(topic) {
+  const labels = new Set((topic?.tags || []).map(tag => EXEMPTION_LABELS.get(typeof tag === "string" ? tag : tag.name)).filter(Boolean));
+  return labels.size === 1 ? labels.values().next().value : null;
+}
+
+export function topicTermsPreview(topic, { includeExemption = false } = {}) {
+  let terms;
+  if (topic.svdex_presale) terms = presaleTerms(topic.svdex_presale);
+  else if (topic.svdex_listing) terms = offeringTerms(topic.svdex_listing, topic.title);
+  if (!terms) return "";
+  const exemption = includeExemption && topic.svdex_listing ? offeringExemption(topic) : null;
+  return [terms.primary, terms.secondary, exemption].filter(Boolean).join(" · ");
 }

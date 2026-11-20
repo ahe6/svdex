@@ -2,7 +2,7 @@ import { trustHTML } from "@ember/template";
 import { categoryBadgeHTML } from "discourse/ui-kit/helpers/d-category-link";
 import { publicPrivateCategory, PRIVATE_ACCESS_ID } from "../lib/svdex-public-private-category";
 import { tracked } from "@glimmer/tracking";
-import { privateAccessNoticePage, organizationDirectoryPage } from "../lib/svdex-private-access-pages";
+import { privateAccessNoticePage } from "../lib/svdex-private-access-pages";
 import PublicPrivateCategoryRow from "../components/svdex-public-private-category-row.gjs";
 import { action } from "@ember/object";
 import { service } from "@ember/service";
@@ -69,19 +69,8 @@ export default function registerPrivateAccess(api, { settings, router, site }) {
   api.modifyClass("component:category-drop", publicPrivateAccessChoice);
   class PrivateAccessNoticeState { @tracked dismissed = false; }
   const privateAccessNotice = new PrivateAccessNoticeState();
-  const directoryInterestNotice = new PrivateAccessNoticeState();
   api.addGlobalNotice(
-    '<span class="svdex-directory-interest-notice"><span class="svdex-notice-desktop">Use <strong>Add interest</strong>, or click a buy or sell amount. Public totals include only capacity-reviewed interest.</span><span class="svdex-notice-mobile">Use <strong>Add interest</strong> to record interest. Public amounts require verification.</span></span>',
-    "svdex-directory-interest",
-    {
-      dismissable: true,
-      persistentDismiss: false,
-      onDismiss: () => { directoryInterestNotice.dismissed = true; },
-      visibility: () => !directoryInterestNotice.dismissed && settings.svdex_interest_enabled && organizationDirectoryPage(router.currentURL),
-    }
-  );
-  api.addGlobalNotice(
-    '<span class="svdex-private-access-notice"><span class="svdex-notice-desktop">Private offerings are available to approved members. <a href="/private-offerings">Request access</a> by completing our investor questionnaire.</span><span class="svdex-notice-mobile">Private offerings for approved members. <a href="/private-offerings">Request access</a>.</span></span>',
+    '<span class="svdex-private-access-notice"><span class="svdex-notice-desktop">Private offerings are available to approved members. <a href="/private-offerings">Request access</a>.</span><span class="svdex-notice-mobile">Private offerings for approved members. <a href="/private-offerings">Request access</a>.</span></span>',
     "svdex-private-access",
     {
       dismissable: true,
@@ -90,7 +79,7 @@ export default function registerPrivateAccess(api, { settings, router, site }) {
       visibility: () => !privateAccessNotice.dismissed &&
         Number(settings.svdex_private_offerings_category_id) > 0 &&
         !site.categories.some(c => Number(c.id) === Number(settings.svdex_private_offerings_category_id)) &&
-        privateAccessNoticePage(router.currentURL, site.categories, settings),
+        privateAccessNoticePage(router.currentURL, settings),
     }
   );
 }

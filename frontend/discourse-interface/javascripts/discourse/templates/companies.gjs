@@ -1,12 +1,12 @@
+import CatalogProposalAction from "../components/svdex-catalog-proposal.gjs";
+import Component from "@glimmer/component";
 import { action } from "@ember/object";
+import { service } from "@ember/service";
 import CompanyApplication from "../components/svdex-company-application.gjs";
 import { popupAjaxError } from "discourse/lib/ajax-error";
 import DiscourseURL from "discourse/lib/url";
-import { service } from "@ember/service";
-import Component from "@glimmer/component";
-import { Input } from "@ember/component";
+import DFilterInput from "discourse/ui-kit/d-filter-input";
 import { hash } from "@ember/helper";
-import { on } from "@ember/modifier";
 import DirectoryInterestAction from "../components/svdex-directory-interest-action.gjs";
 import DirectoryTable from "../components/svdex-companies-table.gjs";
 import PluginOutlet from "discourse/components/plugin-outlet";
@@ -22,24 +22,29 @@ import DEmptyState from "discourse/ui-kit/d-empty-state";
 import DLoadMore from "discourse/ui-kit/d-load-more";
 import { i18n } from "discourse-i18n";
 
-class CompanyApplicationLink extends Component {
+class AddOrganization extends Component {
   @service site;
   @service siteSettings;
   @service currentUser;
   @service store;
   @service modal;
-  get isFund() { return this.args.kind === "funds"; }
-  get applicationLabel() { return this.isFund ? "Add fund" : "Add company"; }
-  get buttonLabel() { return this.site.mobileView ? null : this.applicationLabel; }
+
+  get label() { return this.args.kind === "funds" ? "Add fund" : "Add company"; }
+
   @action async open() {
-    const name = this.siteSettings.svdex_companies_group_name;
     if (!this.currentUser) return DiscourseURL.routeTo("/login");
     try {
-      const group = await this.store.find("group", name);
+      const group = await this.store.find("group", this.siteSettings.svdex_companies_group_name);
       this.modal.show(CompanyApplication, { model: { group, kind: this.args.kind } });
-    } catch (error) { popupAjaxError(error); }
+    } catch (error) {
+      popupAjaxError(error);
+    }
   }
-  <template><DButton @action={{this.open}} @icon="plus" @translatedLabel={{this.buttonLabel}} @translatedAriaLabel={{this.applicationLabel}} @translatedTitle={{this.applicationLabel}} class="btn-default svdex-company-application" /></template>
+
+  <template>
+    <DButton @icon="plus" @action={{this.open}} @translatedLabel={{if this.site.mobileView null this.label}}
+      @translatedAriaLabel={{this.label}} @translatedTitle={{this.label}} class="btn-primary svdex-company-application" />
+  </template>
 }
 
 export default <template>
@@ -66,20 +71,21 @@ export default <template>
           <div class="directory-controls">
             <div class="period-controls">
               <h2>{{if @controller.isFund "Funds" "Companies"}}</h2>
+              <span class="svdex-directory-heading-count">
+                <span aria-hidden="true">{{or @controller.model.totalRows 0}}</span>
+                <span class="sr-only">{{i18n @controller.countKey count=(or @controller.model.totalRows 0)}}</span>
+              </span>
             </div>
             <div class="svdex-company-directory-tools">
             <div class="inline-form">
-              <label class="total-rows">
-                {{i18n @controller.countKey count=(or @controller.model.totalRows 0)}}
-              </label>
-              <Input
-                class="filter-name no-blur"
+              <DFilterInput
+                @containerClass="filter-name svdex-directory-search"
+                @icons={{hash left="magnifying-glass"}}
+                @value={{@controller.nameInput}}
+                @filterAction={{withEventValue @controller.onUsernameFilterChanged}}
+                class="no-blur"
                 placeholder={{@controller.searchLabel}}
-                @value={{readonly @controller.nameInput}}
-                {{on
-                  "input"
-                  (withEventValue @controller.onUsernameFilterChanged)
-                }}
+                aria-label={{@controller.searchLabel}}
               />
               <CompanyMobileControls @controller={{@controller}} />
               {{#if @controller.showGroupFilter}}
@@ -97,7 +103,9 @@ export default <template>
               />
             </div>
             <DirectoryInterestAction @controller={{@controller}} />
-            <CompanyApplicationLink @kind={{if @controller.isFund "funds" "companies"}} />
+            <CatalogProposalAction @kind={{if @controller.isFund "funds" "companies"}}>
+              <AddOrganization @kind={{if @controller.isFund "funds" "companies"}} />
+            </CatalogProposalAction>
             </div>
           </div>
 

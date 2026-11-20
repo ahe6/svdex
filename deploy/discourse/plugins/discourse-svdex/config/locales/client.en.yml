@@ -16,7 +16,11 @@ en:
     svdex:
       people:
         person: "Person"
+        age: "Age"
+        net_worth: "All-Time Money"
       new_presale: "New pre-sale"
+      presale:
+        choose_product: "Choose a product"
       new_product: "New product"
       add_product: "Add product"
       add_offering: "Add offering"

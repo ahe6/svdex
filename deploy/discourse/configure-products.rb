@@ -10,7 +10,7 @@ Category.transaction do
   category = Category.find_by(id: SiteSetting.svdex_products_category_id) || Category.find_by(slug: "products") || Category.new(user: actor)
   raise "Unexpected Products category" if category.persisted? && (category.slug != "products" || category.parent_category_id.present?)
   category.assign_attributes(name: "Products", slug: "products", color: "2396BF", text_color: "FFFFFF")
-  category.set_permissions("everyone" => :full)
+  category.set_permissions("everyone" => :full, "staff" => :full)
   category.save!
   category.update!(description: "Discover products, explore what they do and discuss them with their makers. Product pages stay useful before and after launch.",
     topic_posting_review_mode: "everyone", reply_posting_review_mode: "no_one")
@@ -21,4 +21,4 @@ Category.transaction do
     presales.update!(parent_category_id: category.id)
   end
 end
-puts "Products configured as public native topics with reviewed submissions and normal replies."
+puts "Products configured for reviewed submissions and public discussion."

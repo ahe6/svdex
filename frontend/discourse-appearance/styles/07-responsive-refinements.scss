@@ -59,7 +59,7 @@
   .svdex-company-search-item .svdex-company-search-form { flex: 1; min-width: 9rem; }
   .svdex-discovery-search {
     margin: 0;
-    .filter-input-container { width: var(--svdex-topic-search-width); min-width: 0; }
+    .filter-input-container { width: var(--svdex-search-width); min-width: 0; }
     input { width: 100%; margin: 0; }
   }
   .navigation-container:has(.svdex-discovery-search) .navigation-controls { align-items: center; gap: var(--space-3); }
@@ -75,9 +75,60 @@
     .svdex-discovery-search { gap: var(--space-2); }
   }
 }
+// Catalog titles can use the same separate mobile row as native category headings.
+.list-controls .navigation-container:has(> .svdex-catalog-heading) {
+  align-items: center;
+  justify-content: flex-start;
+
+  > .svdex-catalog-heading {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    flex: none;
+    h2 { margin: 0; line-height: normal; }
+  }
+
+  > #navigation-bar { margin-inline-end: auto; order: 0; }
+  > .navigation-controls { align-self: center; }
+}
+
+.mobile-view .list-controls .navigation-container > .svdex-catalog-heading {
+  gap: var(--space-2);
+  h2 { font-size: var(--font-up-1); line-height: var(--line-height-large); }
+
+  &.svdex-catalog-heading--separate-mobile {
+    flex-basis: 100%;
+    order: -1;
+  }
+}
+
+@media (max-width: 22rem) {
+  .mobile-view .list-controls .navigation-container:has(> .svdex-catalog-heading):has(.svdex-mobile-filters) {
+    column-gap: var(--space-1);
+    > .svdex-catalog-heading { gap: var(--space-1); }
+    #navigation-bar .list-control-toggle-link-trigger { font-size: var(--font-down-1); }
+  }
+}
+
+@container (max-width: 55rem) {
+  .desktop-view .list-controls .navigation-container:has(> .svdex-catalog-heading) {
+    &:has(#create-topic) > #navigation-bar { flex-basis: auto; }
+    .navigation-controls { flex-basis: auto; }
+    :is(.svdex-discovery-search .filter-input-container, .svdex-company-search-form) { width: 9.5rem; }
+    .category-breadcrumb { flex: none; }
+  }
+}
+
+@container (max-width: 47rem) {
+  .desktop-view .list-controls .navigation-container:has(> .svdex-catalog-heading) {
+    .svdex-discovery-search,
+    > .category-breadcrumb:has(.svdex-company-search-item) { display: none; }
+  }
+}
+
 .desktop-view .category-breadcrumb > .svdex-company-search-item {
   justify-content: flex-end;
-  .svdex-company-search-form { max-width: var(--svdex-topic-search-width); }
+  .svdex-company-search-form { max-width: var(--svdex-search-width); }
 }
 
 // Native Latest/Top tabs replace the offering sort selector.
@@ -86,7 +137,6 @@
 // Directory controls use the same gaps on both sides of search.
 .svdex-companies-page .svdex-company-directory-tools .inline-form {
   gap: var(--space-3);
-  > .total-rows { margin-inline: 0; }
 }
 @container (max-width: 45rem) {
   .svdex-companies-page .svdex-company-directory-tools .inline-form { gap: var(--space-2); }
@@ -117,15 +167,10 @@
   margin-inline-start: var(--space-2);
   padding: 0;
 }
-.svdex-companies-page .directory-controls .period-controls {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: var(--space-3);
-  h2 { margin: 0; }
-}
-@container (max-width: 45rem) {
-  .desktop-view .svdex-companies-page .directory-controls .period-controls { display: flex; grid-column: 1; grid-row: 1; }
+:is(.svdex-companies-page, .svdex-people-page) .directory-controls .period-controls {
+  flex-wrap: wrap;
+  gap: 0 var(--space-3);
+  min-width: 0;
 }
 .svdex-submission-tabs { margin: 0; }
 .svdex-interest-filters { align-items: center; gap: var(--space-3); }
@@ -138,7 +183,7 @@
 .navigation-container:has(.svdex-home-filters) > .category-breadcrumb { display: none; }
 .navigation-container:has(.svdex-filter-trigger) > .category-breadcrumb > li:has(> .tag-drop:not(.svdex-company-search-form)) { display: none; }
 // The native directory and topic-list counts share one secondary text size.
-.svdex-company-directory-tools .total-rows, .svdex-topic-count {
+.svdex-directory-heading-count, .svdex-topic-count {
   font-size: var(--font-down-1);
   font-weight: normal;
   line-height: var(--line-height-medium);
@@ -159,14 +204,6 @@
 .navigation-container .navigation-controls > .tag-category-admin-dropdown { order: 22; }
 .navigation-container .navigation-controls > .category-notifications-tracking,
 .navigation-container .navigation-controls > .tag-notifications-tracking { order: 21; }
-// A text Filter button needs a second directory toolbar row at tablet widths.
-@container (max-width: 34rem) {
-  .desktop-view .svdex-companies-page .directory-controls {
-    grid-template-columns: minmax(0, 1fr);
-    .period-controls { grid-column: 1; grid-row: 1; }
-    .svdex-company-directory-tools { grid-column: 1; grid-row: 2; }
-  }
-}
 .desktop-view .navigation-container:has(.svdex-discovery-search) > .navigation-controls { margin-inline-start: auto; }
 
 .navigation-container:has(.svdex-sector-control) > .category-breadcrumb > li:has(> .tag-drop:not(.svdex-company-search-form)) { display: none; }
@@ -199,21 +236,16 @@
 .desktop-view .list-controls .navigation-container > .navigation-controls { margin-inline-start: auto; }
 .mobile-view .svdex-discussion-chat-navigation { padding: var(--space-5) .67em 0; }
 .mobile-view .svdex-companies-page .directory-controls {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
-  align-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
   gap: var(--space-2);
-  .period-controls { grid-column: 1; grid-row: 1; min-width: 0; }
-  .period-controls h2 { font-size: var(--font-up-1); line-height: var(--line-height-large); }
-  .svdex-company-directory-tools, .svdex-company-directory-tools .inline-form { display: contents; }
-  .svdex-company-mobile-controls { grid-column: 2; grid-row: 1; }
-  .svdex-company-application { grid-column: 3; grid-row: 1; }
-  .svdex-company-directory-tools .inline-form > .total-rows {
-    position: static;
-    grid-column: 1 / -1;
-    grid-row: 2;
-    margin: 0;
-    justify-self: start;
+
+  .period-controls { min-width: 0; }
+}
+@media (max-width: 22rem) {
+  .mobile-view .svdex-companies-page :is(.svdex-company-directory-tools, .svdex-company-mobile-controls) {
+    gap: var(--space-1);
   }
 }
 // The additional native directory column scrolls as one table on desktop.
@@ -230,14 +262,6 @@
   .svdex-interest-consent { display: flex; align-items: flex-start; gap: var(--space-2); margin-top: var(--space-5); }
   .svdex-interest-consent input { flex: 0 0 auto; margin-top: .25em; }
   .svdex-interest-hint { font-size: var(--font-down-1); color: var(--primary-medium); margin: var(--space-2) 0 0; }
-}
-
-// Align offering metadata with the title and financial preview on mobile.
-.mobile-view .svdex-offering-card__footer { margin-inline-start: var(--svdex-offering-content-inset); }
-.mobile-view .svdex-offering-card__identity {
-  gap: 10px;
-  .user-image { flex-basis: 45px; min-width: 45px; }
-  .avatar { width: 45px; height: 45px; }
 }
 
 // The same text + caret geometry for SelectKit and modal-based Filter controls.
@@ -273,11 +297,6 @@
   .svdex-notice-mobile { display: inline; }
 }
 
-// The Lounge shell shares the Discussions content edge on desktop.
-.desktop-view .svdex-discussion-chat-navigation ~ .full-page-chat {
-  margin-inline-start: calc(var(--space-4) * 2);
-}
-
 // Fit the SVDEX wordmark within core's centered header/logo layout.
 .d-header .title:not(.title--minimized) {
   --d-logo-height: 24px;
@@ -289,41 +308,4 @@
 }
 @media (max-width: 767px) {
   .d-header .title:not(.title--minimized) { --d-logo-height: 22px; }
-}
-
-// Final tablet offering layout: tabs above, then count/search and actions.
-// The count remains inside the search group instead of becoming a grid item.
-@container (max-width: 55rem) {
-  .desktop-view .list-controls .navigation-container:has(.svdex-company-search-item) {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-    justify-content: flex-start;
-    gap: var(--space-2);
-    column-gap: .5em;
-    .category-breadcrumb { display: contents; }
-    #navigation-bar { grid-column: 1 / -1; grid-row: 1; }
-    .svdex-offering-filter-group { flex-basis: 100%; grid-column: 2 / -1; grid-row: 1; justify-self: end; }
-    .svdex-company-search-item { flex: 1 1 9rem; min-width: 9rem; max-width: none; margin-inline-start: auto; }
-    .svdex-company-search-form { width: 100%; }
-    .category-breadcrumb > .svdex-company-search-item {
-      display: flex;
-      flex: 1 1 9rem;
-      grid-column: 1;
-      grid-row: 2;
-      width: 100%;
-      min-width: 0;
-      .svdex-company-search-form { min-width: 0; width: auto; }
-    }
-    .category-breadcrumb > li:has(> .tag-drop:not(.svdex-company-search-form)) { grid-column: 2; grid-row: 2; }
-    .navigation-controls { margin-inline-start: 0; grid-column: 2; grid-row: 2; }
-    .svdex-topic-count { grid-column: 2; grid-row: 1; justify-self: end; }
-  }
-}
-
-// Keep the directory's main controls intact. The secondary interest action shares
-// the existing mobile count row rather than crowding the heading/plus row.
-.mobile-view .svdex-companies-page .directory-controls {
-  .svdex-directory-interest-action { grid-row: 2; grid-column: 2 / -1; justify-self: end; }
-  .svdex-company-directory-tools .inline-form > .total-rows { grid-column: 1; }
 }
