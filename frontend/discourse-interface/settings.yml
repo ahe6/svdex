@@ -1,5 +1,5 @@
 svg_icons:
-  default: "compass|shield-halved|key|file-lines"
+  default: "compass|shield-halved|key|file-lines|arrows-left-right"
   type: list
   list_type: compact
   description: "Icons used by the SVDEX interface."

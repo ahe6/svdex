@@ -3,6 +3,11 @@ DiscourseSvdex::Engine.routes.draw do
   get "/discoveries/:username" => "discoveries#index", defaults: { format: :json }
   get "/discovery-credit/:user_id" => "discoveries#show", defaults: { format: :json }
   put "/discovery-credit/:user_id" => "discoveries#update", defaults: { format: :json }
+  get "/interest-verifications/targets" => "interest_verifications#targets", defaults: { format: :json }
+  get "/interest-verifications/users/:user_id" => "interest_verifications#index", defaults: { format: :json }
+  post "/interest-verifications/users/:user_id" => "interest_verifications#create", defaults: { format: :json }
+  delete "/interest-verifications/:id" => "interest_verifications#destroy", defaults: { format: :json }
+  post "/interest-verifications/requests/:id" => "interest_verifications#request_review", defaults: { format: :json }
   get "/my-interest" => "my_interest#index", defaults: { format: :json }
   delete "/my-interest/:kind/:id" => "my_interest#destroy", defaults: { format: :json }
   get "/offering-bids/:topic_id" => "offering_bids#index", defaults: { format: :json }

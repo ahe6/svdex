@@ -1,3 +1,8 @@
+import ProductDirectory from "./svdex-product-directory.gjs";
+import SecuritiesDirectory from "./svdex-securities-directory.gjs";
+import { isProductCatalog } from "../lib/svdex-products";
+import { isPresaleCategory } from "../lib/svdex-presales";
+import { hasSecuritiesDirectory } from "../lib/svdex-feed-views";
 import { isOfferingCategory } from "../lib/svdex-offering-categories";
 import Component from "@glimmer/component";
 import { action } from "@ember/object";
@@ -8,6 +13,12 @@ import DEmptyState from "discourse/ui-kit/d-empty-state";
 export default class OfferingsEmptyState extends Component {
   @service router;
   @service siteSettings;
+  get directoryView() { return this.router.currentRoute?.queryParams.svdex_view === "directory"; }
+  get securitiesDirectory() { return this.directoryView && hasSecuritiesDirectory(this.args.outletArgs.category?.id, this.siteSettings); }
+  get presalesOnly() { return isPresaleCategory(this.args.outletArgs.category?.id, this.siteSettings); }
+  get productDirectory() {
+    return this.directoryView && isProductCatalog(this.args.outletArgs.category?.id, this.siteSettings);
+  }
   get visible() {
     const { category, model } = this.args.outletArgs;
     const query = this.router.currentRoute?.queryParams || {};
@@ -22,7 +33,11 @@ export default class OfferingsEmptyState extends Component {
     DiscourseURL.routeTo(`${this.args.outletArgs.category.url}${sort}${params.size ? `?${params}` : ""}`);
   }
   <template>
-    {{#if this.visible}}
+    {{#if this.securitiesDirectory}}
+      <SecuritiesDirectory @list={{@outletArgs.model.list}} />
+    {{else if this.productDirectory}}
+      <ProductDirectory @presalesOnly={{this.presalesOnly}} />
+    {{else if this.visible}}
       <DEmptyState
         @title="No offerings match these filters"
         @body="Try changing the company, sector or valuation filters."

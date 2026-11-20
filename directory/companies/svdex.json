@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "id": "svdex",
+  "name": "SVDEX",
+  "summary": "Company research, discussion and private-capital discovery.",
+  "company_tag": "svdex",
+  "sector": "finance",
+  "stage": null,
+  "location": null,
+  "financials": {
+    "total_funding_usd": null,
+    "last_valuation_usd": null,
+    "as_of": null,
+    "source_url": null
+  },
+  "sources": [
+    { "url": "https://svdex.com", "note": "Company website." }
+  ]
+}

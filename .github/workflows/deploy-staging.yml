@@ -2,6 +2,15 @@ name: Preview SVDEX staging
 on:
   push:
     branches: [staging]
+    paths:
+      - frontend/**
+      - assets/brand/**
+      - deploy/discourse/**
+      - '!deploy/discourse/**/*.md'
+      - scripts/prepare-discourse-production.rb
+      - scripts/deploy-from-github.py
+      - scripts/resolve-preview-pr.py
+      - .github/workflows/deploy-staging.yml
   workflow_dispatch:
     inputs:
       reviewed_pr:

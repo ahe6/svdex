@@ -1,4 +1,15 @@
-// Preserve desktop page alignment without reserving a scrollbar on mobile.
+.svdex-filter-trigger.has-active-filters { border-color: var(--primary-medium); }
+
+.mobile-view .svdex-mobile-heading-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-basis: 100%;
+  order: -1;
+  .svdex-mobile-category-heading { flex-basis: auto; }
+}
+
 html:has(body.desktop-view) {
   scrollbar-gutter: stable;
 }
@@ -124,3 +135,46 @@ nav.post-controls .actions button.post-action-menu__svdex-bid.btn-primary {
 // Nested replies center a narrow reading column by default. Anchor the complete
 // topic at the page edge, retaining native width, avatar gutters and reply depth.
 .desktop-view #topic.nested-view { margin-inline: 0 auto; }
+
+// Organization summaries use the native user-summary headings and topic rows,
+// with labeled facts rather than a grid of unrelated account-style counters.
+.svdex-company-profile-summary {
+  .svdex-organization-details { margin-block-end: var(--space-6); }
+  .svdex-company-details-header { justify-content: space-between; margin-block-end: var(--space-4); }
+  .svdex-profile-interest-actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+  .svdex-profile-interest-actions .btn:first-child {
+    color: var(--tertiary);
+    border-color: var(--tertiary);
+    &:hover { background: var(--tertiary-low); }
+  }
+  .svdex-profile-interest-actions .btn:last-child {
+    color: var(--danger);
+    border-color: var(--danger);
+    &:hover { background: var(--danger-low); }
+  }
+  .svdex-organization-facts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--space-8);
+    margin: 0;
+    > div { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: baseline; gap: var(--space-3); padding-block: var(--space-3); border-bottom: 1px solid var(--primary-low); }
+    dt { color: var(--primary-medium); font-weight: normal; }
+    dd { margin: 0; overflow-wrap: anywhere; }
+  }
+  .svdex-profile-section-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-8); &::before, &::after { display: none; } }
+  .svdex-profile-section-grid > .top-sub-section { width: auto; float: none; margin: 0; }
+  @media (max-width: 40rem) {
+    .svdex-organization-facts, .svdex-profile-section-grid { grid-template-columns: minmax(0, 1fr); }
+    .svdex-profile-section-grid { gap: var(--space-5); }
+  }
+}
+.svdex-profile-heading { display: flex; align-items: flex-start; gap: var(--space-4); min-width: 0; }
+.svdex-profile-logo { flex: none; .avatar { width: 64px; height: 64px; } }
+.mobile-view .svdex-profile-logo .avatar { width: 48px; height: 48px; }
+
+@media (max-width: 360px) {
+  .mobile-view .svdex-mobile-heading-row { gap: var(--space-2); }
+}
+
+.svdex-profile-heading p { margin-block-end: 0; }
+.mobile-view .svdex-profile-heading h1 { font-size: var(--font-up-2); line-height: var(--line-height-large); }

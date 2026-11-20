@@ -222,7 +222,7 @@
         "DisableApiTermination": false,
         "MetadataOptions": {
           "HttpTokens": "required",
-          "HttpPutResponseHopLimit": 1
+          "HttpPutResponseHopLimit": 2
         },
         "NetworkInterfaces": [
           {

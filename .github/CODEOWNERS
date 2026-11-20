@@ -1,0 +1,6 @@
+# Maintainer review for public facts and the code that imports them.
+/directory/ @ahe6
+/.github/workflows/sync-public-content.yml @ahe6
+/deploy/discourse/aws/content-sync.yml @ahe6
+/scripts/*catalog* @ahe6
+/deploy/discourse/plugins/discourse-svdex/lib/discourse_svdex/prototypes/*catalog* @ahe6

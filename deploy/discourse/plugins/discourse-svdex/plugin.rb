@@ -20,10 +20,6 @@ module ::DiscourseSvdex
     [SiteSetting.svdex_listings_category_id.to_i, SiteSetting.svdex_public_offerings_category_id.to_i, SiteSetting.svdex_private_offerings_category_id.to_i].select(&:positive?).uniq
   end
 
-  def self.home_category_ids
-    (offering_category_ids + [SiteSetting.svdex_introductions_category_id.to_i, SiteSetting.svdex_presales_category_id.to_i]).select(&:positive?).uniq
-  end
-
   def self.offering_category?(id)
     offering_category_ids.include?(id.to_i)
   end
@@ -72,6 +68,35 @@ require_relative "lib/discourse_svdex/financial_submissions"
 require_relative "lib/discourse_svdex/engine"
 
 after_initialize do
+  require_relative "app/controllers/discourse_svdex/catalog_proposals_controller"
+  add_to_serializer(:site, :svdex_catalog_publishing_ready) { DiscourseSvdex::CatalogProposals.publishing_ready? }
+  add_to_serializer(:site, :svdex_catalog_proposals_available) { DiscourseSvdex::CatalogProposals.enabled? }
+  require_relative "lib/discourse_svdex/secure_draft_uploads"
+  UploadsController.prepend(DiscourseSvdex::SecureDraftUploads)
+  if GlobalSetting.hostname == "localhost" && SiteSetting.port.to_s == "4080"
+    require_relative "lib/discourse_svdex/prototypes/company_profiles"
+    Discourse::Application.routes.append do
+      get "/company-directory", to: "discourse_svdex/prototypes/company_profiles#directory", constraints: { format: "html" }
+      get "/company-profiles", to: "discourse_svdex/prototypes/company_profiles#index", defaults: { format: :json }
+      get "/company-profiles/:slug/discovery", to: "discourse_svdex/prototypes/company_profiles#discovery", defaults: { format: :json }
+      put "/company-profiles/:slug/discovery", to: "discourse_svdex/prototypes/company_profiles#update_discovery", defaults: { format: :json }
+      get "/company-profile-interests/:organization_id", to: "discourse_svdex/prototypes/company_interests#index", defaults: { format: :json }
+      put "/company-profile-interests/:organization_id/:side", to: "discourse_svdex/prototypes/company_interests#update", defaults: { format: :json }
+      get "/company/:slug", to: "discourse_svdex/prototypes/company_profiles#page", constraints: { format: "html" }
+      get "/company-profiles/:slug", to: "discourse_svdex/prototypes/company_profiles#show", defaults: { format: :json }
+      post "/company-profiles/:slug/suggestions", to: "discourse_svdex/prototypes/company_profiles#suggest", defaults: { format: :json }
+      put "/company-profiles/:slug", to: "discourse_svdex/prototypes/company_profiles#update", defaults: { format: :json }
+      { "fund" => "funds", "person" => "people" }.each do |singular, kind|
+        get "/#{singular}-directory", to: "discourse_svdex/prototypes/company_profiles#directory", defaults: { kind: kind }, constraints: { format: "html" }
+        get "/#{singular}-profiles", to: "discourse_svdex/prototypes/company_profiles#index", defaults: { kind: kind, format: :json }
+        get "/#{singular}-profiles/:slug/discovery", to: "discourse_svdex/prototypes/company_profiles#discovery", defaults: { kind: kind, format: :json }
+        put "/#{singular}-profiles/:slug/discovery", to: "discourse_svdex/prototypes/company_profiles#update_discovery", defaults: { kind: kind, format: :json }
+        get "/#{singular}-profiles/:slug", to: "discourse_svdex/prototypes/company_profiles#show", defaults: { kind: kind, format: :json }
+        put "/#{singular}-profiles/:slug", to: "discourse_svdex/prototypes/company_profiles#update", defaults: { kind: kind, format: :json }
+        get "/#{singular}/:slug", to: "discourse_svdex/prototypes/company_profiles#page", defaults: { kind: kind }, constraints: { format: "html" }
+      end
+    end
+  end
   require_relative "lib/discourse_svdex/retired_information_pages"
   AboutController.prepend(DiscourseSvdex::RetiredAboutPage)
   StaticController.prepend(DiscourseSvdex::RetiredGuidelinesPages)
@@ -99,8 +124,20 @@ after_initialize do
   require_relative "app/models/discourse_svdex/offering_bid"
   require_relative "app/controllers/discourse_svdex/offering_bids_controller"
   require_relative "app/models/discourse_svdex/interest_indication"
+  require_relative "app/models/discourse_svdex/interest_verification"
+  require_relative "app/controllers/discourse_svdex/interest_verifications_controller"
   require_relative "app/controllers/discourse_svdex/interests_controller"
   require_relative "app/controllers/discourse_svdex/my_interest_controller"
+  if defined?(DiscourseSvdex::Prototypes::CompanyProfiles)
+    require_relative "lib/discourse_svdex/prototypes/company_relationships"
+    require_relative "lib/discourse_svdex/prototypes/company_catalog"
+    require_relative "lib/discourse_svdex/prototypes/public_catalog"
+    register_topic_custom_field_type(DiscourseSvdex::Prototypes::PublicCatalog::PRODUCT_KEY, :string)
+    register_topic_custom_field_type(DiscourseSvdex::Prototypes::PublicCatalog::PRODUCT_STATE, :json)
+    register_topic_custom_field_type(DiscourseSvdex::Prototypes::CompanyCatalog::PROPOSAL_FIELD, :json)
+    require_relative "lib/discourse_svdex/prototypes/company_profile_directory"
+    DiscourseSvdex::Prototypes::CompanyRelationships.install!
+  end
   require_relative "app/controllers/discourse_svdex/company_details_controller"
   require_relative "app/controllers/discourse_svdex/company_directory_controller"
   require_relative "app/controllers/discourse_svdex/people_directory_controller"
@@ -142,10 +179,35 @@ after_initialize do
   end
   require_relative "lib/discourse_svdex/topic_discovery"
   DiscourseSvdex::TopicDiscovery.install!(self)
+  require_relative "lib/discourse_svdex/feed_views"
+  require_relative "lib/discourse_svdex/securities_directory"
+  DiscourseSvdex::FeedViews.install!(self)
   require_relative "lib/discourse_svdex/presales"
   DiscourseSvdex::Presales.install!(self)
   require_relative "lib/discourse_svdex/products"
   DiscourseSvdex::Products.install!(self)
+  DiscourseSvdex::TopicDiscovery.install_catalog_counts!(self)
+  add_to_serializer(:topic_view, :svdex_catalog_security_id, include_condition: -> {
+    DiscourseSvdex::SecuritiesDirectory.eligible?(object.topic) &&
+      object.topic.custom_fields[DiscourseSvdex::SecuritiesDirectory::CATALOG_KEY].present?
+  }) { object.topic.custom_fields[DiscourseSvdex::SecuritiesDirectory::CATALOG_KEY] }
+  if defined?(DiscourseSvdex::Prototypes::PublicCatalog)
+    add_to_serializer(:topic_view, :svdex_catalog_product_id, include_condition: -> {
+      (DiscourseSvdex::Products.topic?(object.topic) || DiscourseSvdex::Presales.topic?(object.topic)) &&
+        object.topic.custom_fields[DiscourseSvdex::Prototypes::PublicCatalog::PRODUCT_KEY].present?
+    }) { object.topic.custom_fields[DiscourseSvdex::Prototypes::PublicCatalog::PRODUCT_KEY] }
+  end
+  require_relative "lib/discourse_svdex/product_directory"
+  Discourse::Application.routes.append do
+    get "/product-directory", to: "discourse_svdex/product_directory#index", defaults: { format: :json }, constraints: { format: "json" }
+    get "/directory-proposals/:kind/:id", to: "discourse_svdex/catalog_proposals#show", defaults: { format: :json }, constraints: { format: "json" }
+    post "/directory-proposals/:kind", to: "discourse_svdex/catalog_proposals#create", defaults: { format: :json }, constraints: { format: "json" }
+    put "/directory-proposals/:kind/:id", to: "discourse_svdex/catalog_proposals#update", defaults: { format: :json }, constraints: { format: "json" }
+  end
+  if defined?(DiscourseSvdex::Prototypes::CompanyProfiles)
+    require_relative "lib/discourse_svdex/prototypes/topic_logos"
+    DiscourseSvdex::Prototypes::TopicLogos.install!(self)
+  end
 
   DiscourseSvdex::FIELDS.each do |name, length|
     register_topic_custom_field_type(name, name == DiscourseSvdex::VALUATION_FIELD ? :integer : :string, max_length: length)

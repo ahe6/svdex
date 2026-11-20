@@ -11,7 +11,6 @@ assert!(SiteSetting.discourse_events_enabled && SiteSetting.discourse_post_event
 assert!(SiteSetting.discourse_post_event_allowed_on_groups_map.sort == [1, 2, 10], "signed-in members can create native events")
 events = Category.find(SiteSetting.svdex_events_category_id)
 assert!(!events.read_restricted? && SiteSetting.calendar_upcoming_events_default_category.to_i == events.id, "calendar defaults to the public Events category")
-assert!(!DiscourseSvdex.home_category_ids.include?(events.id), "community events stay out of Home's default feed")
 actor = User.find_by!(username: "svdex")
 assert!(actor.guardian.can_create_discourse_post_event?, "staff can create native events")
 

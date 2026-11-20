@@ -40,7 +40,7 @@ export default function registerTopicMetadata(api, { settings, router, site }) {
   const markHomeTopicLabels = ({ value, context }) => {
     const path = router.currentURL.split("?")[0];
     const home = path === "/" || path === "/all-forums" || /^\/(latest|top|new|unread|unseen|hot|posted)(\/|$)/.test(path);
-    if (home && context.topic.category?.slug === "discussion") value.push("svdex-home-discussion");
+    if (home) value.push("svdex-home-topic");
     if (context.topic.svdex_listing || context.topic.svdex_presale) value.push("svdex-home-listing");
     if (context.topic.svdex_product) value.push("svdex-product-topic");
     return value;

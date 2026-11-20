@@ -1,0 +1,98 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Optional reviewed public-data sync; no app deployment, static credentials or backup access for GitHub.
+Parameters:
+  InstanceId:
+    Type: String
+    AllowedPattern: 'i-[0-9a-f]+'
+  ArtifactBucket:
+    Type: String
+    AllowedPattern: 'svdex-(discourse|staging)-[0-9]{12}-us-east-1'
+  HostRoleName:
+    Type: String
+    AllowedPattern: '[A-Za-z0-9+=,.@_-]+'
+  GitHubIdentityProviderArn:
+    Type: String
+  GitHubContentSubject:
+    Type: String
+    Description: Exact existing customized GitHub subject for this repository and environment content; use its numeric owner and repository IDs.
+    AllowedPattern: 'repo:ahe6@[0-9]+/svdex@[0-9]+:environment:content'
+Resources:
+  SyncDocument:
+    Type: AWS::SSM::Document
+    Properties:
+      Name: SVDEX-SyncPublicCatalog
+      DocumentType: Command
+      UpdateMethod: NewVersion
+      Content:
+        schemaVersion: '2.2'
+        parameters:
+          SourceCommit:
+            type: String
+            allowedPattern: '^[0-9a-f]{40}$'
+          BundleSha256:
+            type: String
+            allowedPattern: '^[0-9a-f]{64}$'
+          RunId:
+            type: String
+            allowedPattern: '^[0-9]{1,20}-[0-9]{1,5}$'
+        mainSteps:
+          - action: aws:runShellScript
+            name: syncReviewedPublicData
+            inputs:
+              timeoutSeconds: '900'
+              runCommand:
+                - "bash /usr/local/sbin/svdex-sync-public-catalog '{{ SourceCommit }}' '{{ BundleSha256 }}' '{{ RunId }}'"
+  ContentRole:
+    Type: AWS::IAM::Role
+    Properties:
+      MaxSessionDuration: 3600
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !Ref GitHubIdentityProviderArn
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+                token.actions.githubusercontent.com:sub: !Ref GitHubContentSubject
+      Policies:
+        - PolicyName: ReviewedContentOnly
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: s3:PutObject
+                Resource: !Sub 'arn:${AWS::Partition}:s3:::${ArtifactBucket}/catalog/github/*/bundle.json'
+                Condition:
+                  StringEquals:
+                    s3:x-amz-server-side-encryption: AES256
+              - Effect: Allow
+                Action: s3:GetObject
+                Resource: !Sub 'arn:${AWS::Partition}:s3:::${ArtifactBucket}/catalog/receipts/*.json'
+              - Effect: Allow
+                Action: ssm:SendCommand
+                Resource:
+                  - !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:document/${SyncDocument}'
+                  - !Sub 'arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:instance/${InstanceId}'
+  HostContentAccess:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: SVDEXPublicContentSync
+      Roles: [!Ref HostRoleName]
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action: s3:GetObject
+            Resource: !Sub 'arn:${AWS::Partition}:s3:::${ArtifactBucket}/catalog/github/*/bundle.json'
+          - Effect: Allow
+            Action: s3:PutObject
+            Resource: !Sub 'arn:${AWS::Partition}:s3:::${ArtifactBucket}/catalog/receipts/*.json'
+            Condition:
+              StringEquals:
+                s3:x-amz-server-side-encryption: AES256
+Outputs:
+  ContentRoleArn:
+    Value: !GetAtt ContentRole.Arn

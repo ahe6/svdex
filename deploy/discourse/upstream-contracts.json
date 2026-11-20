@@ -130,6 +130,21 @@
       "path": "app/models/concerns/has_custom_fields.rb",
       "sha256": "f8971a2d398a3f079a0a1c3418035381c35ffe4ec5982cf5f36de176bbee0347",
       "integration": "Native typed bulk custom-field reader for directory facts and associations"
+    },
+    {
+      "path": "plugins/chat/assets/javascripts/discourse/routes/chat/direct-messages.js",
+      "sha256": "e286ab849a2e3a4e3500172f30e89cdcd8f2ec1411682c92aadaee6be4fda5fc",
+      "integration": "Keep native DM list on desktop instead of redirecting to last channel; preserve anonymous guard"
+    },
+    {
+      "path": "plugins/chat/assets/javascripts/discourse/components/chat-channel-row.gjs",
+      "sha256": "5ff268e0894fbdf86ef496048cd2f9bd3848080c347bf4f5938d3ce9b7bdcd9b",
+      "integration": "Use the native last-message excerpt in full-page desktop DM rows"
+    },
+    {
+      "path": "lib/secure_upload_endpoint_helpers.rb",
+      "sha256": "169b8cea145166e7ba3e2f51a5c43b2ea3cfb6b6249f3ee12e0fa9f383d67e4f",
+      "integration": "Secure draft ownership guard delegates posted upload authorization to native helper"
     }
   ]
 }

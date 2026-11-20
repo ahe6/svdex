@@ -1,6 +1,7 @@
 import PersonAffiliations from "../components/svdex-person-affiliations.gjs";
 import DiscoveriesSummary from "../components/svdex-discoveries-summary.gjs";
 import DiscoveriesNav from "../components/svdex-discoveries-nav.gjs";
+import InterestVerificationAdmin from "../components/svdex-interest-verification-admin.gjs";
 import DiscoveryAdmin from "../components/svdex-discovery-admin.gjs";
 import InterestActivityNav from "../components/svdex-interest-activity-nav.gjs";
 import CompanyApplication from "../components/svdex-company-application.gjs";
@@ -62,4 +63,5 @@ export default function registerOrganizationProfiles(api, { settings, router, si
   api.renderInOutlet("below-user-summary-stats", PersonAffiliations);
   api.renderInOutlet("below-user-summary-stats", DiscoveriesSummary);
   api.renderInOutlet("admin-user-details", DiscoveryAdmin);
+  api.renderInOutlet("admin-user-details", InterestVerificationAdmin);
 }

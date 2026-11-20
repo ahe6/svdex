@@ -5,6 +5,9 @@ owns the guest-only exporter, SQLite loader, privacy regression tests, format
 documentation and daily publishing workflow. It reads the deployed public JSON
 endpoints. It has no AWS access, login session, API key, database connection or
 ability to change the SVDEX application. Application releases do not depend on it.
+It queries Discourse's guest topic filter independently of the site's feeds,
+which keeps past public events in the export. Related pre-sales include a product
+topic ID when the linked product is also public and in the snapshot.
 
 Daily output lives in a replaceable **latest GitHub Release**, not Git history.
 The manifest points to versioned gzip JSON Lines files and contains checksums,

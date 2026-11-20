@@ -17,6 +17,7 @@ import DiscourseURL from "discourse/lib/url";
 export default class OfferingSearch extends Component {
   @service router;
   @service site;
+  @service siteSettings;
   @tracked companyQuery = "";
   @tracked suggestionsOpen = false;
 
@@ -39,7 +40,9 @@ export default class OfferingSearch extends Component {
         const term = input.value.trim();
         const current = ++request;
         if (!term) return [];
-        const result = await ajax("/listings/companies.json", { data: { q: term, category_id: this.args.outletArgs.currentCategory.id } });
+        const categoryId = this.router.currentRoute?.queryParams.svdex_view === "directory" ?
+          this.siteSettings.svdex_public_offerings_category_id : this.args.outletArgs.currentCategory.id;
+        const result = await ajax("/listings/companies.json", { data: { q: term, category_id: categoryId } });
         if (this.isDestroying || this.isDestroyed || current !== request || input.value.trim() !== term) return CANCELLED_STATUS;
         return result.companies;
       },
@@ -94,13 +97,6 @@ export default class OfferingSearch extends Component {
     this.companyQuery = this.router.currentRoute?.queryParams?.svdex_company || "";
   }
 
-  get offeringCount() {
-    const list = this.router.currentRoute?.attributes?.list;
-    return list?.topic_list?.svdex_offering_count;
-  }
-  get offeringCountLabel() { return this.offeringCount === 1 ? "1 offering" : `${this.offeringCount} offerings`; }
-  get hasOfferingCount() { return Number.isInteger(this.offeringCount) && !this.args.panel; }
-
   get showSearch() { return this.args.panel || !this.site.mobileView; }
 
   @action focusSearch(event) {
@@ -137,7 +133,6 @@ export default class OfferingSearch extends Component {
   <template>
       {{#if this.showSearch}}
       <li class="svdex-company-search-item">
-        {{#if this.hasOfferingCount}}<span class="total-rows">{{this.offeringCountLabel}}</span>{{/if}}
         <form class="svdex-company-search-form select-kit single-select combo-box tag-drop" role="search" aria-label="Search offering" {{on "submit" this.submitSearch}} {{on "click" this.focusSearch}}>
           <DFilterInput
             @value={{this.companyQuery}}

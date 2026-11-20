@@ -8,7 +8,8 @@ export const PRESALE_FIELDS = [
 export function isPresaleCategory(id, settings) {
   return Number(id) > 0 && Number(id) === Number(settings.svdex_presales_category_id);
 }
-export function presaleTerms(data = {}) {
+export function presaleTerms(data = {}, { deliveryFirst = false } = {}) {
   const price = data.price?.trim();
-  return { primary: price || "Price not set", secondary: [data.includes, data.delivery].map(value => value?.trim()).filter(Boolean).join(" · "), progress: null, missing: !price };
+  const details = deliveryFirst ? [data.delivery, data.includes] : [data.includes, data.delivery];
+  return { primary: price || "Price not set", secondary: details.map(value => value?.trim()).filter(Boolean).join(" · "), progress: null, missing: !price };
 }

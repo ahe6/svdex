@@ -7,6 +7,11 @@
 - [Current product behavior](product.md)
 - [Engineering review and active findings — November 19](engineering-review-2026-11-19.md)
 - [Refactoring map and batch order](refactoring-plan.md)
+- [Independent company profile: local experiment](independent-company-prototype.md)
+- [Reviewed company files and site corrections](company-catalog.md)
+- [Private capacity reviews and public interest totals](interest-verification.md)
+- [Native protected attachments and staging rollout](secure-uploads.md)
+- [Feed tabs, event views and the pre-sales filter](feed-navigation.md)
 - [Source boundaries, checks and upstream upgrades](discourse-maintenance.md)
 - [Local and remote development operations](operations.md)
 - [Cloud editing, browser reports and PR previews](cloud-development.md)
@@ -30,3 +35,5 @@ This repository starts with a clean active-source snapshot. It does not include
 production data or credentials, historical research captures, retired applications
 or private operational history. The deployment tooling is source code, not access
 to SVDEX's infrastructure. Contributors can work locally without cloud accounts.
+
+- [Reviewed public content sync](public-content-sync.md): content-only file imports, GitHub review, and hosted activation status.

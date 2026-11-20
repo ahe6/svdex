@@ -39,14 +39,27 @@
   min-height: min(650px, calc(100dvh - 70px));
 }
 
-// Match the native Users input in common/base/discourse.scss. Directory inputs
-// inherit that rule directly; composed topic search controls need the same width.
-.desktop-view { --svdex-topic-search-width: 210px; }
+// Use one desktop width for topic and directory search.
+:root { --svdex-search-width: 210px; }
+
+// The native magnifying glass already supplies the gap before the text.
+:is(.svdex-company-search-form, .svdex-discovery-search, .svdex-panel-search, .svdex-company-search-modal) .filter-input-container,
+.svdex-directory-search {
+  > .filter-input {
+    min-width: 0;
+    padding-inline-start: 0;
+
+    &::placeholder {
+      color: var(--primary-medium);
+      opacity: 1;
+    }
+  }
+}
 
 // Native filter input; only size it to fit the existing breadcrumb row.
 .svdex-company-search-form {
   display: flex;
-  width: 210px;
+  width: var(--svdex-search-width);
   max-width: 100%;
   .filter-input-container { width: 100%; }
 }
@@ -60,7 +73,7 @@
   .filter-input-clear-btn { flex-shrink: 0; padding-block: 0; min-height: 0; }
 }
 .select-kit.combo-box.tag-drop.svdex-company-suggestion-menu {
-  min-width: 210px;
+  min-width: var(--svdex-search-width);
   width: 100%;
   .select-kit-body { width: 100%; }
   .select-kit-row a { color: inherit; width: 100%; }
@@ -96,9 +109,8 @@
 .desktop-view .list-controls .navigation-container:has(.svdex-company-search-item) {
   justify-content: flex-end;
   column-gap: var(--space-3);
-  .svdex-company-search-form { width: var(--svdex-topic-search-width); }
+  .svdex-company-search-form { width: var(--svdex-search-width); }
   .navigation-controls { order: 3; }
-  #navigation-bar { order: -1; }
   .category-breadcrumb {
     flex: 1 1 0;
     flex-wrap: nowrap;
@@ -122,12 +134,12 @@
 // A pre-sale has two paired product details after its full-width summary.
 .svdex-composer-fields.svdex-presale-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
-// Discussion uses its tags for context. Offerings retain the native category
-// label in mixed feeds; dedicated category pages still use core hideCategory.
-.svdex-home-discussion {
-  .link-bottom-line > .badge-category__wrapper,
-  .topic-item-stats__category-tags > .badge-category__wrapper,
-  .bottom-row > .badge-category__wrapper { display: none; }
+// Home keeps topic titles and previews clear of category and tag labels.
+.svdex-home-topic {
+  :is(.link-bottom-line, .bottom-row) > :is(.badge-category__wrapper, .discourse-tags),
+  .topic-item-stats__category-tags { display: none; }
+
+  .svdex-offering-card__footer { justify-content: flex-end; }
 }
 
 // Match core category squares without changing tag text or link styling.
@@ -144,8 +156,8 @@
 :is(.topic-list .link-bottom-line, .topic-list .topic-item-stats__category-tags, .latest-topic-list-item .bottom-row, .fps-result .search-category) {
   .discourse-tags > li:not(:first-child) .svdex-tag-marker { display: none; }
 }
-.topic-list-item:not(.svdex-home-discussion) :is(.link-bottom-line, .topic-item-stats__category-tags):has(> .badge-category__wrapper),
-.latest-topic-list-item:not(.svdex-home-discussion) .bottom-row:has(> .badge-category__wrapper),
+.topic-list-item :is(.link-bottom-line, .topic-item-stats__category-tags):has(> .badge-category__wrapper),
+.latest-topic-list-item .bottom-row:has(> .badge-category__wrapper),
 .fps-result .search-category:has(> .badge-category__wrapper) {
   .svdex-tag-marker { display: none; }
 }
@@ -162,7 +174,6 @@
 
 // The mobile label row uses an inline category margin rather than a flex gap.
 .mobile-view .topic-item-stats__category-tags > .badge-category__wrapper:has(~ .discourse-tags li) { margin-inline-end: 0.25em; }
-.svdex-home-discussion :is(.link-bottom-line, .topic-item-stats__category-tags, .bottom-row) > .badge-category__wrapper:has(~ .discourse-tags li) .badge-category__name::after { content: none; }
 
 // Topic headers wrap tags in an extra native container, so share the same
 // category-to-first-tag punctuation there too.
@@ -243,19 +254,52 @@
   .svdex-category-short { display: inline; }
 }
 
+.svdex-companies-page .svdex-directory-interest-action {
+  --svdex-interest-action-text: light-dark(var(--tertiary-high), var(--tertiary));
+  --d-button-default-bg-color: transparent;
+  --d-button-default-bg-color--hover: var(--d-hover);
+  --d-button-default-text-color: var(--svdex-interest-action-text);
+  --d-button-default-text-color--hover: var(--svdex-interest-action-text);
+  --d-button-default-icon-color: var(--svdex-interest-action-text);
+  --d-button-default-icon-color--hover: var(--svdex-interest-action-text);
+  --d-button-default-border: 1px solid var(--tertiary);
+  --d-button-default-border--hover: var(--d-button-default-border);
+}
+
+// Native inline-form children reserve 0.5em individually for wrapped rows.
+// These toolbars combine direct and wrapped controls: reserve it once on the
+// row instead, so input, Filter and Add actions share one alignment box.
+:is(.svdex-companies-page, .svdex-people-page) .directory-controls {
+  align-items: center;
+  padding-block-end: .5em;
+  .period-controls { display: flex; align-items: center; min-height: 2.34375em; h2 { margin: 0; line-height: normal; } }
+  .inline-form {
+    gap: .5em;
+    > .filter-name, > .btn, > .select-kit { margin: 0; }
+  }
+}
+.svdex-directory-search {
+  width: var(--svdex-search-width);
+  min-width: 0;
+}
+
+.svdex-catalog-proposal textarea {
+  box-sizing: border-box;
+  width: 100%;
+  font-family: var(--d-font-family--monospace);
+}
+
+.svdex-people-filter-control { display: inline-flex; }
+.mobile-view :is(.svdex-companies-page, .svdex-people-page) .period-controls h2 { font-size: var(--font-up-1); line-height: var(--line-height-large); }
+
 // Use native heading typography and ComboBox controls for company navigation.
 .svdex-companies-page {
   .svdex-company-directory-tools {
     display: flex;
-    align-self: flex-start;
     align-items: center;
     justify-content: flex-end;
     flex-wrap: wrap;
     gap: var(--space-3);
-    // Core inline forms reserve bottom margin for wrapped controls. These
-    // buttons sit outside that form, so remove only its vertical reservation.
-    .inline-form > .filter-name,
-    .inline-form > .total-rows { margin-block: 0; }
   }
   .svdex-company-sort-control {
     display: flex;
@@ -284,7 +328,7 @@
 .svdex-companies-page .svdex-companies-grid .horizontal-scroll-sync__top-scroll { display: none; }
 
 // Native header typography, with the filter controls in Discourse's own menu.
-.svdex-companies-page .svdex-company-column-trigger {
+:is(.svdex-companies-page, .svdex-people-table, .svdex-product-directory) .svdex-company-column-trigger {
   padding: 0;
   min-height: 0;
   font: inherit;
@@ -314,7 +358,6 @@
   align-items: center;
   justify-content: space-between;
   .filter-name { display: none; }
-  .total-rows { margin-inline-end: auto; }
 }
 .svdex-company-profile-offerings {
   li { margin-bottom: var(--space-3); }
@@ -395,12 +438,7 @@
   .inline-form {
     align-items: center;
     gap: .5em;
-    > .filter-name, > .total-rows { margin: 0; }
-  }
-  .total-rows {
-    font-size: var(--font-down-1);
-    line-height: var(--line-height-medium);
-    white-space: nowrap;
+    > .filter-name { margin: 0; }
   }
   .horizontal-scroll-sync__top-scroll { display: none; }
   .user-info.svdex-person-named .name-line {
@@ -418,21 +456,17 @@
     overflow: hidden;
     white-space: normal;
   }
-  .svdex-person-affiliation {
-    display: block;
-    + .svdex-person-affiliation { margin-block-start: var(--space-2); }
-  }
   .svdex-person-organization, .svdex-person-role { display: block; }
-  .svdex-person-role { font-size: var(--font-down-1); color: var(--primary-medium); }
   .svdex-person-estimate { padding: 0; font: inherit; }
 }
 @container directory-table (min-width: 47em) {
   .svdex-people-table {
-    // Related details form a single block, vertically centered against the
-    // identity/biography. Keep labels and values on the same left edge.
+    // Keep labels and values on the same left edge.
     .directory-table__column-header {
       justify-content: flex-start;
       .header-contents { text-align: start; }
+
+      &:last-child { white-space: normal; }
     }
     .directory-table__row > .directory-table__cell { align-items: center; }
     .directory-table__cell--user-field {
@@ -448,18 +482,24 @@
     }
   }
 }
-@media (max-width: 600px) {
-  .svdex-people-page .directory-controls {
+// The same compact layout follows viewport width on phones and the actual
+// available directory width when a desktop sidebar leaves less room.
+@mixin svdex-people-compact-controls {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto auto;
     gap: var(--space-2);
     .period-controls { grid-column: 1; grid-row: 1; }
     .inline-form { display: contents; }
-    .total-rows { grid-column: 2 / -1; grid-row: 1; justify-self: end; }
     .filter-name { grid-column: 1; grid-row: 2; width: 100%; min-width: 0; }
     .svdex-people-filter-control { grid-column: 2; grid-row: 2; }
     .svdex-company-application { grid-column: 3; grid-row: 2; justify-self: end; }
-  }
+
+}
+@media (max-width: 600px) {
+  .svdex-people-page .directory-controls { @include svdex-people-compact-controls; }
+}
+@container (max-width: 45rem) {
+  .desktop-view .svdex-people-page .directory-controls { @include svdex-people-compact-controls; }
 }
 // Share the compact native card treatment used by Funds: long professional
 // facts can use available row space instead of reserving half for short labels.
@@ -512,35 +552,232 @@
   .user-info, .user-detail { font-size: inherit; }
 }
 
-// Mobile offerings share a directory-style identity and compact financial text.
+// Independent company profile: reuse native summary stats and topic sections.
+.svdex-independent-company-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+  h1 { margin-bottom: var(--space-2); }
+}
+.svdex-independent-company-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.svdex-product-directory-page .list-controls .category-breadcrumb { display: none; }
+
+.svdex-product-directory {
+  .horizontal-scroll-sync__top-scroll { display: none; }
+  .user-info { margin: 0; }
+
+  .svdex-product-directory-description {
+    flex-basis: 100%;
+    min-width: 0;
+    color: var(--primary-medium);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .directory-table__cell--user-field a { color: var(--tertiary); }
+
+  .directory-table__column-header > .btn-flat {
+    padding: 0;
+    min-height: 0;
+    font: inherit;
+    color: inherit;
+  }
+
+  @media (max-width: 600px) {
+    .directory-table__value--user-field { max-width: 65%; }
+  }
+}
+
+.svdex-topic-logo {
+  flex: none;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.btn.svdex-product-upvote {
+  flex: none;
+  align-self: center;
+  min-inline-size: 2.25rem;
+  padding: var(--space-1) var(--space-2);
+  flex-direction: column;
+  gap: 0;
+  border: 1px solid var(--primary-low);
+  border-radius: var(--d-border-radius);
+  font-size: var(--font-down-1);
+  line-height: var(--line-height-small);
+  color: var(--primary-high);
+
+  .d-icon { margin: 0; color: inherit; }
+  &.is-voted {
+    color: var(--tertiary);
+    border-color: var(--tertiary-low);
+    background: var(--tertiary-lowest);
+  }
+}
+
+.svdex-product-directory-table .btn.svdex-product-upvote {
+  flex-direction: row;
+  gap: var(--space-1);
+}
+
+.mobile-view .svdex-offering-card__identity:has(.svdex-product-upvote) {
+  gap: var(--space-2);
+}
+
+.topic-list.svdex-catalog-topics { margin-block-start: var(--space-1); }
+
+.desktop-view .topic-list.svdex-catalog-topics:has(.svdex-catalog-overview-cell) {
+  --svdex-catalog-row-padding: var(--space-2);
+  --svdex-catalog-terms-width: clamp(8.5rem, 24vw, 22rem);
+  --svdex-catalog-stats-width: 2.75rem;
+  --svdex-catalog-stats-gap: var(--space-4);
+  table-layout: fixed;
+
+  .topic-list-header th.default {
+    padding: var(--space-2) var(--svdex-catalog-row-padding);
+    font-size: var(--font-0);
+    line-height: var(--line-height-large);
+    position: relative;
+  }
+
+  .svdex-catalog-terms-heading {
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline-end: var(--svdex-catalog-row-padding);
+    translate: 0 -50%;
+    inline-size: calc(var(--svdex-catalog-terms-width) + var(--svdex-catalog-stats-width) + var(--svdex-catalog-stats-gap));
+    text-align: start;
+  }
+}
+
+.topic-list.svdex-listing-topics .svdex-listing-topic {
+  --topic-list-item-background-color--visited: var(--topic-list-item-background-color);
+  --topic-title-font-weight--visited: var(--topic-title-font-weight);
+
+  .latest-topic-list-item a.title:not(.badge-notification) { color: var(--primary); }
+
+  .svdex-offering-card a.raw-topic-link {
+    color: var(--primary);
+    font-weight: bold;
+  }
+}
+
+.desktop-view .svdex-catalog-topics .svdex-catalog-overview-cell {
+  padding: 0;
+
+  .latest-topic-list-item {
+    padding: var(--space-3) var(--svdex-catalog-row-padding);
+    align-items: flex-start;
+    border-block-end: 0;
+    line-height: var(--line-height-large);
+
+    .main-link { min-width: 0; }
+    .top-row { margin-block-end: 0; font-size: inherit; }
+    a.title { padding: 0; font-weight: bold; }
+    .topic-stats { align-self: center; }
+  }
+
+  // Restore Overview stats inside the topic table's outer cell.
+  .topic-stats > .topic-list-data.num {
+    width: auto;
+    min-width: 0;
+    padding: 0;
+    text-align: inherit;
+    font-size: var(--font-up-1);
+
+    .badge-posts { padding: 0; }
+  }
+
+  .svdex-catalog-overview-preview {
+    display: block;
+    flex-basis: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    font-size: inherit;
+    line-height: inherit;
+
+    > span {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  .latest-topic-list-item:has(.svdex-catalog-row-terms) {
+    .main-link { flex: 1 1 auto; min-width: 0; max-width: none; }
+
+    .topic-stats {
+      display: grid;
+      grid-template-columns: var(--svdex-catalog-terms-width) var(--svdex-catalog-stats-width);
+      column-gap: var(--svdex-catalog-stats-gap);
+      align-items: center;
+      width: auto;
+      flex: none;
+    }
+
+    .svdex-catalog-row-terms {
+      grid-row: span 2;
+      min-width: 0;
+      position: relative;
+
+      // Fit funding progress in the row's existing bottom padding.
+      .svdex-offering-terms__progress {
+        position: absolute;
+        inset-block-start: calc(100% + var(--space-1));
+        inset-inline-start: 0;
+        margin: 0;
+      }
+    }
+
+    .topic-stats > :is(.posts, .topic-last-activity) { justify-self: end; }
+    .svdex-offering-terms__primary { font-size: var(--font-up-1); }
+    .svdex-offering-terms__secondary { font-size: var(--font-down-1); }
+  }
+}
+
+@container (max-width: 47em) {
+  .desktop-view .topic-list.svdex-catalog-topics:has(.svdex-catalog-overview-cell) {
+    --svdex-catalog-row-padding: var(--space-3);
+    .topic-list-header:not(:has(button, .svdex-catalog-terms-heading)) { display: none; }
+    .svdex-catalog-overview-cell .latest-topic-list-item {
+      padding-block: calc(var(--space-3) + var(--space-2));
+    }
+  }
+}
+
+// Mobile catalog topics keep the logo beside the title and the preview below.
 .svdex-product-topic .svdex-home-listing-summary {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-.svdex-product-type-filter { display: grid; gap: var(--space-2); margin-block: var(--space-3); }
 
 .mobile-view .topic-list .svdex-offering-mobile-cell {
   padding: var(--space-3) 0;
-  .svdex-offering-card { --svdex-offering-content-inset: 55px; contain: inline-size; min-width: 0; }
+  .svdex-offering-card { contain: inline-size; min-width: 0; }
   .svdex-offering-card__identity {
-    display: flex;
     align-items: flex-start;
-    gap: 10px;
     width: 100%;
-    .user-image { flex: 0 0 45px; margin: 0; }
-    .user-detail { flex: 1; min-width: 0; padding: 0; font-size: var(--font-0); }
-    .name-line { margin: 0; display: block; white-space: normal; }
-    .raw-topic-link {
-      font-size: var(--font-up-1);
-      font-weight: normal;
-      color: var(--primary-high);
-      display: inline;
-      white-space: normal;
-      overflow-wrap: anywhere;
-    }
-    .badge-notification.new-topic { display: inline-block; margin-inline-start: var(--space-1); }
+    margin: 0;
+
+    .user-image { flex: 0 0 48px; }
+    .user-detail { flex: 1; padding: 0; }
+    .name-line { white-space: normal; }
+    .name-wrapper { white-space: normal; overflow-wrap: anywhere; }
+    .raw-topic-link { font-weight: bold; white-space: normal; }
+    .badge-notification.new-topic { margin-inline-start: var(--space-1); }
   }
   .svdex-offering-card__replies {
     flex: 0 0 auto;
@@ -550,6 +787,7 @@
   }
   .svdex-offering-card__summary {
     font-size: var(--font-down-1);
+    flex-basis: 100%;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
@@ -559,12 +797,11 @@
   .svdex-offering-card__preview {
     overflow-wrap: anywhere;
     display: block;
-    width: calc(100% - var(--svdex-offering-content-inset));
+    width: 100%;
     box-sizing: border-box;
     font-size: var(--font-0);
     color: var(--primary-high);
     margin: var(--space-2) 0 0;
-    margin-inline-start: var(--svdex-offering-content-inset);
   }
   .svdex-offering-card__footer {
     display: flex;
@@ -577,6 +814,26 @@
     .svdex-offering-card__tags { flex: 1; min-width: 0; }
     .discourse-tags { display: inline; font-size: inherit; }
     .discourse-tags > li, .discourse-tags__tag-separator { display: inline; }
+  }
+}
+
+.mobile-view .topic-list.svdex-catalog-topics .svdex-offering-mobile-cell {
+  padding: calc(var(--space-3) + var(--space-2)) var(--space-3);
+
+  .svdex-offering-card__identity {
+    line-height: var(--line-height-large);
+    .user-detail { min-width: 0; }
+    .name-wrapper { display: flex; flex-basis: 100%; min-width: 0; }
+    .raw-topic-link { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  }
+
+  .svdex-offering-card__summary {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: inherit;
   }
 }
 
@@ -611,6 +868,15 @@
   &__primary { font-size: var(--font-up-2); font-weight: 600; color: var(--primary); }
   &__primary--missing { color: var(--primary-medium); }
   &__secondary { margin-top: var(--space-1); color: var(--primary-high); font-size: var(--font-0); }
+  &--single-line {
+    max-width: none;
+
+    .svdex-offering-terms__secondary {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
   &__progress {
     display: block;
     appearance: none;
@@ -642,7 +908,18 @@
 
 .svdex-private-access-info { max-width: 48em; h1 .d-icon { font-size: var(--font-down-1); } }
 
-// Preserve desktop page alignment without reserving a scrollbar on mobile.
+.svdex-filter-trigger.has-active-filters { border-color: var(--primary-medium); }
+
+.mobile-view .svdex-mobile-heading-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-basis: 100%;
+  order: -1;
+  .svdex-mobile-category-heading { flex-basis: auto; }
+}
+
 html:has(body.desktop-view) {
   scrollbar-gutter: stable;
 }
@@ -769,10 +1046,82 @@ nav.post-controls .actions button.post-action-menu__svdex-bid.btn-primary {
 // topic at the page edge, retaining native width, avatar gutters and reply depth.
 .desktop-view #topic.nested-view { margin-inline: 0 auto; }
 
+// Organization summaries use the native user-summary headings and topic rows,
+// with labeled facts rather than a grid of unrelated account-style counters.
+.svdex-company-profile-summary {
+  .svdex-organization-details { margin-block-end: var(--space-6); }
+  .svdex-company-details-header { justify-content: space-between; margin-block-end: var(--space-4); }
+  .svdex-profile-interest-actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+  .svdex-profile-interest-actions .btn:first-child {
+    color: var(--tertiary);
+    border-color: var(--tertiary);
+    &:hover { background: var(--tertiary-low); }
+  }
+  .svdex-profile-interest-actions .btn:last-child {
+    color: var(--danger);
+    border-color: var(--danger);
+    &:hover { background: var(--danger-low); }
+  }
+  .svdex-organization-facts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--space-8);
+    margin: 0;
+    > div { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: baseline; gap: var(--space-3); padding-block: var(--space-3); border-bottom: 1px solid var(--primary-low); }
+    dt { color: var(--primary-medium); font-weight: normal; }
+    dd { margin: 0; overflow-wrap: anywhere; }
+  }
+  .svdex-profile-section-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-8); &::before, &::after { display: none; } }
+  .svdex-profile-section-grid > .top-sub-section { width: auto; float: none; margin: 0; }
+  @media (max-width: 40rem) {
+    .svdex-organization-facts, .svdex-profile-section-grid { grid-template-columns: minmax(0, 1fr); }
+    .svdex-profile-section-grid { gap: var(--space-5); }
+  }
+}
+.svdex-profile-heading { display: flex; align-items: flex-start; gap: var(--space-4); min-width: 0; }
+.svdex-profile-logo { flex: none; .avatar { width: 64px; height: 64px; } }
+.mobile-view .svdex-profile-logo .avatar { width: 48px; height: 48px; }
+
+@media (max-width: 360px) {
+  .mobile-view .svdex-mobile-heading-row { gap: var(--space-2); }
+}
+
+.svdex-profile-heading p { margin-block-end: 0; }
+.mobile-view .svdex-profile-heading h1 { font-size: var(--font-up-2); line-height: var(--line-height-large); }
+
+// Core Chat removes the sidebar/content gap. Keep the native page gutter on
+// desktop, rather than compensating separately on the Lounge or DM list.
+.desktop-view body.has-sidebar-page.has-full-page-chat #main-outlet-wrapper {
+  column-gap: var(--d-main-content-gap);
+}
+
+.full-page-chat .c-routes.--direct-messages {
+  box-sizing: border-box;
+  padding-block-start: var(--space-4);
+}
+
+.desktop-view .full-page-chat .c-routes.--direct-messages {
+  .chat-channel-row__info:has(.chat-channel__last-message) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    row-gap: var(--space-1);
+  }
+
+  .chat-channel__last-message {
+    grid-column: 1 / -1;
+    color: var(--primary-medium);
+    font-size: var(--font-down-1);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    .emoji { width: 1em; height: 1em; }
+  }
+}
+
 // Lounge retains the native chat shell, with a non-scrolling Discussions toolbar.
 .svdex-discussion-chat-navigation {
   flex: 0 0 auto;
-  padding: var(--space-4) 0 0 calc(var(--space-4) * 2);
+  padding: var(--space-4) 0 0;
   .navigation-container { margin-block-end: var(--space-4); }
   .navigation-controls, .category-breadcrumb { display: none; }
 }
@@ -845,19 +1194,21 @@ html.has-full-page-chat body #main-outlet:has(> .svdex-discussion-chat-navigatio
 
 // A persistent sidebar can leave a desktop directory as narrow as a tablet.
 // Follow the available content width instead of keeping a desktop-size input.
-.svdex-companies-page .users-directory { container-type: inline-size; }
+:is(.svdex-companies-page, .svdex-people-page) .users-directory { container-type: inline-size; }
 .desktop-view .svdex-company-search-trigger { display: none; }
-@container (max-width: 45rem) {
+@container (max-width: 55rem) {
   .desktop-view .svdex-companies-page {
     .directory-controls {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
+      flex-wrap: wrap;
       gap: var(--space-2);
-      .period-controls { display: contents; }
-      h2 { grid-column: 1; grid-row: 1; margin: 0; align-self: center; }
+      .period-controls { gap: 0 var(--space-2); }
       .filter-name { display: none; }
     }
-    .svdex-company-directory-tools { grid-column: 2; grid-row: 1; flex-wrap: nowrap; align-self: center; gap: var(--space-2); }
+    .svdex-company-directory-tools {
+      max-width: 100%;
+      margin-inline-start: auto;
+      gap: var(--space-2);
+    }
     .svdex-company-directory-tools .inline-form { margin: 0; align-items: center; }
     .svdex-company-search-trigger { display: inline-flex; }
     .svdex-company-application { white-space: nowrap; }
@@ -925,7 +1276,7 @@ html.has-full-page-chat body #main-outlet:has(> .svdex-discussion-chat-navigatio
   .svdex-company-search-item .svdex-company-search-form { flex: 1; min-width: 9rem; }
   .svdex-discovery-search {
     margin: 0;
-    .filter-input-container { width: var(--svdex-topic-search-width); min-width: 0; }
+    .filter-input-container { width: var(--svdex-search-width); min-width: 0; }
     input { width: 100%; margin: 0; }
   }
   .navigation-container:has(.svdex-discovery-search) .navigation-controls { align-items: center; gap: var(--space-3); }
@@ -941,9 +1292,60 @@ html.has-full-page-chat body #main-outlet:has(> .svdex-discussion-chat-navigatio
     .svdex-discovery-search { gap: var(--space-2); }
   }
 }
+// Catalog titles can use the same separate mobile row as native category headings.
+.list-controls .navigation-container:has(> .svdex-catalog-heading) {
+  align-items: center;
+  justify-content: flex-start;
+
+  > .svdex-catalog-heading {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    flex: none;
+    h2 { margin: 0; line-height: normal; }
+  }
+
+  > #navigation-bar { margin-inline-end: auto; order: 0; }
+  > .navigation-controls { align-self: center; }
+}
+
+.mobile-view .list-controls .navigation-container > .svdex-catalog-heading {
+  gap: var(--space-2);
+  h2 { font-size: var(--font-up-1); line-height: var(--line-height-large); }
+
+  &.svdex-catalog-heading--separate-mobile {
+    flex-basis: 100%;
+    order: -1;
+  }
+}
+
+@media (max-width: 22rem) {
+  .mobile-view .list-controls .navigation-container:has(> .svdex-catalog-heading):has(.svdex-mobile-filters) {
+    column-gap: var(--space-1);
+    > .svdex-catalog-heading { gap: var(--space-1); }
+    #navigation-bar .list-control-toggle-link-trigger { font-size: var(--font-down-1); }
+  }
+}
+
+@container (max-width: 55rem) {
+  .desktop-view .list-controls .navigation-container:has(> .svdex-catalog-heading) {
+    &:has(#create-topic) > #navigation-bar { flex-basis: auto; }
+    .navigation-controls { flex-basis: auto; }
+    :is(.svdex-discovery-search .filter-input-container, .svdex-company-search-form) { width: 9.5rem; }
+    .category-breadcrumb { flex: none; }
+  }
+}
+
+@container (max-width: 47rem) {
+  .desktop-view .list-controls .navigation-container:has(> .svdex-catalog-heading) {
+    .svdex-discovery-search,
+    > .category-breadcrumb:has(.svdex-company-search-item) { display: none; }
+  }
+}
+
 .desktop-view .category-breadcrumb > .svdex-company-search-item {
   justify-content: flex-end;
-  .svdex-company-search-form { max-width: var(--svdex-topic-search-width); }
+  .svdex-company-search-form { max-width: var(--svdex-search-width); }
 }
 
 // Native Latest/Top tabs replace the offering sort selector.
@@ -952,7 +1354,6 @@ html.has-full-page-chat body #main-outlet:has(> .svdex-discussion-chat-navigatio
 // Directory controls use the same gaps on both sides of search.
 .svdex-companies-page .svdex-company-directory-tools .inline-form {
   gap: var(--space-3);
-  > .total-rows { margin-inline: 0; }
 }
 @container (max-width: 45rem) {
   .svdex-companies-page .svdex-company-directory-tools .inline-form { gap: var(--space-2); }
@@ -983,15 +1384,10 @@ html.has-full-page-chat body #main-outlet:has(> .svdex-discussion-chat-navigatio
   margin-inline-start: var(--space-2);
   padding: 0;
 }
-.svdex-companies-page .directory-controls .period-controls {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: var(--space-3);
-  h2 { margin: 0; }
-}
-@container (max-width: 45rem) {
-  .desktop-view .svdex-companies-page .directory-controls .period-controls { display: flex; grid-column: 1; grid-row: 1; }
+:is(.svdex-companies-page, .svdex-people-page) .directory-controls .period-controls {
+  flex-wrap: wrap;
+  gap: 0 var(--space-3);
+  min-width: 0;
 }
 .svdex-submission-tabs { margin: 0; }
 .svdex-interest-filters { align-items: center; gap: var(--space-3); }
@@ -1004,7 +1400,7 @@ html.has-full-page-chat body #main-outlet:has(> .svdex-discussion-chat-navigatio
 .navigation-container:has(.svdex-home-filters) > .category-breadcrumb { display: none; }
 .navigation-container:has(.svdex-filter-trigger) > .category-breadcrumb > li:has(> .tag-drop:not(.svdex-company-search-form)) { display: none; }
 // The native directory and topic-list counts share one secondary text size.
-.svdex-company-directory-tools .total-rows, .svdex-topic-count {
+.svdex-directory-heading-count, .svdex-topic-count {
   font-size: var(--font-down-1);
   font-weight: normal;
   line-height: var(--line-height-medium);
@@ -1025,14 +1421,6 @@ html.has-full-page-chat body #main-outlet:has(> .svdex-discussion-chat-navigatio
 .navigation-container .navigation-controls > .tag-category-admin-dropdown { order: 22; }
 .navigation-container .navigation-controls > .category-notifications-tracking,
 .navigation-container .navigation-controls > .tag-notifications-tracking { order: 21; }
-// A text Filter button needs a second directory toolbar row at tablet widths.
-@container (max-width: 34rem) {
-  .desktop-view .svdex-companies-page .directory-controls {
-    grid-template-columns: minmax(0, 1fr);
-    .period-controls { grid-column: 1; grid-row: 1; }
-    .svdex-company-directory-tools { grid-column: 1; grid-row: 2; }
-  }
-}
 .desktop-view .navigation-container:has(.svdex-discovery-search) > .navigation-controls { margin-inline-start: auto; }
 
 .navigation-container:has(.svdex-sector-control) > .category-breadcrumb > li:has(> .tag-drop:not(.svdex-company-search-form)) { display: none; }
@@ -1065,21 +1453,16 @@ html.has-full-page-chat body #main-outlet:has(> .svdex-discussion-chat-navigatio
 .desktop-view .list-controls .navigation-container > .navigation-controls { margin-inline-start: auto; }
 .mobile-view .svdex-discussion-chat-navigation { padding: var(--space-5) .67em 0; }
 .mobile-view .svdex-companies-page .directory-controls {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
-  align-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
   gap: var(--space-2);
-  .period-controls { grid-column: 1; grid-row: 1; min-width: 0; }
-  .period-controls h2 { font-size: var(--font-up-1); line-height: var(--line-height-large); }
-  .svdex-company-directory-tools, .svdex-company-directory-tools .inline-form { display: contents; }
-  .svdex-company-mobile-controls { grid-column: 2; grid-row: 1; }
-  .svdex-company-application { grid-column: 3; grid-row: 1; }
-  .svdex-company-directory-tools .inline-form > .total-rows {
-    position: static;
-    grid-column: 1 / -1;
-    grid-row: 2;
-    margin: 0;
-    justify-self: start;
+
+  .period-controls { min-width: 0; }
+}
+@media (max-width: 22rem) {
+  .mobile-view .svdex-companies-page :is(.svdex-company-directory-tools, .svdex-company-mobile-controls) {
+    gap: var(--space-1);
   }
 }
 // The additional native directory column scrolls as one table on desktop.
@@ -1098,14 +1481,6 @@ html.has-full-page-chat body #main-outlet:has(> .svdex-discussion-chat-navigatio
   .svdex-interest-hint { font-size: var(--font-down-1); color: var(--primary-medium); margin: var(--space-2) 0 0; }
 }
 
-// Align offering metadata with the title and financial preview on mobile.
-.mobile-view .svdex-offering-card__footer { margin-inline-start: var(--svdex-offering-content-inset); }
-.mobile-view .svdex-offering-card__identity {
-  gap: 10px;
-  .user-image { flex-basis: 45px; min-width: 45px; }
-  .avatar { width: 45px; height: 45px; }
-}
-
 // The same text + caret geometry for SelectKit and modal-based Filter controls.
 // Use the native SelectKit foreground for every inactive Filter control.
 // Keep core's primary/active and hover states intact.
@@ -1116,6 +1491,7 @@ html.has-full-page-chat body #main-outlet:has(> .svdex-discussion-chat-navigatio
   font-weight: 500;
 }
 .svdex-filter-trigger .d-icon { margin: 0; padding: 0; width: 1em; height: 1em; }
+.svdex-filter-trigger.no-text { gap: 0; padding-inline: .65em; }
 .select-kit.combo-box.svdex-sector-filter .select-kit-header {
   padding-inline: .75em;
   min-height: 2.34375em;
@@ -1138,11 +1514,6 @@ html.has-full-page-chat body #main-outlet:has(> .svdex-discussion-chat-navigatio
   .svdex-notice-mobile { display: inline; }
 }
 
-// The Lounge shell shares the Discussions content edge on desktop.
-.desktop-view .svdex-discussion-chat-navigation ~ .full-page-chat {
-  margin-inline-start: calc(var(--space-4) * 2);
-}
-
 // Fit the SVDEX wordmark within core's centered header/logo layout.
 .d-header .title:not(.title--minimized) {
   --d-logo-height: 24px;
@@ -1154,34 +1525,4 @@ html.has-full-page-chat body #main-outlet:has(> .svdex-discussion-chat-navigatio
 }
 @media (max-width: 767px) {
   .d-header .title:not(.title--minimized) { --d-logo-height: 22px; }
-}
-
-// Final tablet offering layout: tabs above, then count/search and actions.
-// The count remains inside the search group instead of becoming a grid item.
-@container (max-width: 55rem) {
-  .desktop-view .list-controls .navigation-container:has(.svdex-company-search-item) {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-    justify-content: flex-start;
-    gap: var(--space-2);
-    column-gap: .5em;
-    .category-breadcrumb { display: contents; }
-    #navigation-bar { grid-column: 1 / -1; grid-row: 1; }
-    .svdex-offering-filter-group { flex-basis: 100%; grid-column: 2 / -1; grid-row: 1; justify-self: end; }
-    .svdex-company-search-item { flex: 1 1 9rem; min-width: 9rem; max-width: none; margin-inline-start: auto; }
-    .svdex-company-search-form { width: 100%; }
-    .category-breadcrumb > .svdex-company-search-item {
-      display: flex;
-      flex: 1 1 9rem;
-      grid-column: 1;
-      grid-row: 2;
-      width: 100%;
-      min-width: 0;
-      .svdex-company-search-form { min-width: 0; width: auto; }
-    }
-    .category-breadcrumb > li:has(> .tag-drop:not(.svdex-company-search-form)) { grid-column: 2; grid-row: 2; }
-    .navigation-controls { margin-inline-start: 0; grid-column: 2; grid-row: 2; }
-    .svdex-topic-count { grid-column: 2; grid-row: 1; justify-self: end; }
-  }
 }

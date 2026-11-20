@@ -1,5 +1,11 @@
 en:
+  svdex:
+    presales:
+      product_required: "Choose a public product for this pre-sale."
   site_settings:
+    svdex_catalog_publishing_enabled: "Use reviewed directory files after the hosted publishing pipeline has been verified."
+    svdex_catalog_proposals_enabled: "Let signed-in members open public directory pull requests through the configured GitHub App."
+    svdex_interest_document_uploads_enabled: "Open native private-message verification intake after testing S3 Secure Uploads access controls. Requires secure S3 uploads, PDF attachments and secure images excluded from email. Does not verify anyone automatically."
     svdex_bids_enabled: "Allow private nonbinding offering bids with amount and proposed terms. Does not execute trades or alter general interest totals."
     svdex_bids_staff_preview: "Allow authorized staff to review offering bids within accessible offering topics."
     svdex_interest_public_totals: "Publish aggregates from consenting, current, non-restricted indications to all viewers. Individual records remain private."

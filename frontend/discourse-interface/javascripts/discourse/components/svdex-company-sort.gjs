@@ -13,12 +13,13 @@ const OPTIONS = [
 ];
 
 export default class CompanySort extends Component {
-  get options() { return this.args.kind === "funds" ? [
+  get options() { return this.args.options ?? this.companyOptions; }
+  get companyOptions() { return this.args.kind === "funds" ? [
     { id:"svdex_aum:desc", name:"AUM: highest first", field:"svdex_aum", asc:null },
     { id:"svdex_aum:asc", name:"AUM: lowest first", field:"svdex_aum", asc:true },
     ...OPTIONS.filter(option => option.field === "username"),
   ] : OPTIONS; }
-  get value() { return `${this.args.order || "svdex_total_funding"}:${this.args.asc ? "asc" : "desc"}`; }
+  get value() { return `${this.args.order || this.args.defaultOrder || "svdex_total_funding"}:${this.args.asc ? "asc" : "desc"}`; }
   @action changeSort(value) {
     const option = this.options.find(item => item.id === value);
     if (option) this.args.onChange(option.field, option.asc);
@@ -27,7 +28,7 @@ export default class CompanySort extends Component {
     <div class="svdex-company-sort-control">
       <label for="svdex-company-sort">Sort by</label>
       <ComboBox @id="svdex-company-sort" @content={{this.options}} @value={{this.value}} @onChange={{this.changeSort}}
-        @options={{hash filterable=false headerAriaLabel="Sort listings"}} />
+        @options={{hash filterable=false headerAriaLabel="Sort by"}} />
     </div>
   </template>
 }

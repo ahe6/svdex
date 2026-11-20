@@ -40,19 +40,52 @@
   .svdex-category-short { display: inline; }
 }
 
+.svdex-companies-page .svdex-directory-interest-action {
+  --svdex-interest-action-text: light-dark(var(--tertiary-high), var(--tertiary));
+  --d-button-default-bg-color: transparent;
+  --d-button-default-bg-color--hover: var(--d-hover);
+  --d-button-default-text-color: var(--svdex-interest-action-text);
+  --d-button-default-text-color--hover: var(--svdex-interest-action-text);
+  --d-button-default-icon-color: var(--svdex-interest-action-text);
+  --d-button-default-icon-color--hover: var(--svdex-interest-action-text);
+  --d-button-default-border: 1px solid var(--tertiary);
+  --d-button-default-border--hover: var(--d-button-default-border);
+}
+
+// Native inline-form children reserve 0.5em individually for wrapped rows.
+// These toolbars combine direct and wrapped controls: reserve it once on the
+// row instead, so input, Filter and Add actions share one alignment box.
+:is(.svdex-companies-page, .svdex-people-page) .directory-controls {
+  align-items: center;
+  padding-block-end: .5em;
+  .period-controls { display: flex; align-items: center; min-height: 2.34375em; h2 { margin: 0; line-height: normal; } }
+  .inline-form {
+    gap: .5em;
+    > .filter-name, > .btn, > .select-kit { margin: 0; }
+  }
+}
+.svdex-directory-search {
+  width: var(--svdex-search-width);
+  min-width: 0;
+}
+
+.svdex-catalog-proposal textarea {
+  box-sizing: border-box;
+  width: 100%;
+  font-family: var(--d-font-family--monospace);
+}
+
+.svdex-people-filter-control { display: inline-flex; }
+.mobile-view :is(.svdex-companies-page, .svdex-people-page) .period-controls h2 { font-size: var(--font-up-1); line-height: var(--line-height-large); }
+
 // Use native heading typography and ComboBox controls for company navigation.
 .svdex-companies-page {
   .svdex-company-directory-tools {
     display: flex;
-    align-self: flex-start;
     align-items: center;
     justify-content: flex-end;
     flex-wrap: wrap;
     gap: var(--space-3);
-    // Core inline forms reserve bottom margin for wrapped controls. These
-    // buttons sit outside that form, so remove only its vertical reservation.
-    .inline-form > .filter-name,
-    .inline-form > .total-rows { margin-block: 0; }
   }
   .svdex-company-sort-control {
     display: flex;
@@ -81,7 +114,7 @@
 .svdex-companies-page .svdex-companies-grid .horizontal-scroll-sync__top-scroll { display: none; }
 
 // Native header typography, with the filter controls in Discourse's own menu.
-.svdex-companies-page .svdex-company-column-trigger {
+:is(.svdex-companies-page, .svdex-people-table, .svdex-product-directory) .svdex-company-column-trigger {
   padding: 0;
   min-height: 0;
   font: inherit;
@@ -111,7 +144,6 @@
   align-items: center;
   justify-content: space-between;
   .filter-name { display: none; }
-  .total-rows { margin-inline-end: auto; }
 }
 .svdex-company-profile-offerings {
   li { margin-bottom: var(--space-3); }
@@ -192,12 +224,7 @@
   .inline-form {
     align-items: center;
     gap: .5em;
-    > .filter-name, > .total-rows { margin: 0; }
-  }
-  .total-rows {
-    font-size: var(--font-down-1);
-    line-height: var(--line-height-medium);
-    white-space: nowrap;
+    > .filter-name { margin: 0; }
   }
   .horizontal-scroll-sync__top-scroll { display: none; }
   .user-info.svdex-person-named .name-line {
@@ -215,21 +242,17 @@
     overflow: hidden;
     white-space: normal;
   }
-  .svdex-person-affiliation {
-    display: block;
-    + .svdex-person-affiliation { margin-block-start: var(--space-2); }
-  }
   .svdex-person-organization, .svdex-person-role { display: block; }
-  .svdex-person-role { font-size: var(--font-down-1); color: var(--primary-medium); }
   .svdex-person-estimate { padding: 0; font: inherit; }
 }
 @container directory-table (min-width: 47em) {
   .svdex-people-table {
-    // Related details form a single block, vertically centered against the
-    // identity/biography. Keep labels and values on the same left edge.
+    // Keep labels and values on the same left edge.
     .directory-table__column-header {
       justify-content: flex-start;
       .header-contents { text-align: start; }
+
+      &:last-child { white-space: normal; }
     }
     .directory-table__row > .directory-table__cell { align-items: center; }
     .directory-table__cell--user-field {
@@ -245,18 +268,24 @@
     }
   }
 }
-@media (max-width: 600px) {
-  .svdex-people-page .directory-controls {
+// The same compact layout follows viewport width on phones and the actual
+// available directory width when a desktop sidebar leaves less room.
+@mixin svdex-people-compact-controls {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto auto;
     gap: var(--space-2);
     .period-controls { grid-column: 1; grid-row: 1; }
     .inline-form { display: contents; }
-    .total-rows { grid-column: 2 / -1; grid-row: 1; justify-self: end; }
     .filter-name { grid-column: 1; grid-row: 2; width: 100%; min-width: 0; }
     .svdex-people-filter-control { grid-column: 2; grid-row: 2; }
     .svdex-company-application { grid-column: 3; grid-row: 2; justify-self: end; }
-  }
+
+}
+@media (max-width: 600px) {
+  .svdex-people-page .directory-controls { @include svdex-people-compact-controls; }
+}
+@container (max-width: 45rem) {
+  .desktop-view .svdex-people-page .directory-controls { @include svdex-people-compact-controls; }
 }
 // Share the compact native card treatment used by Funds: long professional
 // facts can use available row space instead of reserving half for short labels.
@@ -307,4 +336,49 @@
 // Inherit the surrounding profile body size once, then apply its secondary size.
 .mobile-view :is(.svdex-discoveries-summary, .svdex-affiliations-summary) {
   .user-info, .user-detail { font-size: inherit; }
+}
+
+// Independent company profile: reuse native summary stats and topic sections.
+.svdex-independent-company-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+  h1 { margin-bottom: var(--space-2); }
+}
+.svdex-independent-company-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.svdex-product-directory-page .list-controls .category-breadcrumb { display: none; }
+
+.svdex-product-directory {
+  .horizontal-scroll-sync__top-scroll { display: none; }
+  .user-info { margin: 0; }
+
+  .svdex-product-directory-description {
+    flex-basis: 100%;
+    min-width: 0;
+    color: var(--primary-medium);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .directory-table__cell--user-field a { color: var(--tertiary); }
+
+  .directory-table__column-header > .btn-flat {
+    padding: 0;
+    min-height: 0;
+    font: inherit;
+    color: inherit;
+  }
+
+  @media (max-width: 600px) {
+    .directory-table__value--user-field { max-width: 65%; }
+  }
 }

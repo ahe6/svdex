@@ -1,9 +1,9 @@
-// Discussion uses its tags for context. Offerings retain the native category
-// label in mixed feeds; dedicated category pages still use core hideCategory.
-.svdex-home-discussion {
-  .link-bottom-line > .badge-category__wrapper,
-  .topic-item-stats__category-tags > .badge-category__wrapper,
-  .bottom-row > .badge-category__wrapper { display: none; }
+// Home keeps topic titles and previews clear of category and tag labels.
+.svdex-home-topic {
+  :is(.link-bottom-line, .bottom-row) > :is(.badge-category__wrapper, .discourse-tags),
+  .topic-item-stats__category-tags { display: none; }
+
+  .svdex-offering-card__footer { justify-content: flex-end; }
 }
 
 // Match core category squares without changing tag text or link styling.
@@ -20,8 +20,8 @@
 :is(.topic-list .link-bottom-line, .topic-list .topic-item-stats__category-tags, .latest-topic-list-item .bottom-row, .fps-result .search-category) {
   .discourse-tags > li:not(:first-child) .svdex-tag-marker { display: none; }
 }
-.topic-list-item:not(.svdex-home-discussion) :is(.link-bottom-line, .topic-item-stats__category-tags):has(> .badge-category__wrapper),
-.latest-topic-list-item:not(.svdex-home-discussion) .bottom-row:has(> .badge-category__wrapper),
+.topic-list-item :is(.link-bottom-line, .topic-item-stats__category-tags):has(> .badge-category__wrapper),
+.latest-topic-list-item .bottom-row:has(> .badge-category__wrapper),
 .fps-result .search-category:has(> .badge-category__wrapper) {
   .svdex-tag-marker { display: none; }
 }
@@ -38,7 +38,6 @@
 
 // The mobile label row uses an inline category margin rather than a flex gap.
 .mobile-view .topic-item-stats__category-tags > .badge-category__wrapper:has(~ .discourse-tags li) { margin-inline-end: 0.25em; }
-.svdex-home-discussion :is(.link-bottom-line, .topic-item-stats__category-tags, .bottom-row) > .badge-category__wrapper:has(~ .discourse-tags li) .badge-category__name::after { content: none; }
 
 // Topic headers wrap tags in an extra native container, so share the same
 // category-to-first-tag punctuation there too.

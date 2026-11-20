@@ -4,8 +4,8 @@ import { shortDate } from "discourse/lib/formatter";
 import { eq } from "truth-helpers";
 
 export default class DiscoveriesSummary extends Component {
-  get user() { return this.args.user || this.args.outletArgs.user; }
-  get credit() { return this.user?.svdex_discovery; }
+  get user() { return this.args.user || this.args.outletArgs?.user; }
+  get credit() { return this.args.credit || this.user?.svdex_discovery; }
   get history() { return this.user?.svdex_discoveries; }
   get viewAllLabel() { return `View all ${this.history.count} ${this.history.count === 1 ? "discovery" : "discoveries"}`; }
   get historyUrl() { return `/u/${encodeURIComponent(this.user.username)}/activity/discoveries`; }
@@ -28,7 +28,7 @@ export default class DiscoveriesSummary extends Component {
         <ul class="svdex-discovery-preview">
           {{#each this.history.records as |row|}}
             <li>
-              <div class="user-info small"><div class="user-image"><a href={{row.url}} aria-hidden="true">{{dAvatar row.entity imageSize="large"}}</a></div><div class="user-detail">
+              <div class="user-info small">{{#if row.entity.avatar_template}}<div class="user-image"><a href={{row.url}} aria-hidden="true">{{dAvatar row.entity imageSize="large"}}</a></div>{{/if}}<div class="user-detail">
                 <a href={{row.url}}>{{row.entity.name}}</a>
                 <span>{{#if (eq row.kind "companies")}}Company{{else if (eq row.kind "funds")}}Fund{{else}}Person{{/if}} · {{shortDate row.listed_at}}{{#if (eq row.provenance "self_listed")}} · Self-listed{{/if}}</span>
               </div></div>

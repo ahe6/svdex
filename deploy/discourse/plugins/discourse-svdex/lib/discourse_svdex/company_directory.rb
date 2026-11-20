@@ -312,6 +312,8 @@ module DiscourseSvdex
           visible_ids = User.where(id: items.select(:user_id)).includes(:user_option, :user_stat)
             .select { |person| guardian.can_see_profile?(person) }.map(&:id)
           items = items.where(user_id: visible_ids)
+          field = PeopleDirectory::SORT_FIELDS[requested_order]
+          return PeopleDirectory.sort_items(items, visible_ids, field, ascending) if field
         end
         if @svdex_people_directory && requested_order == "username"
           return items.joins(:user).order(Arel.sql("LOWER(BTRIM(users.name)) #{ascending ? 'ASC' : 'DESC'}"), id: :asc)

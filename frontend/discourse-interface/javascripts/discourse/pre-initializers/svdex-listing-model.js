@@ -8,9 +8,11 @@ const FIELDS = ["svdex_instrument_type", "svdex_summary", "svdex_terms", "svdex_
 const PROPERTIES = ["svdexInstrumentForSave", "svdexSummaryForSave", "svdexTermsForSave", "svdexSizeForSave", "svdexMinimumForSave", "svdexValuationForSave", "svdexInterestForSave", "svdexFundsRaisedForSave", "svdexTotalFundingForSave", "svdexCapForSave", "svdexDiscountForSave", "svdexStrikeForSave", "svdexExpirationForSave"];
 
 const PRESALE_KEYS = PRESALE_FIELDS.map(field => `svdex_presale_${field.key}`);
-FIELDS.push(...PRESALE_KEYS);
-PROPERTIES.push(...PRESALE_FIELDS.map(field => `svdexPresale${field.key[0].toUpperCase()}${field.key.slice(1)}ForSave`));
+const PRODUCT_KEY = "svdex_presale_product_id";
+FIELDS.push(...PRESALE_KEYS, PRODUCT_KEY);
+PROPERTIES.push(...PRESALE_FIELDS.map(field => `svdexPresale${field.key[0].toUpperCase()}${field.key.slice(1)}ForSave`), "svdexPresaleProductIdForSave");
 function storedValue(model, key) {
+  if (key === PRODUCT_KEY) return String(model.topic?.svdex_presale?.product_id ?? "");
   return key.startsWith("svdex_presale_") ? model.topic?.svdex_presale?.[key.replace("svdex_presale_", "")] : model.topic?.svdex_listing?.[key.replace("svdex_", "")];
 }
 
@@ -29,6 +31,8 @@ export default {
       // Composer scope is a draft-only UI preference, never topic metadata.
       api.addModelField("composer", "svdex_category_scope");
       api.serializeToDraft("svdex_category_scope");
+      api.addModelField("composer", "svdex_presale_product_title");
+      api.serializeToDraft("svdex_presale_product_title");
       FIELDS.forEach((key, index) => {
         api.addModelField("composer", key);
         api.addModelGetter("composer", PROPERTIES[index], function () {

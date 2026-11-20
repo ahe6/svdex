@@ -8,24 +8,37 @@ import dIcon from "discourse/ui-kit/helpers/d-icon";
 import { companyFilterOptions } from "../lib/svdex-company-filters";
 
 export default class CompanyColumnMenu extends Component {
-  get sortField() { return this.args.field === "svdex_funding" ? "svdex_total_funding" : this.args.field === "svdex_valuation" ? "svdex_last_valuation" : ["svdex_aum", "svdex_buy_interest", "svdex_sell_interest"].includes(this.args.field) ? this.args.field : null; }
+  get sortField() { return this.args.sortField ?? this.companySortField; }
+  get companySortField() { return this.args.field === "svdex_funding" ? "svdex_total_funding" : this.args.field === "svdex_valuation" ? "svdex_last_valuation" : ["svdex_aum", "svdex_buy_interest", "svdex_sell_interest"].includes(this.args.field) ? this.args.field : null; }
   get icon() { return this.sortField && this.args.controller.order === this.sortField && this.args.controller.asc ? "angle-up" : "angle-down"; }
-  get title() { return this.sortField ? `Filter and sort ${this.args.label}` : `Filter ${this.args.label}`; }
-  get active() { return Boolean(this.args.controller[this.args.field]); }
+  get hasFilters() { return Boolean(this.args.filter || this.args.field); }
+  get title() {
+    const actionName = this.hasFilters ? (this.sortField ? "Filter and sort" : "Filter") : "Sort";
+    return `${actionName} ${this.args.label}`;
+  }
+  get value() {
+    return this.args.filter ? this.args.filter.value : this.args.controller[this.args.field];
+  }
+  get active() { return Boolean(this.value); }
   get options() {
-    const { reset, options } = companyFilterOptions(this.args.controller, this.args.field);
-    const current = this.args.controller[this.args.field];
+    if (!this.hasFilters) return [];
+    const { reset, options } = this.args.filter || companyFilterOptions(this.args.controller, this.args.field);
+    const current = this.value;
     return [{ id: null, name: reset }, ...options].map(option => ({ ...option, selected: String(option.id ?? "") === String(current ?? "") }));
   }
   get sortOptions() {
     const c = this.args.controller;
     return [
-      { name: "Highest first", asc: null, selected: c.order === this.sortField && !c.asc },
-      { name: "Lowest first", asc: true, selected: c.order === this.sortField && Boolean(c.asc) },
+      { name: this.args.highestLabel ?? "Highest first", asc: null, selected: c.order === this.sortField && !c.asc },
+      { name: this.args.lowestLabel ?? "Lowest first", asc: true, selected: c.order === this.sortField && Boolean(c.asc) },
     ];
   }
   @action registerMenu(api) { this.menu = api; }
-  @action choose(value) { this.args.controller.changeCompanyFilter(this.args.field, value); this.menu?.close(); }
+  @action choose(value) {
+    this.menu?.close();
+    if (this.args.filter) this.args.filter.onChoose(value);
+    else this.args.controller.changeCompanyFilter(this.args.field, value);
+  }
   @action sort(asc) { this.args.controller.updateOrderAndAsc(this.sortField, asc); this.menu?.close(); }
   <template>
     <div class="directory-table__column-header" role="columnheader">
@@ -37,7 +50,7 @@ export default class CompanyColumnMenu extends Component {
               {{#each this.sortOptions as |option|}}
                 <dropdown.item><DButton @action={{fn this.sort option.asc}} class={{if option.selected "-selected"}} role="menuitemradio" aria-checked={{if option.selected "true" "false"}}><span class="svdex-company-choice-mark">{{#if option.selected}}{{dIcon "check"}}{{/if}}</span><span>{{option.name}}</span></DButton></dropdown.item>
               {{/each}}
-              <dropdown.divider />
+              {{#if this.hasFilters}}<dropdown.divider />{{/if}}
             {{/if}}
             {{#each this.options as |option|}}
               <dropdown.item><DButton @action={{fn this.choose option.id}} class={{if option.selected "-selected"}} role="menuitemradio" aria-checked={{if option.selected "true" "false"}}><span class="svdex-company-choice-mark">{{#if option.selected}}{{dIcon "check"}}{{/if}}</span><span>{{option.name}}</span></DButton></dropdown.item>

@@ -4,12 +4,13 @@ SVDEX uses native Discourse Light/Dark palettes, controls, menus, tables, profil
 components and responsive behavior. Presentation belongs in the Appearance,
 Interface and Sidebar themes; no Discourse core files are patched.
 
-The Sidebar component orders the current main links: Home, Companies, Funds,
-Offerings, Discussions, Events, My posts, My interest & bids, My messages,
-Achievements, Bookmarks and Users, followed by role-specific staff tools. More
-holds secondary destinations such as All tags, Groups and configured Terms/
-Privacy links. About/Guidelines are retired. Native standalone Categories, Tags
-and Channels sidebar sections are hidden; their underlying data remains native.
+The Sidebar component orders the main links as Home, Offerings, Pre-sales,
+Discussions, Companies, Funds, Products, People and Events. Signed-in members
+also see Messages, My Interests, Bookmarks and My posts when available, followed
+by role-specific staff tools. More holds Achievements and secondary destinations
+such as All tags, Users, Groups and the configured Terms and Privacy links.
+About and Guidelines are retired. Native standalone Categories, Tags and
+Channels sidebar sections are hidden.
 
 Home exposes Tags before New Topic and retains its offerings/official-updates
 feed scope. Offerings groups Search company, Sector, Valuation and Latest,

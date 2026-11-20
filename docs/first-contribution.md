@@ -128,3 +128,12 @@ before it has been reviewed, and never put cloud credentials into a fork.
 - Need cloud development: use the private SSH/editor forwarding instructions in
   [operations](operations.md#remote-linux-development). Codespaces/devcontainer
   provisioning is not currently supplied or validated.
+
+
+## Correct public company data
+
+The local company catalog can be edited without running Discourse. See
+[the data guide](../directory/README.md), edit a company JSON file, then run
+`ruby scripts/validate-company-catalog.rb`. Maintainers review sources and preview
+imports before applying changes. Site contributors can instead use Suggest changes
+on the profile; GitHub is optional for them.

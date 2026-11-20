@@ -8,12 +8,12 @@ export default class FilterTrigger extends Component {
   }
   <template>
     <DButton
-      @icon="angle-right"
-      @translatedLabel="Filter"
+      @icon={{if @compact "filter" "angle-right"}}
+      @translatedLabel={{unless @compact "Filter"}}
       @translatedTitle={{this.title}}
       @translatedAriaLabel={{this.title}}
       @action={{@action}}
-      class={{if @active "btn-primary svdex-filter-trigger" "btn-default svdex-filter-trigger"}}
+      class="btn-default svdex-filter-trigger {{if @active 'has-active-filters'}}"
     />
   </template>
 }

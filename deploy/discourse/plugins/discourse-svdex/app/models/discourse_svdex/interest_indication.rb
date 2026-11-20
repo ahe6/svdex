@@ -3,14 +3,15 @@ module DiscourseSvdex
   class InterestIndication < ActiveRecord::Base
     self.table_name = "svdex_interest_indications"
     belongs_to :user
-    belongs_to :organization, class_name: "User"
+    belongs_to :organization, class_name: "User", optional: true
+    validate { errors.add(:organization, "must exist") unless organization || (respond_to?(:company_profile_id) && company_profile_id.present?) }
     belongs_to :topic, optional: true
     validates :side, inclusion: { in: %w[buy sell] }
     validates :market, inclusion: { in: %w[primary secondary either] }
     validates :currency, inclusion: { in: ["USD"] }
     validates :amount_cents, numericality: { only_integer: true, greater_than: 0, less_than_or_equal_to: FinancialSubmissions::MAX_AMOUNT_CENTS }
     validates :expires_at, presence: true
-    validates :user_id, uniqueness: { scope: [:organization_id, :side] }
+    validates :user_id, uniqueness: { scope: [:organization_id, :side] }, if: -> { organization_id.present? }
     validate { errors.add(:market, "must be secondary for a sale") if side == "sell" && market != "secondary" }
 
     def self.preview?(guardian)
@@ -34,8 +35,8 @@ module DiscourseSvdex
     def self.aggregate_scope(guardian)
       return disclosed_to(guardian) unless public_totals?
       public_topics = CompanyDirectory.offering_scope(Guardian.new).select(:id)
-      where.not(aggregate_consent_at: nil).where(source_was_restricted: false)
-        .where("topic_id IS NULL OR topic_id IN (?)", public_topics)
+      InterestVerification.covered(where.not(aggregate_consent_at: nil).where(source_was_restricted: false)
+        .where("topic_id IS NULL OR topic_id IN (?)", public_topics))
     end
 
     def self.totals(organization_ids, guardian)

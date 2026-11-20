@@ -23,10 +23,14 @@ Two custom tables store investor submissions:
   proposed terms, nonbinding confirmation, expiry and withdrawal.
 
 Two additional tables, `svdex_discoveries` and `svdex_discovery_events`, track
-staff-reviewed attribution and its append-only review history. Four plugin-owned
-tables exist in total; these are separate from native users/topics/custom fields.
+staff-reviewed attribution and its append-only review history. The new private
+`svdex_interest_verifications` table stores dated staff capacity/holding reviews,
+replacements and revocations. These five source-defined tables are separate from
+native users/topics/custom fields; the verification migration has only been applied
+locally so far. The optional [local independent-company experiment](../../../../docs/independent-company-prototype.md)
+adds a sixth local-only table, with no production migration or registered route.
 
-Migrations and ordinary native backups include all four tables. A submission is not
+Migrations and ordinary native backups include every installed table. A submission is not
 an accepted order or executed investment. Updating replaces the saved record;
 there is no immutable ledger of every earlier edit.
 

@@ -3,6 +3,7 @@ import { isOfferingCategory } from "../lib/svdex-offering-categories";
 import Component from "@glimmer/component";
 import { service } from "@ember/service";
 import { formatFinancialAmount, formatValuation } from "../lib/svdex-financial-format";
+import { offeringExemption } from "../lib/svdex-offering-terms";
 
 export default class ListingOverview extends Component {
   @service siteSettings;
@@ -10,7 +11,10 @@ export default class ListingOverview extends Component {
   get data() {
     const post = this.args.outletArgs.post;
     const reviewable = this.args.outletArgs.model;
-    if (reviewable?.type === "ReviewableQueuedPost" && this.isPresale) return Object.fromEntries(PRESALE_FIELDS.map(field => [field.key, reviewable.payload?.[`svdex_presale_${field.key}`]]));
+    if (reviewable?.type === "ReviewableQueuedPost" && this.isPresale) {
+      const payload = reviewable.payload || {};
+      return { ...Object.fromEntries(PRESALE_FIELDS.map(field => [field.key, payload[`svdex_presale_${field.key}`]])), product_id: payload.svdex_presale_product_id };
+    }
     if (reviewable?.type === "ReviewableQueuedPost" &&
         isOfferingCategory(reviewable.category_id ?? reviewable.category?.id, this.siteSettings)) {
       const payload = reviewable.payload || {};
@@ -22,6 +26,10 @@ export default class ListingOverview extends Component {
     }
   }
   get summary() { return this.data?.summary?.trim(); }
+  get productUrl() {
+    const id = String(this.data?.product_id ?? "");
+    if (this.isPresale && /^[1-9]\d*$/.test(id)) return `/t/${id}`;
+  }
   get rows() {
     const data = this.data;
     if (!data) return [];
@@ -42,17 +50,21 @@ export default class ListingOverview extends Component {
       { label: "Strike price", value: data.strike_price },
       { label: "Expiry", value: data.expiration },
       { label: "Terms", value: data.terms },
+      { label: "Exemption", value: offeringExemption(this.args.outletArgs.post?.topic) },
       { label: "Raised in this offering", value: data.funds_raised },
     ].filter(row => row.value?.trim() && !["—", "-"].includes(row.value.trim()));
     return [...rows, ...interestRows];
   }
-  get visible() { return this.data && (this.summary || this.rows.length); }
+  get visible() { return this.data && (this.summary || this.rows.length || this.productUrl); }
   <template>
     {{#if this.visible}}
       <section class="cooked svdex-topic-overview" aria-label={{if this.isPresale "Pre-sale details" "Company or offering details"}}>
         {{#if this.summary}}<p>{{this.summary}}</p>{{/if}}
-        {{#if this.rows.length}}
+        {{#if (if this.productUrl true this.rows.length)}}
           <dl>
+            {{#if this.productUrl}}
+              <div><dt>Product</dt><dd><a href={{this.productUrl}}>{{if this.data.product_title this.data.product_title "View product"}}</a></dd></div>
+            {{/if}}
             {{#each this.rows as |row|}}
               <div><dt>{{row.label}}</dt><dd>{{row.value}}</dd></div>
             {{/each}}

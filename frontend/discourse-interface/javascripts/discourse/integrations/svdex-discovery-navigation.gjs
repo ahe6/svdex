@@ -1,5 +1,6 @@
 import { isPresaleCategory } from "../lib/svdex-presales";
 import { isProductCategory } from "../lib/svdex-products";
+import { openCatalogProposal } from "../components/svdex-catalog-proposal.gjs";
 import registerDiscoveryTabs from "./svdex-discovery-tabs.gjs";
 import { isOverviewDirectory } from "../lib/svdex-sector-navigation";
 import DiscoveryTopicHeader from "../components/svdex-discovery-topic-header.gjs";
@@ -11,13 +12,27 @@ import { action } from "@ember/object";
 import { scheduleOnce } from "@ember/runloop";
 import DiscourseURL, { getCategoryAndTagUrl } from "discourse/lib/url";
 import { ALL_TAGS_ID, NO_TAG_ID, NONE_TAG } from "discourse/select-kit/components/tag-drop";
-import MobileCategoryHeading from "../components/svdex-mobile-category-heading.gjs";
+import CategoryHeading from "../components/svdex-category-heading.gjs";
 import ListingMobileFilters from "../components/svdex-mobile-filters.gjs";
 import NavItem, { customNavItemHref } from "discourse/models/nav-item";
 import ListingTagGroupFilters from "../components/svdex-tag-group-filters.gjs";
+import { feedViews, feedViewHref } from "../lib/svdex-feed-views";
 
 export default function registerDiscoveryNavigation(api, { settings, router, site }) {
   registerDiscoveryTabs(api);
+  api.registerValueTransformer("navigation-items", ({ value: items, context }) => {
+    const query = router.currentRoute?.queryParams || {};
+    const config = feedViews({ ...context, settings, routeName: router.currentRouteName, query });
+    if (!config) return items;
+    const noSubcategories = items.some(item => item.noSubcategories);
+    const tabs = config.views.map(([view, label]) => {
+      const path = NavItem.pathFor(view === "top" ? "top" : "latest", { category: context.category, tag: context.tag, noSubcategories });
+      return NavItem.create({ name: `svdex-${view}`, displayName: label, title: label,
+        filterType: view === "top" ? "top" : "latest", active: view === config.selected,
+        svdexHref: feedViewHref(path, query, view === "latest" && config.nativeActivity ? "activity" : view) });
+    });
+    return [...tabs, ...items.filter(item => !["latest", "top"].includes(item.name))];
+  });
   api.registerValueTransformer("topic-list-columns", ({ value: columns, context }) => {
     if (context.listContext === "discovery" &&
       (isOfferingCategory(context.category?.id, settings) || isPresaleCategory(context.category?.id, settings) || isProductCategory(context.category?.id, settings) ||
@@ -30,16 +45,21 @@ export default function registerDiscoveryNavigation(api, { settings, router, sit
   api.registerValueTransformer("create-topic-icon", () => "plus");
   api.registerValueTransformer("can-create-topic-button", ({ value, context }) => {
     if (isOverviewDirectory(router.currentRouteName) || router.currentRouteName?.startsWith("chat")) return false;
+    if (isProductCategory(context.category?.id, settings) && site.svdex_catalog_publishing_ready) return true;
     if (api.getCurrentUser()) return value;
     const category = context.category;
-    const publicSubmission = isOfferingCategory(category?.id, settings) || isPresaleCategory(category?.id, settings) ||
-      isProductCategory(category?.id, settings) || category?.slug === "discussion" ||
+    const publicSubmission = isOfferingCategory(category?.id, settings) || isPresaleCategory(category?.id, settings) || isProductCategory(category?.id, settings) ||
+      category?.slug === "discussion" ||
       Number(category?.id) > 0 && Number(category.id) === Number(settings.svdex_events_category_id);
     const home = !category && /^discovery\.(latest|top)$/.test(router.currentRouteName || "");
     return publicSubmission || home || value;
   });
-  api.registerBehaviorTransformer("create-topic-button-click", ({ next }) => {
-    if (!api.getCurrentUser()) return DiscourseURL.routeTo("/login");
+  api.registerBehaviorTransformer("create-topic-button-click", ({ next, context }) => {
+    const currentUser = api.getCurrentUser();
+    if (isProductCategory(context.category?.id, settings) && site.svdex_catalog_publishing_ready) {
+      return openCatalogProposal({ currentUser, site, modal: api.container.lookup("service:modal") }, "products");
+    }
+    if (!currentUser) return DiscourseURL.routeTo("/login");
     return next();
   });
   // Suppress only this toolbar's split menu; native create/resume and the
@@ -116,6 +136,7 @@ export default function registerDiscoveryNavigation(api, { settings, router, sit
   api.modifyClass("component:tag-drop", extendTagDrop);
 
   customNavItemHref(item => {
+    if (item.svdexHref) return item.svdexHref;
     const query = item.currentRouteQueryParams || {};
     if (!item.category && !item.tag && query.svdex_home === "1" && ["latest", "top"].includes(item.name)) {
       const params = new URLSearchParams({svdex_home: "1"});
@@ -145,5 +166,5 @@ export default function registerDiscoveryNavigation(api, { settings, router, sit
   api.renderInOutlet("before-create-topic-button", DiscoverySearch);
   api.renderInOutlet("before-create-topic-button", SectorFilter);
   api.renderInOutlet("before-create-topic-button", ListingMobileFilters);
-  api.renderInOutlet("after-breadcrumbs", MobileCategoryHeading);
+  api.renderInOutlet("after-breadcrumbs", CategoryHeading);
 }
